@@ -1180,6 +1180,7 @@ const CHAT_TOOLS=[
  {name:'list_folder_files',description:'רשימת קבצי הגלם בתיקיית העבודה המחוברת (שם, נתיב, סוג). דורש שתיקייה תהיה מחוברת.',input_schema:{type:'object',properties:{}}},
  {name:'read_folder_file',description:'קריאת טקסט מקובץ בתיקייה המחוברת לפי שם/נתיב (Word ו‑טקסט בלבד). מחזיר את התוכן.',input_schema:{type:'object',properties:{query:{type:'string',description:'שם או נתיב הקובץ'}},required:['query']}},
  {name:'save_to_folder',description:'שמירת שיעור קיים מהספרייה כקובץ Markdown לתת‑התיקייה "תוצרים" בתיקייה המחוברת.',input_schema:{type:'object',properties:{query:{type:'string',description:'מספר/שם/מזהה השיעור'}},required:['query']}},
+ {name:'build_lesson_from_folder',description:'בניית שיעור שלם דרך כל ארבעת הסוכנים (חולץ→אדריכל→קולן→עורך) מתוך קבצים בתיקייה המחוברת — כולל PDF ותמונות. תחילה קראי ל-list_folder_files כדי לראות את הקבצים ולבחור נתיבים, ואז קראי לכלי הזה עם רשימת הנתיבים. התוצאה נשמרת בספרייה.',input_schema:{type:'object',properties:{files:{type:'array',items:{type:'string'},description:'רשימת נתיבי/שמות קבצים מהתיקייה לבנות מהם'},name:{type:'string',description:'שם השיעור'},length:{type:'string',enum:['short','medium','deep']}},required:['files','name']}},
 ];
 function findLesson(q){const lib=loadLib();if(!q&&q!==0)return null;q=(''+q).trim().toLowerCase();
   return lib.find(l=>l.id===q)||lib.find(l=>(''+l.num).toLowerCase()===q)||lib.find(l=>(l.name||'').toLowerCase().includes(q))||lib.find(l=>(''+l.num).includes(q));}
@@ -1210,12 +1211,28 @@ async function chatToolRun(name,a){a=a||{};
       const txt=await fsaReadText(hit.path);return txt?txt.slice(0,12000):'לא הצלחתי לחלץ טקסט מהקובץ.';}catch(e){return 'שגיאה: '+e.message;}}
   if(name==='save_to_folder'){const l=findLesson(a.query);if(!l)return 'לא נמצא שיעור.';
     try{const safe=(l.name||'שיעור').replace(/[\\/:*?"<>|]/g,'-').trim();const fn=(l.num?l.num+' - ':'')+safe+'.md';const p=await fsaWrite(fn,l.body);return 'נשמר בתיקייה: '+p;}catch(e){return 'לא הצלחתי לשמור: '+e.message;}}
+  if(name==='build_lesson_from_folder'){if(!folderHandle)return 'אין תיקייה מחוברת. בקשי מעופרה ללחוץ "חברי תיקייה" תחילה.';
+    const paths=Array.isArray(a.files)?a.files:[];if(!paths.length)return 'לא צוינו קבצים. קראי תחילה ל-list_folder_files ובחרי נתיבים.';
+    let list;try{list=await fsaList(folderHandle);}catch(e){return 'שגיאה בקריאת התיקייה: '+e.message;}
+    const chosen=paths.map(p=>{const q=(''+p).toLowerCase();return list.find(f=>f.path.toLowerCase()===q)||list.find(f=>f.name.toLowerCase()===q)||list.find(f=>f.path.toLowerCase().includes(q))||list.find(f=>f.name.toLowerCase().includes(q));}).filter((v,i,arr)=>v&&arr.indexOf(v)===i);
+    if(!chosen.length)return 'לא נמצאו הקבצים שצוינו בתיקייה.';
+    const docContent=[],textBlocks=[];
+    for(const it of chosen){try{const fh=await fsaGetFileHandle(it.path);const f=await fh.getFile();
+      if(it.ext==='pdf'){const d=await rURL(f);docContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:d.split(',')[1]}});}
+      else if(['png','jpg','jpeg','webp','gif'].includes(it.ext)){const d=await rURL(f);docContent.push({type:'image',source:{type:'base64',media_type:'image/'+(it.ext==='jpg'?'jpeg':it.ext),data:d.split(',')[1]}});}
+      else if(it.ext==='docx'){const buf=await rBuf(f);const r=await mammoth.extractRawText({arrayBuffer:buf});textBlocks.push('=== '+it.name+' ===\n'+r.value);}
+      else{const t=await rTxt(f);textBlocks.push('=== '+it.name+' ===\n'+t);}
+    }catch(e){}}
+    if(!docContent.length&&!textBlocks.length)return 'לא הצלחתי לקרוא את הקבצים שנבחרו.';
+    let final;try{final=await runPipelineHeadless(a.name||'שיעור',a.length||'medium',docContent,textBlocks);}catch(e){return 'שגיאה בבניית השיעור: '+e.message;}
+    const lib=loadLib();lib.push({id:uid(),num:'',name:a.name||'שיעור ללא שם',body:final,slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);try{renderLib();}catch(e){}
+    return 'נבנה שיעור מלא דרך ארבעת הסוכנים מתוך '+chosen.length+' קבצים, ונשמר בספרייה כ"'+(a.name||'שיעור')+'". אפשר לפתוח אותו בלשונית "ספרייה".';}
   return 'כלי לא מוכר.';}
-function actionLabel(n){return ({list_lessons:'מעיינת בספרייה',read_lesson:'קוראת שיעור',search_lessons:'מחפשת',draft_lesson:'כותבת שיעור…',revise_lesson:'מתקנת שיעור…',make_slides:'בונה מצגת…',present_lesson:'פותחת הצגה',generate_image:'מציירת…',add_voice_example:'מעדכנת את הקול',open_section:'עוברת לשונית',list_folder_files:'מעיינת בתיקייה',read_folder_file:'קוראת קובץ מהתיקייה',save_to_folder:'שומרת לתיקייה'})[n]||n;}
+function actionLabel(n){return ({list_lessons:'מעיינת בספרייה',read_lesson:'קוראת שיעור',search_lessons:'מחפשת',draft_lesson:'כותבת שיעור…',revise_lesson:'מתקנת שיעור…',make_slides:'בונה מצגת…',present_lesson:'פותחת הצגה',generate_image:'מציירת…',add_voice_example:'מעדכנת את הקול',open_section:'עוברת לשונית',list_folder_files:'מעיינת בתיקייה',read_folder_file:'קוראת קובץ מהתיקייה',save_to_folder:'שומרת לתיקייה',build_lesson_from_folder:'בונה שיעור דרך הסוכנים… (כדקה־שתיים)'})[n]||n;}
 function chatSystem(){return `את "עוזרת ההוראה" של עופרה במערכת "שפת הנשמה". חכמה, חמה, מדויקת — כמו עוזרת הוראה אישית מצוינת. את מכירה את המותג והקול (למטה).
 תפקידך: לעזור לעופרה לתכנן, לחשוב יחד, לשפר, לארגן, ולבצע פעולות במערכת. דברי בעברית, קצר וברור ובחום.
 כשמבקשים פעולה (לכתוב/לתקן שיעור, ליצור מצגת/תמונה, להציג) — בצעי דרך הכלים ואז דווחי בקצרה מה עשית. כשמבקשים תוכן — כתבי בקול של שפת הנשמה. אל תמציאי שיעורים — בדקי עם הכלים. אל תכתבי תשובות ארוכות מדי.
-אם עופרה חיברה תיקיית עבודה — את יכולה לעיין בקבצים שבה (list_folder_files), לקרוא קובץ Word/טקסט (read_folder_file), ולשמור שיעור מהספרייה לתיקייה (save_to_folder). כשמבקשים לבנות שיעור מקבצים — אם אלה PDF/תמונה, הנחי לטעון אותם דרך לשונית "שיעור חדש" → "בחרי מתיקייה שלמה".
+אם עופרה חיברה תיקיית עבודה — את יכולה לעיין בקבצים שבה (list_folder_files), לקרוא קובץ Word/טקסט (read_folder_file), ולשמור שיעור מהספרייה לתיקייה (save_to_folder). לבניית שיעור שלם מקבצים בתיקייה (כולל PDF ותמונות) דרך כל ארבעת הסוכנים — קראי תחילה ל-list_folder_files כדי לבחור את הקבצים הנכונים, ואז ל-build_lesson_from_folder עם רשימת הנתיבים ושם לשיעור. זו הדרך הנכונה לבנות "לפי הסוכנים", לא draft_lesson.
 
 — פרופיל הקול —
 `+systemBase();}
@@ -1302,6 +1319,17 @@ async function fsaWrite(filename,text){if(!folderHandle)throw new Error('אין 
   if(!(await fsaPerm(folderHandle,true)))throw new Error('אין הרשאת כתיבה');
   const out=await folderHandle.getDirectoryHandle('תוצרים',{create:true});
   const fh=await out.getFileHandle(filename,{create:true});const w=await fh.createWritable();await w.write(text);await w.close();return 'תוצרים/'+filename;}
+// פייפליין מלא (4 סוכנים) ללא ממשק — לשימוש עוזרת ההוראה מתוך הצ'אט
+async function runPipelineHeadless(name,len,docContent,textBlocks){
+  const sys=systemBase();const lenTxt=LEN[len]||LEN.medium;const prior=(typeof priorLessonsContext==='function')?priorLessonsContext():'';
+  let intro=AGENTS[0].inst;if(name)intro='שם השיעור: "'+name+'".\n\n'+intro;
+  if(textBlocks&&textBlocks.length)intro+='\n\nקבצי טקסט:\n\n'+textBlocks.join('\n\n');
+  const content1=[...(docContent||[]),{type:'text',text:intro}];
+  const extraction=await callClaude(sys+'\n\n'+AGENTS[0].inst,content1,AGENTS[0].max,null);
+  const skeleton=await callClaude(sys+prior+'\n\n'+AGENTS[1].inst.replace('LENGTH',lenTxt),[{type:'text',text:'חומר הגלם שחולץ:\n\n'+extraction}],AGENTS[1].max,null);
+  const draft=await callClaude(sys+'\n\n'+AGENTS[2].inst,[{type:'text',text:'שלד השיעור:\n\n'+skeleton}],AGENTS[2].max,null);
+  const final=await callClaude(sys+'\n\n'+AGENTS[3].inst,[{type:'text',text:'טיוטת השיעור:\n\n'+draft}],AGENTS[3].max,null);
+  return final;}
 function updateFolderStatus(){
   const fs=document.getElementById('folderStatus');if(fs)fs.textContent=folderHandle?('🔗 מחוברת: '+folderHandle.name):'';
   const st=document.getElementById('fsaStatus');if(st)st.innerHTML=folderHandle?('<span style="color:var(--green)">מחוברת לתיקייה: <b>'+esc(folderHandle.name)+'</b> · העוזרת יכולה לקרוא ולשמור אליה.</span>'):'אין תיקייה מחוברת עדיין.';}
