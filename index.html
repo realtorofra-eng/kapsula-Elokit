@@ -310,6 +310,22 @@
     <div id="libList"></div>
   </section>
 
+  <!-- ===== חומרי גלם ===== -->
+  <section class="tab" id="tab-source">
+    <div class="section-head"><h2 class="section">חומרי גלם</h2>
+      <p class="lead">קבצי המקור של המרצה, מסודרים לפי שיעור. בוחרים שיעור — והסוכנים בונים ממנו מערך מלא בקול שלך.</p></div>
+    <div class="card tight">
+      <div class="folder-row">
+        <button class="btn" id="sourceConnectBtn" type="button">🔗 חברי תיקייה</button>
+        <button class="btn dark" id="organizeBtn" type="button">🗂️ סדרי את חומרי הגלם</button>
+        <button class="btn" id="sourceRefreshBtn" type="button">🔄 רענני</button>
+      </div>
+      <p class="hint" id="sourceOrgStatus" style="margin-top:8px"></p>
+      <p class="hint">"סדרי" מעתיק (לא מזיז ולא מוחק) את הקבצים שמכילים "שיעור N" בשמם לתוך <b>קבצי מקור/שיעור NN/</b>. המקור נשאר שלם. עובד ב‑Chrome/Edge במחשב על כתובת האינטרנט.</p>
+    </div>
+    <div id="sourceList"></div>
+  </section>
+
   <!-- ===== תמונות ===== -->
   <section class="tab" id="tab-images">
     <div class="section-head"><h2 class="section">תמונות</h2>
@@ -520,12 +536,12 @@ const AGENTS=[
 ];
 
 // ===== nav =====
-const tabs=[{id:'new',label:'שיעור חדש'},{id:'library',label:'ספרייה'},{id:'images',label:'תמונות'},{id:'voice',label:'פרופיל הקול'},{id:'settings',label:'הגדרות'}];
+const tabs=[{id:'new',label:'שיעור חדש'},{id:'library',label:'ספרייה'},{id:'source',label:'חומרי גלם'},{id:'images',label:'תמונות'},{id:'voice',label:'פרופיל הקול'},{id:'settings',label:'הגדרות'}];
 const nav=document.getElementById('nav');
 tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
 function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new')checkKey();
+  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new')checkKey();if(id==='source'&&typeof renderSource==='function')renderSource();
   try{const a=document.querySelector('nav button.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
 
 document.querySelectorAll('#lenSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#lenSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');lenChoice=b.dataset.len});
@@ -1181,6 +1197,8 @@ const CHAT_TOOLS=[
  {name:'read_folder_file',description:'קריאת טקסט מקובץ בתיקייה המחוברת לפי שם/נתיב (Word ו‑טקסט בלבד). מחזיר את התוכן.',input_schema:{type:'object',properties:{query:{type:'string',description:'שם או נתיב הקובץ'}},required:['query']}},
  {name:'save_to_folder',description:'שמירת שיעור קיים מהספרייה כקובץ Markdown לתת‑התיקייה "תוצרים" בתיקייה המחוברת.',input_schema:{type:'object',properties:{query:{type:'string',description:'מספר/שם/מזהה השיעור'}},required:['query']}},
  {name:'build_lesson_from_folder',description:'בניית שיעור שלם דרך כל ארבעת הסוכנים (חולץ→אדריכל→קולן→עורך) מתוך קבצים בתיקייה המחוברת — כולל PDF ותמונות. תחילה קראי ל-list_folder_files כדי לראות את הקבצים ולבחור נתיבים, ואז קראי לכלי הזה עם רשימת הנתיבים. התוצאה נשמרת בספרייה.',input_schema:{type:'object',properties:{files:{type:'array',items:{type:'string'},description:'רשימת נתיבי/שמות קבצים מהתיקייה לבנות מהם'},name:{type:'string',description:'שם השיעור'},length:{type:'string',enum:['short','medium','deep']}},required:['files','name']}},
+ {name:'list_source_lessons',description:'רשימת שיעורי המקור המסודרים בתיקיית "קבצי מקור" (כל שיעור ומספר הקבצים שלו). דורש שעופרה הריצה "סדרי את חומרי הגלם".',input_schema:{type:'object',properties:{}}},
+ {name:'build_lesson_from_source',description:'בניית שיעור שלם דרך כל ארבעת הסוכנים מתוך כל קבצי המקור של שיעור מסוים בתיקיית "קבצי מקור" (למשל "שיעור 1"). זו הדרך המומלצת לבנות מחומרי הגלם המסודרים. נשמר בספרייה.',input_schema:{type:'object',properties:{lesson:{type:'string',description:'מספר השיעור או שם תיקיית השיעור (למשל "1" או "שיעור 01")'},name:{type:'string',description:'שם לשיעור (אופציונלי)'},length:{type:'string',enum:['short','medium','deep']}},required:['lesson']}},
 ];
 function findLesson(q){const lib=loadLib();if(!q&&q!==0)return null;q=(''+q).trim().toLowerCase();
   return lib.find(l=>l.id===q)||lib.find(l=>(''+l.num).toLowerCase()===q)||lib.find(l=>(l.name||'').toLowerCase().includes(q))||lib.find(l=>(''+l.num).includes(q));}
@@ -1227,12 +1245,29 @@ async function chatToolRun(name,a){a=a||{};
     let final;try{final=await runPipelineHeadless(a.name||'שיעור',a.length||'medium',docContent,textBlocks);}catch(e){return 'שגיאה בבניית השיעור: '+e.message;}
     const lib=loadLib();lib.push({id:uid(),num:'',name:a.name||'שיעור ללא שם',body:final,slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);try{renderLib();}catch(e){}
     return 'נבנה שיעור מלא דרך ארבעת הסוכנים מתוך '+chosen.length+' קבצים, ונשמר בספרייה כ"'+(a.name||'שיעור')+'". אפשר לפתוח אותו בלשונית "ספרייה".';}
+  if(name==='list_source_lessons'){if(!folderHandle)return 'אין תיקייה מחוברת.';
+    let L;try{L=await fsaListSource();}catch(e){return 'שגיאה: '+e.message;}
+    if(!L.length)return 'אין עדיין תיקיית "קבצי מקור". בקשי מעופרה ללחוץ "🗂️ סדרי את חומרי הגלם" בלשונית "חומרי גלם".';
+    return JSON.stringify(L.map(x=>({lesson:x.lesson,files:x.files.length})));}
+  if(name==='build_lesson_from_source'){if(!folderHandle)return 'אין תיקייה מחוברת.';
+    let L;try{L=await fsaListSource();}catch(e){return 'שגיאה: '+e.message;}
+    if(!L.length)return 'אין עדיין קבצי מקור מסודרים. בקשי מעופרה ללחוץ "סדרי את חומרי הגלם".';
+    const raw=(''+(a.lesson||'')).trim();const q=raw.toLowerCase().replace(/\s+/g,'');const nm=raw.match(/\d+/);
+    let hit=L.find(x=>x.lesson.toLowerCase().replace(/\s+/g,'')===q)||(nm&&L.find(x=>{const xn=x.lesson.match(/\d+/);return xn&&+xn[0]===+nm[0];}))||L.find(x=>x.lesson.toLowerCase().includes(q));
+    if(!hit)return 'לא נמצא שיעור מתאים בקבצי המקור. קראי ל-list_source_lessons לרשימה.';
+    if(!hit.files.length)return 'אין קבצים נתמכים בשיעור "'+hit.lesson+'".';
+    const inp=await readPipelineInputs(hit.files);
+    if(!inp.docContent.length&&!inp.textBlocks.length)return 'לא הצלחתי לקרוא את קבצי השיעור.';
+    let final;try{final=await runPipelineHeadless(a.name||hit.lesson,a.length||'medium',inp.docContent,inp.textBlocks);}catch(e){return 'שגיאה בבנייה: '+e.message;}
+    const num=(hit.lesson.match(/\d+/)||[''])[0];const lib=loadLib();lib.push({id:uid(),num:String(+num||''),name:a.name||hit.lesson,body:final,slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);try{renderLib();}catch(e){}
+    return 'נבנה שיעור מלא דרך ארבעת הסוכנים מ-'+hit.lesson+' ('+hit.files.length+' קבצי מקור), בקול שלך, ונשמר בספרייה.';}
   return 'כלי לא מוכר.';}
-function actionLabel(n){return ({list_lessons:'מעיינת בספרייה',read_lesson:'קוראת שיעור',search_lessons:'מחפשת',draft_lesson:'כותבת שיעור…',revise_lesson:'מתקנת שיעור…',make_slides:'בונה מצגת…',present_lesson:'פותחת הצגה',generate_image:'מציירת…',add_voice_example:'מעדכנת את הקול',open_section:'עוברת לשונית',list_folder_files:'מעיינת בתיקייה',read_folder_file:'קוראת קובץ מהתיקייה',save_to_folder:'שומרת לתיקייה',build_lesson_from_folder:'בונה שיעור דרך הסוכנים… (כדקה־שתיים)'})[n]||n;}
+function actionLabel(n){return ({list_lessons:'מעיינת בספרייה',read_lesson:'קוראת שיעור',search_lessons:'מחפשת',draft_lesson:'כותבת שיעור…',revise_lesson:'מתקנת שיעור…',make_slides:'בונה מצגת…',present_lesson:'פותחת הצגה',generate_image:'מציירת…',add_voice_example:'מעדכנת את הקול',open_section:'עוברת לשונית',list_folder_files:'מעיינת בתיקייה',read_folder_file:'קוראת קובץ מהתיקייה',save_to_folder:'שומרת לתיקייה',build_lesson_from_folder:'בונה שיעור דרך הסוכנים… (כדקה־שתיים)',list_source_lessons:'מעיינת בחומרי הגלם',build_lesson_from_source:'בונה שיעור מהמקור דרך הסוכנים… (כדקה־שתיים)'})[n]||n;}
 function chatSystem(){return `את "עוזרת ההוראה" של עופרה במערכת "שפת הנשמה". חכמה, חמה, מדויקת — כמו עוזרת הוראה אישית מצוינת. את מכירה את המותג והקול (למטה).
 תפקידך: לעזור לעופרה לתכנן, לחשוב יחד, לשפר, לארגן, ולבצע פעולות במערכת. דברי בעברית, קצר וברור ובחום.
 כשמבקשים פעולה (לכתוב/לתקן שיעור, ליצור מצגת/תמונה, להציג) — בצעי דרך הכלים ואז דווחי בקצרה מה עשית. כשמבקשים תוכן — כתבי בקול של שפת הנשמה. אל תמציאי שיעורים — בדקי עם הכלים. אל תכתבי תשובות ארוכות מדי.
 אם עופרה חיברה תיקיית עבודה — את יכולה לעיין בקבצים שבה (list_folder_files), לקרוא קובץ Word/טקסט (read_folder_file), ולשמור שיעור מהספרייה לתיקייה (save_to_folder). לבניית שיעור שלם מקבצים בתיקייה (כולל PDF ותמונות) דרך כל ארבעת הסוכנים — קראי תחילה ל-list_folder_files כדי לבחור את הקבצים הנכונים, ואז ל-build_lesson_from_folder עם רשימת הנתיבים ושם לשיעור. זו הדרך הנכונה לבנות "לפי הסוכנים", לא draft_lesson.
+אם עופרה סידרה את חומרי הגלם (תיקיית "קבצי מקור" לפי שיעורים) — לבקשה כמו "קחי את שיעור 1 והפעילי את כל הסוכנים" השתמשי ב-build_lesson_from_source עם מספר/שם השיעור (אפשר לראות מה קיים עם list_source_lessons). זו הדרך המועדפת לבנות מחומרי הגלם.
 
 — פרופיל הקול —
 `+systemBase();}
@@ -1294,7 +1329,16 @@ const FOLDER_CSS=`
 .fmodal-body .frow:hover{background:var(--paper)}
 .fmodal-body .fn{flex:1;font-weight:500}
 .fmodal-body .fp{color:var(--ink2);font-size:.78rem;direction:ltr}
-.fmodal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:var(--paper)}`;
+.fmodal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:var(--paper)}
+.src-card{background:var(--cream);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.src-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.src-head h4{flex:1;font-family:'Frank Ruhl Libre';font-size:1.15rem;font-weight:500}
+.src-status{font-size:.78rem;padding:3px 11px;border-radius:20px;background:var(--sand);color:var(--ink2)}
+.src-status.ready{background:var(--rose-soft);color:var(--copper)}
+.src-files{display:flex;flex-direction:column;gap:3px;margin:8px 0 12px}
+.src-file{font-size:.9rem;color:var(--ink2);display:flex;align-items:center;gap:7px}
+.src-file .tag{font-size:.72rem;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:1px 8px;color:var(--olive)}
+.src-empty{color:var(--ink2);font-size:.88rem}`;
 // אחסון ה‑handle ב‑IndexedDB כדי שהחיבור יישמר בין פתיחות
 const idbFolder=(()=>{const DB='sn-fsa',ST='handles';
   function open(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(ST);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
@@ -1330,6 +1374,84 @@ async function runPipelineHeadless(name,len,docContent,textBlocks){
   const draft=await callClaude(sys+'\n\n'+AGENTS[2].inst,[{type:'text',text:'שלד השיעור:\n\n'+skeleton}],AGENTS[2].max,null);
   const final=await callClaude(sys+'\n\n'+AGENTS[3].inst,[{type:'text',text:'טיוטת השיעור:\n\n'+draft}],AGENTS[3].max,null);
   return final;}
+// ===== חומרי גלם: סריקה, סידור פיזי, תצוגה, ובנייה =====
+async function fsaListFull(handle,base='',acc=[],depth=0,parentName=''){if(depth>5)return acc;
+  for await(const [name,h] of handle.entries()){if(name.startsWith('.'))continue;
+    if(h.kind==='directory'){if(['קבצי מקור','תוצרים','תוצר'].includes(name))continue;await fsaListFull(h,base?base+'/'+name:name,acc,depth+1,name);}
+    else{const ext=(name.split('.').pop()||'').toLowerCase();if(FOLDER_EXTS.includes(ext))acc.push({name,path:(base?base+'/'+name:name),ext,parentName});}}
+  return acc;}
+async function fsaCopyInto(srcPath,destDir,name){const sfh=await fsaGetFileHandle(srcPath);const f=await sfh.getFile();
+  const dfh=await destDir.getFileHandle(name,{create:true});const w=await dfh.createWritable();await w.write(await f.arrayBuffer());await w.close();}
+async function organizeSourceFiles(){const all=await fsaListFull(folderHandle);
+  const srcRoot=await folderHandle.getDirectoryHandle('קבצי מקור',{create:true});
+  let copied=0;const skipped=[];const lessons=new Set();
+  for(const file of all){const m=file.name.match(/שיעור\s*0*(\d+)/);
+    if(!m){skipped.push(file.name);continue;}
+    const n=String(m[1]).padStart(2,'0');const typeFolder=(file.parentName&&file.parentName!=='')?file.parentName:'כללי';
+    const lessonDir=await srcRoot.getDirectoryHandle('שיעור '+n,{create:true});
+    const typeDir=await lessonDir.getDirectoryHandle(typeFolder,{create:true});
+    let exists=false;try{await typeDir.getFileHandle(file.name);exists=true;}catch(e){}
+    if(!exists){try{await fsaCopyInto(file.path,typeDir,file.name);copied++;}catch(e){skipped.push(file.name+' (שגיאת העתקה)');continue;}}
+    lessons.add(n);}
+  return {copied,skipped,lessons:[...lessons].sort()};}
+async function fsaListSource(){let root;try{root=await folderHandle.getDirectoryHandle('קבצי מקור');}catch(e){return [];}
+  const lessons=[];
+  for await(const [lname,lh] of root.entries()){if(lh.kind!=='directory'||lname.startsWith('.'))continue;
+    const files=[];
+    async function walk(dir,base){for await(const [n,h] of dir.entries()){if(n.startsWith('.'))continue;
+      const p='קבצי מקור/'+lname+(base?'/'+base:'')+'/'+n;
+      if(h.kind==='file'){const ext=(n.split('.').pop()||'').toLowerCase();if(FOLDER_EXTS.includes(ext))files.push({name:n,path:p,ext,type:base||''});}
+      else if(h.kind==='directory'){await walk(h,base?base+'/'+n:n);}}}
+    await walk(lh,'');
+    lessons.push({lesson:lname,files});}
+  lessons.sort((a,b)=>a.lesson.localeCompare(b.lesson,'he',{numeric:true}));
+  return lessons;}
+async function readPipelineInputs(items){const docContent=[],textBlocks=[];
+  for(const it of items){try{const fh=await fsaGetFileHandle(it.path);const f=await fh.getFile();
+    if(it.ext==='pdf'){const d=await rURL(f);docContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:d.split(',')[1]}});}
+    else if(['png','jpg','jpeg','webp','gif'].includes(it.ext)){const d=await rURL(f);docContent.push({type:'image',source:{type:'base64',media_type:'image/'+(it.ext==='jpg'?'jpeg':it.ext),data:d.split(',')[1]}});}
+    else if(it.ext==='docx'){const buf=await rBuf(f);const r=await mammoth.extractRawText({arrayBuffer:buf});textBlocks.push('=== '+it.name+' ===\n'+r.value);}
+    else{const t=await rTxt(f);textBlocks.push('=== '+it.name+' ===\n'+t);}
+  }catch(e){}}
+  return {docContent,textBlocks};}
+async function runOrganizer(){
+  if(!FSA_SUPPORTED){toast('דרוש Chrome/Edge במחשב על כתובת האינטרנט');return;}
+  if(!folderHandle){toast('חברי תיקייה קודם');return;}
+  if(!(await fsaPerm(folderHandle,true))){toast('אין הרשאת כתיבה לתיקייה');return;}
+  const btn=document.getElementById('organizeBtn');const st=document.getElementById('sourceOrgStatus');
+  if(btn){btn.disabled=true;btn.textContent='מסדר…';}if(st)st.textContent='סורק ומעתיק… (לא מוחק כלום)';
+  try{const res=await organizeSourceFiles();
+    if(st)st.innerHTML='<span style="color:var(--green)">סודרו '+res.copied+' קבצים ל-'+res.lessons.length+' שיעורים.</span>'+(res.skipped.length?(' '+res.skipped.length+' קבצים בלי "שיעור N" לא שויכו (אפשר לשייך ידנית).'):'');
+    renderSource();
+  }catch(e){if(st)st.textContent='שגיאה: '+e.message;}
+  finally{if(btn){btn.disabled=false;btn.textContent='🗂️ סדרי את חומרי הגלם';}}}
+async function renderSource(){const el=document.getElementById('sourceList');if(!el)return;
+  if(!FSA_SUPPORTED){el.innerHTML='<p class="src-empty">דף זה דורש Chrome/Edge במחשב, על כתובת האינטרנט (Vercel).</p>';return;}
+  if(!folderHandle){el.innerHTML='<p class="src-empty">חברי תיקייה (🔗) כדי לראות את חומרי הגלם.</p>';return;}
+  el.innerHTML='<p class="src-empty">טוען…</p>';
+  let lessons;try{lessons=await fsaListSource();}catch(e){el.innerHTML='<p class="src-empty">שגיאה: '+esc(e.message)+'</p>';return;}
+  if(!lessons.length){el.innerHTML='<p class="src-empty">עוד אין תיקיית "קבצי מקור". לחצי <b>🗂️ סדרי את חומרי הגלם</b> כדי לבנות אותה מהקבצים שלך.</p>';return;}
+  const libNums=new Set(loadLib().map(l=>(''+l.num).replace(/\D/g,'')).filter(Boolean));
+  el.innerHTML=lessons.map(L=>{const num=(L.lesson.match(/\d+/)||[''])[0];const ready=num&&libNums.has(String(+num));
+    const rows=L.files.length?L.files.map(f=>'<div class="src-file">📄 <span>'+esc(f.name)+'</span>'+(f.type?'<span class="tag">'+esc(f.type)+'</span>':'')+'</div>').join(''):'<div class="src-empty">אין קבצים נתמכים</div>';
+    return '<div class="src-card"><div class="src-head"><h4>'+esc(L.lesson)+'</h4><span class="src-status'+(ready?' ready':'')+'">'+(ready?'מוכן':'גלם')+'</span></div>'+
+      '<div class="src-files">'+rows+'</div>'+
+      '<div class="actions"><button class="btn dark src-build" data-lesson="'+esc(L.lesson)+'" data-num="'+num+'"'+(L.files.length?'':' disabled')+'>✨ בני שיעור עם הסוכנים</button></div></div>';}).join('');
+  el.querySelectorAll('.src-build').forEach(b=>b.onclick=()=>buildFromSourceUI(b.dataset.lesson,b.dataset.num,b));}
+async function buildFromSourceUI(lessonFolder,num,btn){
+  if(!folderHandle){toast('אין תיקייה מחוברת');return;}
+  let lessons;try{lessons=await fsaListSource();}catch(e){toast('שגיאה: '+e.message);return;}
+  const L=lessons.find(x=>x.lesson===lessonFolder);
+  if(!L||!L.files.length){toast('אין קבצים בשיעור הזה');return;}
+  const all=document.querySelectorAll('.src-build');all.forEach(b=>b.disabled=true);
+  const old=btn?btn.textContent:'';if(btn)btn.textContent='בונה דרך הסוכנים… (כדקה-שתיים) ⏳';
+  try{const {docContent,textBlocks}=await readPipelineInputs(L.files);
+    if(!docContent.length&&!textBlocks.length){toast('לא הצלחתי לקרוא את הקבצים');return;}
+    const final=await runPipelineHeadless(lessonFolder,'medium',docContent,textBlocks);
+    const lib=loadLib();lib.push({id:uid(),num:String(+num||''),name:lessonFolder,body:final,slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);
+    toast('השיעור נבנה ונשמר בספרייה 🌳','good');go('library');
+  }catch(e){toast('שגיאה בבנייה: '+e.message);}
+  finally{all.forEach(b=>b.disabled=false);if(btn)btn.textContent=old;}}
 function updateFolderStatus(){
   const fs=document.getElementById('folderStatus');if(fs)fs.textContent=folderHandle?('🔗 מחוברת: '+folderHandle.name):'';
   const st=document.getElementById('fsaStatus');if(st)st.innerHTML=folderHandle?('<span style="color:var(--green)">מחוברת לתיקייה: <b>'+esc(folderHandle.name)+'</b> · העוזרת יכולה לקרוא ולשמור אליה.</span>'):'אין תיקייה מחוברת עדיין.';}
@@ -1365,6 +1487,9 @@ function initFolder(){
   const sf=document.getElementById('settingsForgetFolder');if(sf)sf.onclick=forgetFolder;
   const un=document.getElementById('fsaUnsupported'),ac=document.getElementById('fsaActions');
   if(!FSA_SUPPORTED){if(un)un.style.display='';if(ac)ac.style.display='none';}
+  const scb=document.getElementById('sourceConnectBtn');if(scb)scb.onclick=async()=>{await connectFolder();renderSource();};
+  const ob=document.getElementById('organizeBtn');if(ob)ob.onclick=runOrganizer;
+  const srb=document.getElementById('sourceRefreshBtn');if(srb)srb.onclick=renderSource;
   folderLoadSaved();updateFolderStatus();}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
