@@ -1,0 +1,22 @@
+{
+  "name": "שפת הנשמה — עופרה אינוז",
+  "short_name": "שפת הנשמה",
+  "description": "המערכת שהופכת קבצי גלם לשיעור שלם בקול שלך — מערכי שיעור, מצגות, תרגילים, שיעורי בית וסיכומי וואטסאפ.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "shfat-hanshama",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#FAF5EC",
+  "theme_color": "#41372C",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שפת הנשמה</title>
+<link rel="icon" href="assets/logo.png">
+<!-- התקנה כאפליקציה (PWA) — מחשב ונייד -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#41372C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="שפת הנשמה">
+<link rel="apple-touch-icon" href="assets/icon-maskable-192.png">
+<script src="logo-data.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --cream:#FAF5EC; --sand:#EFE3D0; --beige:#E7D9C0; --terra:#D2A284;
+    --ink:#41372C; --ink2:#6E6051; --copper:#A9743F; --gold:#BE9C50; --gold-soft:#E9D8B2;
+    --rose:#C58E86; --rose-soft:#EBD6CF; --olive:#7E7B56;
+    --line:#E7D9C2; --line2:#F1E8D7; --paper:#FFFDF8;
+    --green:#6E8A55; --green-bg:#E4ECD8; --red:#B98683; --red-bg:#F4E7E5;
+    --shadow:0 10px 40px rgba(65,55,44,.10); --shadow-sm:0 4px 16px rgba(65,55,44,.07);
+    --r:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Heebo',sans-serif;color:var(--ink);line-height:1.75;min-height:100vh;-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(90% 55% at 50% -8%, #FCF1DC 0%, var(--cream) 48%, #F4ECDD 100%) fixed,
+      var(--cream);}
+  h1,h2,h3,h4,.serif{font-family:'Frank Ruhl Libre',serif;font-weight:500;line-height:1.35}
+  a{color:var(--copper)} a:hover{text-decoration:underline}
+  button{font-family:'Heebo',sans-serif}
+  ::selection{background:var(--gold-soft)}
+
+  header{text-align:center;padding:46px 20px 22px;position:relative}
+  .mark{width:120px;height:120px;margin:0 auto 6px;display:block;object-fit:contain;animation:breathe 6.5s ease-in-out infinite;filter:drop-shadow(0 6px 22px rgba(169,116,63,.22))}
+  @keyframes breathe{0%,100%{opacity:.94;transform:scale(1)}50%{opacity:1;transform:scale(1.035)}}
+  @keyframes turn{to{transform:rotate(360deg)}}
+  header h1{font-size:2.7rem;font-weight:700;letter-spacing:1px}
+  header .tag{color:var(--olive);font-size:1rem;margin-top:2px;font-weight:300;letter-spacing:.4px}
+
+  nav{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;padding:14px;position:sticky;top:0;z-index:40;
+    background:rgba(250,245,236,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  nav button{font-size:.95rem;font-weight:500;background:transparent;border:1px solid transparent;color:var(--ink2);
+    padding:9px 20px;border-radius:30px;cursor:pointer;transition:.22s}
+  nav button:hover{background:#ffffff9c;color:var(--ink)}
+  nav button.active{background:var(--ink);color:var(--cream);box-shadow:var(--shadow-sm)}
+
+  main{max-width:880px;margin:0 auto;padding:30px 22px 110px}
+  .tab{display:none}.tab.active{display:block;animation:fadeUp .5s cubic-bezier(.2,.7,.3,1)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  .section-head{margin-bottom:26px}
+  h2.section{font-size:2rem;font-weight:700}
+  .lead{font-size:1.1rem;color:var(--ink2);font-weight:300;margin-top:4px;max-width:64ch}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:26px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
+  .card.tight{padding:20px 24px}
+  .card h3{font-size:1.2rem;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .step-badge{width:28px;height:28px;flex:none;border-radius:50%;background:var(--rose-soft);color:var(--copper);
+    display:grid;place-items:center;font-weight:700;font-size:.9rem;font-family:'Frank Ruhl Libre'}
+
+  .drop{border:2px dashed var(--gold-soft);border-radius:16px;padding:38px 20px;text-align:center;cursor:pointer;transition:.25s;background:var(--cream)}
+  .drop:hover,.drop.over{border-color:var(--copper);background:#fffdf6;transform:translateY(-1px)}
+  .drop .ico{font-size:2.3rem;transition:.3s}.drop.over .ico{transform:scale(1.18)}
+  .drop .t{font-weight:500;margin-top:4px}.drop p{color:var(--ink2);font-weight:300;margin-top:4px;font-size:.92rem}
+  .filelist{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .fileitem{display:flex;align-items:center;gap:10px;background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:.93rem;animation:fadeUp .3s}
+  .fileitem .tag{color:var(--olive);font-size:.76rem;background:var(--paper);padding:2px 9px;border-radius:20px;border:1px solid var(--line)}
+  .fileitem .x{margin-inline-start:auto;cursor:pointer;color:var(--red);border:none;background:none;font-size:1.2rem;line-height:1;transition:.2s}
+  .fileitem .x:hover{transform:scale(1.2)}
+
+  .field-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input.inp,select.inp,textarea.inp{font-family:'Heebo';font-size:.96rem;padding:11px 15px;border:1px solid var(--line);
+    border-radius:12px;background:var(--paper);color:var(--ink);transition:.2s;width:100%}
+  input.inp:focus,select.inp:focus,textarea.inp:focus{outline:none;border-color:var(--copper);box-shadow:0 0 0 3px var(--rose-soft)}
+  .num{max-width:96px}.grow{flex:1;min-width:200px}
+  label.lbl{display:block;font-weight:500;margin:16px 0 6px}
+  .hint{font-size:.86rem;color:var(--ink2);font-weight:300;margin-top:6px;line-height:1.6}
+  .seg{display:inline-flex;background:var(--cream);border:1px solid var(--line);border-radius:30px;padding:4px;gap:2px;flex-wrap:wrap}
+  .seg button{border:none;background:transparent;color:var(--ink2);font-size:.9rem;font-weight:500;padding:7px 16px;border-radius:24px;cursor:pointer;transition:.2s}
+  .seg button.on{background:var(--ink);color:var(--cream)}
+
+  .btn{font-size:.95rem;font-weight:500;border:1px solid var(--line);background:var(--cream);color:var(--ink);
+    border-radius:12px;padding:11px 18px;cursor:pointer;transition:.2s}
+  .btn:hover{background:var(--copper);color:#fff;border-color:var(--copper)}
+  .btn.ghost:hover{background:var(--sand);color:var(--ink);border-color:var(--line)}
+  .btn.dark{background:var(--ink);color:var(--cream);border-color:var(--ink)}.btn.dark:hover{background:var(--copper);border-color:var(--copper)}
+  .btn-primary{display:block;width:100%;font-size:1.12rem;font-weight:600;background:var(--ink);color:var(--cream);
+    border:none;border-radius:14px;padding:16px;cursor:pointer;transition:.22s;letter-spacing:.3px}
+  .btn-primary:hover:not(:disabled){background:var(--copper);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn-primary:disabled{opacity:.45;cursor:not-allowed}
+
+  .pipe{display:none;margin-top:4px}.pipe.show{display:block;animation:fadeUp .4s}
+  .pstep{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line2)}
+  .pstep:last-child{border-bottom:none}
+  .pstep .dot{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:700;
+    font-family:'Frank Ruhl Libre';background:#EFE6D5;color:var(--ink2);transition:.35s;font-size:.95rem}
+  .pstep.run .dot{background:var(--gold);color:#fff;animation:ring 1.7s infinite}
+  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(190,156,80,.45)}70%{box-shadow:0 0 0 12px rgba(190,156,80,0)}100%{box-shadow:0 0 0 0 rgba(190,156,80,0)}}
+  .pstep.done .dot{background:var(--green-bg);color:var(--green)}.pstep.err .dot{background:var(--red-bg);color:var(--red)}
+  .pstep h4{font-size:1.06rem;font-weight:500}.pstep .desc{font-size:.85rem;color:var(--ink2);font-weight:300}
+  .pstep .stat{font-size:.85rem;color:var(--ink);margin-top:3px}
+  .pstep .live{display:none;margin-top:8px;background:var(--cream);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-size:.85rem;white-space:pre-wrap;max-height:200px;overflow:auto;color:var(--ink2);line-height:1.65}
+  .pstep .live.show{display:block}
+  .pstep .toggle{font-size:.82rem;color:var(--copper);cursor:pointer;margin-top:5px;display:none}.pstep .toggle.show{display:inline-block}
+
+  .lesson{display:none;margin-top:24px}.lesson.show{display:block;animation:fadeUp .5s}
+  .doc{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:42px 48px;box-shadow:var(--shadow);max-height:640px;overflow:auto}
+  .doc.editing{padding:0}
+  .doc textarea{width:100%;border:none;min-height:560px;padding:34px 40px;font-family:'Heebo';font-size:1rem;line-height:1.9;resize:vertical;background:transparent;color:var(--ink)}
+  .doc textarea:focus{outline:none}
+  .md h1{font-size:1.95rem;font-weight:700;margin:0 0 6px;color:var(--ink)}
+  .md h2{font-size:1.32rem;font-weight:600;margin:28px 0 8px;color:var(--copper);border-bottom:1px solid var(--line2);padding-bottom:6px}
+  .md h3{font-size:1.12rem;font-weight:500;margin:18px 0 6px;color:var(--ink)}
+  .md p{margin:10px 0}.md strong{font-weight:600}.md em{color:var(--rose);font-style:normal}
+  .md ul,.md ol{margin:8px 22px 8px 0}.md li{margin:5px 0}
+  .md hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+  .md blockquote{border-inline-start:3px solid var(--rose-soft);margin:12px 0;padding:4px 16px;color:var(--ink2)}
+  .doc-stream{white-space:pre-wrap;font-size:1rem;line-height:1.85;color:var(--ink2)}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+  .meta-line{font-size:.85rem;color:var(--ink2);font-weight:300;margin-top:12px;display:flex;gap:14px;flex-wrap:wrap}
+
+  .banner{background:linear-gradient(180deg,#fff,var(--cream));border:1px solid var(--gold-soft);border-radius:14px;padding:16px 20px;font-size:.95rem;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start}
+  .err-box{background:var(--red-bg);color:#8c4f4c;border-radius:13px;padding:14px 18px;font-size:.92rem;margin-top:16px;display:none;align-items:center;gap:12px;flex-wrap:wrap}
+  .err-box.show{display:flex}.err-box .btn{padding:7px 14px;font-size:.86rem}
+
+  .libtools{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}.libtools input{flex:1;min-width:200px}
+  .lib-item{background:var(--paper);border:1px solid var(--line);border-radius:15px;padding:16px 20px;margin-bottom:12px;box-shadow:var(--shadow-sm);transition:.2s}
+  .lib-item:hover{box-shadow:var(--shadow)}
+  .lib-item .top{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .lib-item .n{width:38px;height:38px;flex:none;border-radius:50%;background:var(--rose-soft);display:grid;place-items:center;font-weight:700;font-family:'Frank Ruhl Libre';color:var(--copper)}
+  .lib-item .nm{font-family:'Frank Ruhl Libre';font-size:1.14rem;font-weight:500}
+  .lib-item .meta{font-size:.8rem;color:var(--ink2);font-weight:300}
+  .lib-item .row{margin-inline-start:auto;display:flex;gap:7px;flex-wrap:wrap}
+  .lib-item .row button{font-size:.83rem;border:1px solid var(--line);background:var(--cream);border-radius:9px;padding:7px 12px;cursor:pointer;transition:.2s}
+  .lib-item .row button:hover{background:var(--copper);color:#fff;border-color:var(--copper)}
+  .lib-item .body{display:none;margin-top:16px;background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:24px 28px;max-height:460px;overflow:auto}
+  .lib-item .body.show{display:block;animation:fadeUp .3s}
+  .empty{text-align:center;color:var(--ink2);font-weight:300;padding:48px 0;font-size:1.05rem}
+  .empty .big{font-size:2rem;display:block;margin-bottom:8px;opacity:.7}
+  .chip{display:inline-block;background:var(--rose-soft);color:var(--copper);border-radius:20px;padding:5px 14px;font-size:.88rem;margin:3px}
+
+  /* images */
+  .imgwrap{margin-top:18px;text-align:center}
+  .imgwrap img{max-width:100%;border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+  .imgwrap .ph{padding:60px 20px;background:var(--cream);border:1px dashed var(--gold-soft);border-radius:14px;color:var(--ink2);font-weight:300}
+  .imggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:16px}
+  .imggrid img{width:100%;border-radius:10px;cursor:pointer;border:1px solid var(--line)}
+
+  /* presenter */
+  #presenter{position:fixed;inset:0;z-index:200;background:var(--cream);display:none;flex-direction:column;padding:22px}
+  #presenter.show{display:flex;animation:fadeUp .3s}
+  .pres-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .pres-top .clock{font-family:'Frank Ruhl Libre';font-size:1.5rem;color:var(--ink)}
+  .pres-top .count{color:var(--ink2);font-size:.95rem}
+  .pres-top .sp{flex:1}
+  .pres-main{flex:1;display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-top:14px;min-height:0}
+  @media(max-width:760px){.pres-main{grid-template-columns:1fr}}
+  .pres-slide{background:var(--paper);border:1px solid var(--line);border-radius:18px;display:flex;align-items:center;justify-content:center;text-align:center;padding:5%;box-shadow:var(--shadow);overflow:auto}
+  .pres-slide .big{font-family:'Frank Ruhl Libre';font-size:2.4rem;line-height:1.4;color:var(--ink)}
+  .pres-side{display:flex;flex-direction:column;gap:14px;min-height:0}
+  .pres-notes{flex:1;background:var(--ink);color:var(--cream);border-radius:16px;padding:22px 24px;overflow:auto;font-size:1.12rem;line-height:1.7}
+  .pres-notes .lab{font-family:'Frank Ruhl Libre';color:var(--gold-soft);font-size:.9rem;margin-bottom:8px}
+  .pres-next{background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink2);font-size:.95rem}
+  .pres-next .lab{font-size:.8rem;color:var(--olive);margin-bottom:4px}
+  .pres-ctrl{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .pres-ctrl button{font-size:.95rem}
+  .nav-btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font-size:1.3rem;cursor:pointer;color:var(--ink)}
+  .nav-btn:hover{background:var(--copper);color:#fff;border-color:var(--copper)}
+
+  #toasts{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center}
+  .toast{background:var(--ink);color:var(--cream);padding:11px 22px;border-radius:30px;font-size:.92rem;box-shadow:var(--shadow);animation:toastIn .3s}
+  .toast.good{background:var(--green)}
+  @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .spinner{width:15px;height:15px;border:2px solid #fff5;border-top-color:#fff;border-radius:50%;display:inline-block;animation:turn .7s linear infinite;vertical-align:-2px}
+  footer{text-align:center;color:var(--ink2);font-size:.83rem;font-weight:300;padding:30px}
+  @media(max-width:600px){.doc{padding:28px 22px}.doc textarea{padding:24px 22px}main{padding:24px 16px 90px}}
+  /* ===== רספונסיביות מלאה — נייד / טאבלט / כל גודל מסך ===== */
+  html,body{max-width:100%;overflow-x:hidden}
+  img,video,svg{max-width:100%}
+  @media(max-width:900px){
+    main{padding:26px 18px 96px}
+    .pres-main{grid-template-columns:1fr}
+  }
+  @media(max-width:760px){
+    .field-row,.actions,.seg,.libtools,.chat-sugs{flex-wrap:wrap}
+    .field-row input,.libtools input,.grow{min-width:0}
+    header{padding:34px 16px 16px}
+    .mark{width:90px;height:90px}
+    header h1{font-size:2rem}
+    header .tag{font-size:.92rem}
+    nav{padding:10px 6px;gap:4px}
+    nav button{padding:8px 14px;font-size:.9rem}
+    h2.section{font-size:1.6rem}
+    .lead{font-size:1rem}
+    .card{padding:20px 18px;border-radius:16px}
+    .card.tight{padding:16px 16px}
+    .actions .btn{flex:1 1 auto;text-align:center}
+    .btn-primary{font-size:1.05rem;padding:14px}
+    .seg{width:100%;justify-content:center}
+    .pres-top{gap:7px}
+    .pres-top .clock{font-size:1.25rem}
+    .pres-top .btn{font-size:.85rem;padding:8px 12px}
+    .pres-notes{font-size:1rem;padding:16px 18px}
+    .pres-side{min-height:38vh}
+    .lib-item .top{flex-wrap:wrap}
+    .lib-item .row{margin-inline-start:0;width:100%}
+    .lib-item .row button{flex:1 1 auto}
+    .meta-line{font-size:.8rem}
+  }
+  @media(max-width:480px){
+    header h1{font-size:1.7rem}
+    .mark{width:74px;height:74px}
+    header .tag{font-size:.85rem}
+    nav{flex-wrap:nowrap;justify-content:flex-start;gap:5px;padding:8px 8px;overflow-x:auto;max-width:100vw;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    nav::-webkit-scrollbar{display:none}
+    nav button{flex:0 0 auto;font-size:.85rem;padding:8px 14px}
+    h2.section{font-size:1.45rem}
+    .card{padding:17px 15px}
+    .field-row{flex-direction:column;align-items:stretch}
+    .field-row .num{max-width:none}
+    .btn,.btn-primary{font-size:.95rem}
+    .doc{padding:22px 16px}
+    #presenter{padding:12px 10px}
+    .nav-btn{width:46px;height:46px;font-size:1.15rem}
+    .pres-ctrl{gap:6px;flex-wrap:wrap}
+    .pres-ctrl .hint{flex-basis:100%}
+    .imggrid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+    footer{font-size:.78rem;padding:24px 16px}
+  }
+  /* טאבלט לרוחב — מנצל את הרוחב */
+  @media(min-width:761px) and (max-width:1100px){main{max-width:92%}}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="mark" id="hdrLogo" alt="שפת הנשמה — פילוסופיה אנושית">
+  <h1>שפת הנשמה</h1>
+  <div class="tag">לגעת בנשמה לפני השכל</div>
+</header>
+
+<nav id="nav"></nav>
+
+<main>
+  <!-- ===== שיעור חדש ===== -->
+  <section class="tab active" id="tab-new">
+    <div class="section-head"><h2 class="section">שיעור חדש</h2>
+      <p class="lead">גוררי את הקבצים מהמורָה. ארבעת הסוכנים יכתבו שיעור בקול שלך — מול עינייך — ויכינו ממנו מצגת להצגה.</p></div>
+    <div id="noKey" class="banner" style="display:none"><span style="font-size:1.2rem">🔑</span>
+      <span>כדי להתחיל צריך מנוע בינה. אם את עובדת מקומית — הזיני מפתח ב<a href="#" onclick="go('settings');return false">הגדרות</a>. אם פרסת ל‑Vercel — ודאי שהגדרת שם את המפתח (ANTHROPIC_API_KEY) ולחצי <a href="#" onclick="go('settings');return false">🔌 בדיקת חיבור</a>. ההודעה תיעלם ברגע שהחיבור עובד.</span></div>
+
+    <div class="card"><h3><span class="step-badge">1</span> הקבצים</h3>
+      <div class="drop" id="drop"><div class="ico">🌿</div><div class="t">גררי לכאן קבצים, או לחצי לבחירה</div>
+        <p>PDF · וורד · תמונה · טקסט — כל מספר של קבצים</p></div>
+      <input type="file" id="fileInput" multiple hidden accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif">
+      <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+      <div class="folder-row">
+        <button class="btn" id="pickFolderBtn" type="button">📂 בחרי מתיקייה שלמה</button>
+        <button class="btn" id="connectFolderBtn" type="button" style="display:none">🔗 חברי תיקייה קבועה</button>
+        <span class="hint" id="folderStatus"></span></div>
+      <div class="filelist" id="filelist"></div></div>
+
+    <div class="card"><h3><span class="step-badge">2</span> פרטי השיעור</h3>
+      <div class="field-row"><input class="inp num" id="lessonNum" type="text" placeholder="מס'">
+        <input class="inp grow" id="lessonName" type="text" placeholder="שם השיעור (למשל: מבוא למבטולוגיה)"></div>
+      <label class="lbl">אורך ועומק</label>
+      <div class="seg" id="lenSeg"><button data-len="short">קצר · 3 תחנות</button>
+        <button data-len="medium" class="on">בינוני · 4 תחנות</button><button data-len="deep">עמוק · 5 תחנות</button></div></div>
+
+    <div class="card tight"><button class="btn-primary" id="runBtn" disabled>✨ בנה את השיעור</button>
+      <div class="err-box" id="err"></div></div>
+
+    <div class="pipe" id="pipe"><div class="card"><h3>הסוכנים עובדים…</h3><div id="pipeSteps"></div></div></div>
+
+    <div class="lesson" id="lesson"><div class="card"><h3>תוכנית השיעור</h3>
+      <div class="doc" id="doc"><div class="md" id="docMd"></div></div>
+      <div class="actions">
+        <button class="btn dark" id="packageBtn">📦 חבילת שיעור מלאה</button>
+        <button class="btn" id="presentBtn">🖥️ הצג מצגת</button>
+        <button class="btn" id="editBtn">✏️ עריכה</button>
+        <button class="btn" id="saveLesson">💾 שמירה</button>
+        <button class="btn" id="pdfLesson">⬇️ PDF</button>
+        <button class="btn" id="ttsLesson">🔊 הקראה</button>
+        <button class="btn" id="copyLesson">📋 העתקה</button>
+        <button class="btn" id="reviseLesson">🔁 תיקון בקול</button>
+      </div>
+      <div class="meta-line" id="metaLine"></div>
+      <div id="pkgArea"></div></div></div>
+  </section>
+
+  <!-- ===== ספרייה ===== -->
+  <section class="tab" id="tab-library">
+    <div class="section-head"><h2 class="section">ספריית השיעורים</h2>
+      <p class="lead">כל שיעור שבנית נשמר כאן, אצלך במחשב. אפשר לפתוח, להציג, להעתיק או להוריד.</p></div>
+    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"></div>
+    <div id="libList"></div>
+  </section>
+
+  <!-- ===== תמונות ===== -->
+  <section class="tab" id="tab-images">
+    <div class="section-head"><h2 class="section">תמונות</h2>
+      <p class="lead">תמונות בסגנון שפת הנשמה — לשקופיות, לאינסטגרם, לכל מקום. כל תמונה נוצרת בפלטה ובתחושה של המותג.</p></div>
+    <div class="card">
+      <label class="lbl">מה לצייר? (בעברית, פשוט)</label>
+      <textarea class="inp" id="imgPrompt" style="min-height:90px" placeholder="למשל: אישה יושבת בשקט מול חלון, אור רך נכנס, תחושת חזרה פנימה"></textarea>
+      <label class="lbl">פורמט</label>
+      <div class="seg" id="arSeg"><button data-ar="1024x1024" class="on">ריבוע · אינסטגרם</button>
+        <button data-ar="1280x720">רחב · שקופית</button><button data-ar="1024x1280">פוסט · 4:5</button></div>
+      <div class="actions"><button class="btn dark" id="genImgBtn">🎨 צור תמונה</button></div>
+      <p class="hint">המנוע חינמי לגמרי (Flux) — לא צריך מפתח. לפעמים לוקח כמה שניות.</p>
+      <div class="imgwrap" id="imgWrap"><div class="ph">כאן תופיע התמונה</div></div>
+      <div class="actions" id="imgActions" style="display:none">
+        <button class="btn" id="dlImg">⬇️ הורדה</button>
+        <button class="btn" id="regenImg">🔁 וריאציה נוספת</button></div>
+    </div>
+    <div class="card">
+      <h3>📸 פוסט לאינסטגרם</h3>
+      <p class="hint" style="margin-bottom:10px">משפט אחד שנוגע → פוסט מרובע ממותג, מוכן לאינסטגרם.</p>
+      <textarea class="inp" id="igQuote" style="min-height:90px" placeholder="למשל: כשהלב מתעורר — המציאות משתנה"></textarea>
+      <div class="actions"><button class="btn dark" id="igBtn">📸 צור פוסט</button></div>
+    </div>
+    <div class="card" id="galleryCard" style="display:none"><h3>נוצרו לאחרונה</h3><div class="imggrid" id="gallery"></div></div>
+  </section>
+
+  <!-- ===== פרופיל קול ===== -->
+  <section class="tab" id="tab-voice">
+    <div class="section-head"><h2 class="section">פרופיל הקול</h2>
+      <p class="lead">זה הלב. המערכת קוראת אותו לפני כל שיעור. ככל שתחדדי אותו — כל שיעור עתידי יישמע יותר כמוך.</p></div>
+    <div class="card">
+      <div style="margin-bottom:12px"><span class="chip">תדר</span><span class="chip">אור</span><span class="chip">רשימו</span>
+        <span class="chip">עולם פנימי</span><span class="chip">השתקפות</span><span class="chip">נשמה</span><span class="chip">מבט</span><span class="chip">השתוקקות</span></div>
+      <textarea class="inp" id="voiceText" style="min-height:380px;line-height:1.7"></textarea>
+      <div class="actions"><button class="btn dark" id="saveVoice">שמירת פרופיל הקול</button>
+        <button class="btn ghost" id="resetVoice">איפוס לברירת מחדל</button></div></div>
+    <div class="card"><h3>דוגמאות בקול שלך <span style="font-weight:300;font-size:.85rem;color:var(--ink2)">(אופציונלי — אבל עוצמתי)</span></h3>
+      <p class="hint" style="margin-bottom:10px">הדביקי קטעים שכתבת בעצמך, או משפטים מתוך שיעורים שיצאו בדיוק נכון. המערכת תלמד מהם ותחקה את הניסוח שלך. כל דוגמה בשורה נפרדת.</p>
+      <textarea class="inp" id="examplesText" style="min-height:170px;line-height:1.7" placeholder="למשל: יש בוקר שבו את עומדת מול הראי, ומשהו קטן בפנים לוחש שאת מחמיצה משהו…"></textarea>
+      <div class="actions"><button class="btn dark" id="saveExamples">שמירת הדוגמאות</button></div></div>
+  </section>
+
+  <!-- ===== הגדרות ===== -->
+  <section class="tab" id="tab-settings">
+    <div class="section-head"><h2 class="section">הגדרות</h2><p class="lead">פעם אחת. אחר כך אף פעם לא יוצאים מהמערכת.</p></div>
+    <div class="card" id="installCard"><h3>📲 התקנת המערכת כאפליקציה</h3>
+      <p class="hint" style="margin-bottom:12px">מתקינים פעם אחת — והמערכת נפתחת כאפליקציה אמיתית עם אייקון משלה, במסך מלא, בלי שורת כתובת. עובד במחשב (Windows · Linux · Mac) ובנייד (iPhone · Android).</p>
+      <div class="actions"><button class="btn dark" id="installBtn">📲 התקנת האפליקציה</button></div>
+      <div class="hint" id="installHint" style="margin-top:10px"></div></div>
+    <div class="card"><h3>מנוע הבינה</h3>
+      <p class="hint" id="keyHint">אם פרסת את המערכת ל‑Vercel והגדרת שם את המפתח — לא צריך כלום כאן. אם את מריצה מקומית — הזיני מפתח (נשמר רק אצלך במחשב).</p>
+      <label class="lbl">מפתח API (לשימוש מקומי)</label>
+      <input class="inp" id="apiKey" type="password" placeholder="sk-ant-...">
+      <p class="hint"><a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> → API Keys → Create Key.</p>
+      <label class="lbl">איכות המנוע</label>
+      <select class="inp" id="model"><option value="claude-opus-4-8">עופרה — האיכותי ביותר לקול (Opus) · מומלץ</option>
+        <option value="claude-sonnet-4-6">חסכוני ומהיר (Sonnet)</option></select>
+      <div class="actions"><button class="btn dark" id="saveSettings">שמירה</button>
+        <button class="btn" id="testConn">🔌 בדיקת חיבור</button></div>
+      <div class="hint" id="connResult" style="margin-top:10px"></div></div>
+    <div class="card"><h3>לוגו</h3>
+      <p class="hint" style="margin-bottom:10px">הלוגו מופיע בכותרת, במצגות, ב‑PDF ובכל תוצר. אפשר להעלות לוגו אחר (מומלץ PNG עם רקע שקוף).</p>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <img id="logoPreview" alt="" style="width:74px;height:74px;object-fit:contain;background:#fff7;border:1px solid var(--line);border-radius:12px;padding:6px">
+        <div class="actions"><button class="btn dark" id="uploadLogoBtn">⬆️ העלאת לוגו</button>
+          <button class="btn" id="resetLogoBtn">↩️ לוגו ברירת מחדל</button>
+          <input type="file" id="logoFile" hidden accept="image/png,image/jpeg,image/webp,image/svg+xml"></div>
+      </div></div>
+    <div class="card"><h3>עזרים חזותיים — וידאו ותמונות אמיתיים</h3>
+      <p class="hint">המערכת תמיד יוצרת תמונות בינה ואייקונים (חינם, ללא מפתח). כדי שתחפש גם <b>וידאו ותמונות אמיתיים מהרשת</b> (למשל סרטון מים פועם למושג "מים חיים") — הוסיפי מפתח Pexels חינמי.</p>
+      <label class="lbl">מפתח Pexels (אופציונלי)</label>
+      <input class="inp" id="pexelsKey" type="password" placeholder="(הדביקי כאן)">
+      <p class="hint">חינם ב‑<a href="https://www.pexels.com/api/" target="_blank">pexels.com/api</a> — הרשמה של דקה. בלי המפתח, השקופיות מקבלות תמונות בינה ואייקונים.</p>
+      <div class="actions"><button class="btn dark" id="savePexels">שמירה</button></div></div>
+    <div class="card"><h3>גיבוי מקומי</h3>
+      <p class="hint" style="margin-bottom:10px">שומר/טוען את כל הספרייה, הקול והדוגמאות בקובץ אחד.</p>
+      <div class="actions"><button class="btn" id="exportAll">⬇️ גיבוי הכול</button>
+        <button class="btn" id="importBtn">⬆️ טעינת גיבוי</button><input type="file" id="importFile" hidden accept=".json"></div></div>
+    <div class="card"><h3>תיקיית העבודה — חיבור לקבצים שלך</h3>
+      <p class="hint" style="margin-bottom:10px">חיבור התיקייה שבה את שומרת את קבצי השיעורים. כך, במקום להעלות מסמך-מסמך, את בוחרת מתוך התיקייה — ועוזרת ההוראה יכולה לקרוא ממנה ולשמור אליה תוצרים.</p>
+      <div id="fsaUnsupported" class="hint" style="display:none;color:var(--copper)">חיבור-קבוע נתמך ב‑<b>Chrome/Edge במחשב</b>, וכשמריצים את המערכת מכתובת אינטרנט (Vercel) או משרת מקומי — לא בפתיחה ישירה של הקובץ. בכל מצב אחר אפשר להשתמש ב‑<b>"בחרי מתיקייה שלמה"</b> בלשונית "שיעור חדש", שעובד תמיד.</p>
+      <div class="actions" id="fsaActions"><button class="btn dark" id="settingsConnectFolder" type="button">🔗 חברי תיקייה</button>
+        <button class="btn" id="settingsForgetFolder" type="button">✖ נתקי</button></div>
+      <p class="hint" id="fsaStatus" style="margin-top:10px"></p></div>
+    <div class="card"><h3>סנכרון ענן — ספרייה בכל המכשירים</h3>
+      <p class="hint">מאפשר לראות את אותה ספרייה בנייד ובמחשב. חינם דרך Supabase. <b>הקמה (פעם אחת):</b></p>
+      <ol class="hint" style="margin:8px 20px;line-height:1.9">
+        <li>נכנסים ל‑<a href="https://supabase.com" target="_blank">supabase.com</a> → New Project (חינם).</li>
+        <li>ב‑SQL Editor מריצים: <code style="background:var(--sand);padding:2px 6px;border-radius:5px;direction:ltr;display:inline-block">create table sn_library (id text primary key, data jsonb); alter table sn_library disable row level security;</code></li>
+        <li>Settings → API → מעתיקים <b>Project URL</b> ו‑<b>anon key</b> לכאן.</li>
+      </ol>
+      <label class="lbl">Project URL</label><input class="inp" id="sbUrl" type="text" placeholder="https://xxxx.supabase.co">
+      <label class="lbl">anon key</label><input class="inp" id="sbKey" type="password" placeholder="eyJ...">
+      <label class="lbl">שם משתמש לסנכרון</label><input class="inp" id="sbId" type="text" placeholder="ofra">
+      <div class="actions"><button class="btn dark" id="saveSb">שמירה</button>
+        <button class="btn" id="cloudPushBtn">⬆️ העלה לענן</button><button class="btn" id="cloudPullBtn">⬇️ הורד מהענן</button></div></div>
+  </section>
+</main>
+
+<!-- ===== מצב הצגה ===== -->
+<div id="presenter">
+  <div class="pres-top">
+    <span class="clock" id="presClock">00:00</span>
+    <button class="btn ghost" id="timerBtn">⏸︎</button>
+    <span class="count" id="presCount"></span>
+    <span class="sp"></span>
+    <button class="btn" id="audienceBtn">🔆 פתח מסך קהל</button>
+    <button class="btn" id="presExBtn">📝 תרגילים</button>
+    <button class="btn dark" id="pptxBtn">🖥️ PowerPoint</button>
+    <button class="btn" id="revealBtn">⬇️ HTML</button>
+    <button class="btn dark" id="closePres">סיום</button>
+  </div>
+  <div class="pres-main">
+    <div class="pres-slide"><div class="stage" id="presStage"></div></div>
+    <div class="pres-side">
+      <div class="pres-notes"><div class="lab">הערות דובר — רק את רואה · ניתן לערוך כאן<span id="notesSaved" style="float:left;font-size:.78rem;opacity:.8"></span></div><div id="presNotes" contenteditable="true" spellcheck="false" style="outline:none;min-height:40px"></div></div>
+      <div class="pres-next"><div class="lab">הבא בתור</div><div id="presNext"></div></div>
+    </div>
+  </div>
+  <div class="pres-ctrl">
+    <button class="nav-btn" id="prevBtn" title="הקודם">›</button>
+    <button class="nav-btn" id="nextBtn" title="הבא">‹</button>
+    <button class="btn" id="slideImgBtn">🎨 תמונה לשקופית</button>
+    <button class="btn" id="autoMediaBtn">✨ עזרים אוטומטיים</button>
+    <span class="hint" style="margin:0">חצים מעבירים שקופיות · "מסך מלא" במסך הקהל</span>
+  </div>
+</div>
+
+<footer>שפת הנשמה · עופרה אינוז — קפסולה אלוקית<br><span style="opacity:.75">לחזור להקשיב פנימה 🌿</span></footer>
+<div id="toasts"></div>
+
+<script>
+try{ if(window.marked) marked.setOptions({breaks:true,gfm:true}); }catch(e){}
+function mdRender(s){ if(window.marked){try{return marked.parse(s)}catch(e){}}
+  return esc(s).replace(/^### (.*)$/gm,'<h3>$1</h3>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>').replace(/^---$/gm,'<hr>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'); }
+
+// ===== storage =====
+const LS={key:'sn-apikey',model:'sn-model',voice:'sn-voice',ex:'sn-examples',lib:'sn-lessons',gal:'sn-gallery'};
+const getKey=()=>localStorage.getItem(LS.key)||'';
+const getModel=()=>localStorage.getItem(LS.model)||'claude-opus-4-8';
+const getEx=()=>localStorage.getItem(LS.ex)||'';
+
+const DEFAULT_VOICE=`את המורָה של "שפת הנשמה". את לא מלמדת ידע רוחני — את מחזירה אישה פנימה ומדליקה בה אור, בעדינות.
+את לא גורו, לא מטיפה, לא רבנית, לא מיסטיקנית, לא ניו‑אייג', לא מסחרית.
+את מעוררת השתוקקות — לא מוכרת ידע. שאישה תרגיש: "מישהי סוף סוף רואה את מה שאני מרגישה מבפנים".
+
+הקהל: נשים שריקות למרות שיש להן הכל, חיות על אוטומט, מחפשות משמעות.
+
+עקרונות התוכן (ברקע תמיד): המוח כאנטנה — לא חושב לבד אלא קולט אורות וגילויים · העולם הפנימי
+מחזיק את האורות, והמציאות מוקרנת בהתאם · הכל מקודד בכוח האותיות והמספרים · הלב מזהה אמת,
+ולומדים את השפה דרך הלב · גוף ונפש משפיעים על מחשבה‑דיבור‑מעשה · רוחניות וארציות תמיד נפגשות —
+לעבור עם הידע הנשמתי דרך החומר.
+
+אוצר המילים: תדר, אור, רשימו, עולם פנימי, השתקפות, נשמה, מבט, השתוקקות, קריאה נשמתית.
+
+הטון: פשוט, אנושי, רך, מקורקע — שקט ועוצמתי כאחד. משפטים קצרים עם נשימה. הרבה מרווח.
+לב לפני שכל. דבר נובע מדבר. פנייה ל"את", אישית וחמה. בלי ז'רגון ובלי לועזית מיותרת.
+
+פתיחה: רגע אנושי שמעורר השתוקקות פנימית לא מוסברת — קריאה נשמתית נסתרת. לא הגדרה.
+סגירה: לא מסקנה. משפט שמהדהד ומשאיר אותה עם "אני רוצה לדעת יותר — מי אני בעולם? אני יותר ממה שאני מבינה".
+
+אסור בשום אופן: לחקות את לשון המורָה‑המלמדת (חומר גלם בלבד) · ניו‑אייג' מרחף · ז'רגון מיסטי כבד ·
+טון מטיף או דתי כבד · ניתוח קר · מוטיבציית אינסטגרם · סימני קריאה · "צריך/חייבים".
+
+לפני שכל טקסט יוצא: לב? קול? קרקע? חיבור? אם אחד "לא" — כתבי מחדש.`;
+const getVoice=()=>localStorage.getItem(LS.voice)||DEFAULT_VOICE;
+function systemBase(){let s=getVoice();const ex=getEx().trim();
+  if(ex)s+='\n\nדוגמאות לקול האותנטי שלך — חַקי את הניסוח, הקצב והרוח (אל תעתיקי מילולית):\n'+ex; return s;}
+
+const LEN={short:'3 תחנות',medium:'4 תחנות',deep:'5 תחנות'};let lenChoice='medium';
+
+const AGENTS=[
+  {n:1,name:'החולֵץ',desc:'קורא את כל הקבצים ומחלץ מושגים, מבנים ושיטות — נאמן למקור.',max:4000,
+   inst:`את "החולֵץ", הסוכן הראשון. לפנייך קבצי גלם של שיעור. חילוץ בלבד — לא לכתוב שיעור, לא לפרש, לא לייפות. נאמנות מלאה למקור.
+חלצי בטבלאות: מושגי‑ליבה (מושג+הסבר נאמן), מבנים/מסגרות, שיטות ודוגמאות הוראה, ציטוטי מקור (סמני "לשון מקור — לא להעתיק"). סמני פערים/סתירות. יבש ומדויק, בלי קול.`},
+  {n:2,name:'האדריכל',desc:'מוצא את נשמת השיעור ובונה את הקשת — לב קודם, שכל אחר כך.',max:3000,
+   inst:`את "האדריכל". קיבלת חומר גלם. בני שלד שיעור (בלי טקסט סופי): 1. נשמת השיעור במשפט אחד. 2. קשת רגשית — מאיפה לאן. 3. אילו עוגנים תפיסתיים של שפת הנשמה משרתים את השיעור (אנטנה / עולם פנימי מצטלם / אותיות ומספרים / לב כגלאי / גוף‑נפש / רוחניות מהיומיום — רק מה שמתאים). 4. בני LENGTH שכל אחת נובעת מהקודמת. 5. סמני לב‑קודם‑שכל, והיכן הפתיחה והסגירה.`},
+  {n:3,name:'הקולָן',desc:'כותב את השיעור המלא בקול שלך — מתרגם מושג רוחני לשפה אנושית.',max:8000,
+   inst:`את "הקולָן", הלב של המערכת. קיבלת שלד שיעור. כתבי את השיעור המלא בקול של שפת הנשמה (לפי פרופיל הקול והדוגמאות — מעל הכול): הקול שלה בלבד, לא לחקות את המורָה‑המלמדת, לא להישמע כמו AI. לב קודם — פתיחה שנוגעת ברגע אנושי ומעוררת השתוקקות, לא הגדרה. תרגום נשמה: כל מושג רוחני → שפה מקורקעת. דבר נובע מדבר. סגירה = קריאת נשמה, לא מסקנה. אסור: ניו‑אייג' מרחף, ז'רגון מיסטי, טון מטיף, ניתוח קר, מוטיבציית אינסטגרם. לכל תחנה הוסיפי בסוגריים [הערת דובר].`},
+  {n:4,name:'העורך',desc:'בודק מול ה‑Checklist, פוסל זיופים, ומפיק את התוכנית הסופית.',max:8000,
+   inst:`את "העורך", שומרת הסף. קיבלת טיוטת שיעור. בדקי כל קטע מול: לב? קול? קרקע? חיבור? תקני בעצמך כל כשל. הפיקי את תוכנית השיעור הסופית ב‑Markdown, בעברית, בלי הקדמות, במבנה:
+
+# [שם השיעור]
+**נשמת השיעור:** [משפט אחד]
+
+## פתיחה — הלב
+[טקסט מלא]
+
+## גוף השיעור
+### תחנה 1 — [שם]
+[טקסט מלא]
+
+## רגעי עצירה ושאלות
+- ...
+
+## סגירה — קריאת נשמה
+[המשפט שנשאר ומהדהד]
+
+---
+## הערות דובר (פרטי)
+- תחנה 1: ...
+
+---
+## שקופיות מוצעות (טקסט נקי למסך התלמידות)
+- שקופית 1 (פתיחה): ...
+
+בסוף: "עבר Checklist: לב ✓ קול ✓ קרקע ✓ חיבור ✓".`},
+];
+
+// ===== nav =====
+const tabs=[{id:'new',label:'שיעור חדש'},{id:'library',label:'ספרייה'},{id:'images',label:'תמונות'},{id:'voice',label:'פרופיל הקול'},{id:'settings',label:'הגדרות'}];
+const nav=document.getElementById('nav');
+tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
+function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new')checkKey();
+  try{const a=document.querySelector('nav button.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
+
+document.querySelectorAll('#lenSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#lenSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');lenChoice=b.dataset.len});
+
+// ===== files =====
+let files=[];
+const drop=document.getElementById('drop'),fileInput=document.getElementById('fileInput');
+drop.onclick=()=>fileInput.click();fileInput.onchange=e=>addFiles(e.target.files);
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+const rURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});
+const rTxt=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsText(f)});
+const rBuf=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsArrayBuffer(f)});
+async function addFiles(fl){for(const f of fl){const ext=f.name.split('.').pop().toLowerCase();
+  try{
+    if(ext==='pdf'){const d=await rURL(f);files.push({name:f.name,kind:'doc',data:d.split(',')[1]});}
+    else if(['png','jpg','jpeg','webp','gif'].includes(ext)){const d=await rURL(f);files.push({name:f.name,kind:'image',data:d.split(',')[1],media:'image/'+(ext==='jpg'?'jpeg':ext)});}
+    else if(ext==='docx'){const buf=await rBuf(f);const res=await mammoth.extractRawText({arrayBuffer:buf});files.push({name:f.name,kind:'text',data:res.value});}
+    else{const t=await rTxt(f);files.push({name:f.name,kind:'text',data:t});}
+  }catch(err){toast('לא הצלחתי לקרוא את '+f.name)}}
+  renderFiles();refreshRun();}
+function renderFiles(){const el=document.getElementById('filelist');
+  el.innerHTML=files.map((f,i)=>`<div class="fileitem">📄 <span>${esc(f.name)}</span><span class="tag">${f.kind==='doc'?'PDF':f.kind==='image'?'תמונה':'טקסט'}</span><button class="x" data-i="${i}">×</button></div>`).join('');
+  el.querySelectorAll('.x').forEach(b=>b.onclick=()=>{files.splice(+b.dataset.i,1);renderFiles();refreshRun()});}
+function refreshRun(){document.getElementById('runBtn').disabled=!files.length}
+
+// ===== API (dual-mode: Vercel proxy or direct) =====
+const PRICE={'claude-opus-4-8':[5,25],'claude-sonnet-4-6':[3,15]};
+let usage={in:0,out:0},API_MODE=null;
+async function claudeFetch(body){
+  if(API_MODE!=='direct'){
+    try{
+      const r=await fetch('/api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      if(r.ok){API_MODE='proxy';window.__apiOk=true;checkKey();return r;}
+      if(getKey())API_MODE='direct'; else return r; // surface proxy error if no local key
+    }catch(e){ if(getKey())API_MODE='direct'; else throw new Error('אין חיבור למנוע. הזיני מפתח בהגדרות או פרסי ל‑Vercel.'); }
+  }
+  const key=getKey(); if(!key) throw new Error('חסר מפתח — הזיני אותו בהגדרות.');
+  return fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)});
+}
+async function callClaude(systemText,content,maxTokens,onText){
+  const res=await claudeFetch({model:getModel(),max_tokens:maxTokens,thinking:{type:'adaptive'},stream:true,system:systemText,messages:[{role:'user',content}]});
+  if(!res.ok){let m=res.status+'';try{const e=await res.json();m=e?.error?.message||m;}catch{}throw new Error(m);}
+  const reader=res.body.getReader(),dec=new TextDecoder();let buf='',full='';
+  while(true){const {done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
+    let idx;while((idx=buf.indexOf('\n'))>=0){const line=buf.slice(0,idx);buf=buf.slice(idx+1);
+      if(!line.startsWith('data:'))continue;const js=line.slice(5).trim();if(!js||js==='[DONE]')continue;
+      let ev;try{ev=JSON.parse(js)}catch{continue}
+      if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){full+=ev.delta.text;onText&&onText(ev.delta.text,full);}
+      else if(ev.type==='message_start'&&ev.message?.usage){usage.in+=ev.message.usage.input_tokens||0;}
+      else if(ev.type==='message_delta'&&ev.usage){usage.out+=ev.usage.output_tokens||0;}}}
+  return full.trim();}
+function costStr(){const p=PRICE[getModel()]||PRICE['claude-opus-4-8'];return '$'+((usage.in/1e6*p[0])+(usage.out/1e6*p[1])).toFixed(3);}
+
+// ===== pipeline =====
+let lastLesson='',currentSlides=null,pState=null;
+const runBtn=document.getElementById('runBtn');runBtn.onclick=startRun;
+function buildSteps(){document.getElementById('pipeSteps').innerHTML=AGENTS.map(a=>
+  `<div class="pstep" id="step-${a.n}"><div class="dot">${a.n}</div><div style="flex:1"><h4>${a.name}</h4>
+    <div class="desc">${a.desc}</div><div class="stat" id="stat-${a.n}">ממתין…</div>
+    <span class="toggle" id="tog-${a.n}">הצגת הפלט ▾</span><div class="live" id="live-${a.n}"></div></div></div>`).join('');
+  AGENTS.forEach(a=>document.getElementById('tog-'+a.n).onclick=()=>document.getElementById('live-'+a.n).classList.toggle('show'));}
+function setStep(n,state,txt){const s=document.getElementById('step-'+n);s.classList.remove('run','done','err');if(state)s.classList.add(state);document.getElementById('stat-'+n).textContent=txt;}
+function liveAppend(n,_,full){const el=document.getElementById('live-'+n);el.classList.add('show');document.getElementById('tog-'+n).classList.add('show');el.textContent=full;el.scrollTop=el.scrollHeight;}
+function startRun(){usage={in:0,out:0};currentSlides=null;curArtifacts={};document.getElementById('pkgArea').innerHTML='';
+  pState={extraction:null,skeleton:null,draft:null,name:document.getElementById('lessonName').value.trim(),len:lenChoice};
+  const content=[],textBlocks=[];
+  for(const f of files){if(f.kind==='doc')content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}});
+    else if(f.kind==='image')content.push({type:'image',source:{type:'base64',media_type:f.media,data:f.data}});
+    else textBlocks.push(`=== ${f.name} ===\n${f.data}`);}
+  let intro=AGENTS[0].inst;if(pState.name)intro=`שם השיעור: "${pState.name}".\n\n`+intro;
+  if(textBlocks.length)intro+='\n\nקבצי טקסט:\n\n'+textBlocks.join('\n\n');
+  content.push({type:'text',text:intro});pState.content1=content;
+  document.getElementById('pipe').classList.add('show');document.getElementById('lesson').classList.remove('show');
+  buildSteps();runFrom(1);}
+function priorLessonsContext(){const lib=loadLib();if(!lib.length)return '';
+  const items=lib.slice(-10).map(l=>'• '+(l.num?l.num+'. ':'')+(l.name||'')).join('\n');
+  return '\n\nשיעורים שכבר לימדת (לרצף וקוהרנטיות של הסדרה — בני על מה שכבר נלמד, אל תחזרי על אותו תוכן בלי צורך, וקשרי בעדינות לשיעורים קודמים אם מתאים):\n'+items;}
+async function runFrom(start){const err=document.getElementById('err');err.classList.remove('show');runBtn.disabled=true;
+  const sys=systemBase(),lenTxt=LEN[pState.len],prior=priorLessonsContext();
+  try{
+    if(start<=1){setStep(1,'run','קורא את הקבצים ומחלץ…');pState.extraction=await callClaude(sys+'\n\n'+AGENTS[0].inst,pState.content1,AGENTS[0].max,(d,f)=>liveAppend(1,d,f));setStep(1,'done','✓ חולץ');}
+    if(start<=2){setStep(2,'run','בונה את הקשת…');const inst=AGENTS[1].inst.replace('LENGTH',lenTxt);pState.skeleton=await callClaude(sys+prior+'\n\n'+inst,[{type:'text',text:'חומר הגלם שחולץ:\n\n'+pState.extraction}],AGENTS[1].max,(d,f)=>liveAppend(2,d,f));setStep(2,'done','✓ שלד מוכן');}
+    if(start<=3){setStep(3,'run','כותב בקול שלך…');pState.draft=await callClaude(sys+'\n\n'+AGENTS[2].inst,[{type:'text',text:'שלד השיעור:\n\n'+pState.skeleton}],AGENTS[2].max,(d,f)=>liveAppend(3,d,f));setStep(3,'done','✓ טיוטה נכתבה');}
+    setStep(4,'run','בודק ומלטש…');document.getElementById('lesson').classList.add('show');
+    const doc=document.getElementById('doc');doc.innerHTML='<div class="doc-stream" id="docStream"></div>';
+    const final=await callClaude(sys+'\n\n'+AGENTS[3].inst,[{type:'text',text:'טיוטת השיעור:\n\n'+pState.draft}],AGENTS[3].max,(d,f)=>{liveAppend(4,d,f);const ds=document.getElementById('docStream');if(ds){ds.textContent=f;doc.scrollTop=doc.scrollHeight;}});
+    setStep(4,'done','✓ עבר את כל הבדיקות');lastLesson=final;renderDoc();
+    document.getElementById('metaLine').innerHTML=`<span>🌿 מוכן</span><span>עלות: ~${costStr()}</span><span>${final.length} תווים</span>`;
+    document.getElementById('lesson').scrollIntoView({behavior:'smooth',block:'nearest'});toast('השיעור מוכן 🌳','good');
+  }catch(e){const failed=!pState.extraction?1:!pState.skeleton?2:!pState.draft?3:4;setStep(failed,'err','נעצר');
+    err.innerHTML=`<span>⚠️ ${esc(e.message)}</span><button class="btn" id="resumeBtn">המשך מכאן</button>`;err.classList.add('show');
+    document.getElementById('resumeBtn').onclick=()=>runFrom(failed);}
+  finally{runBtn.disabled=false;}}
+function renderDoc(){document.getElementById('doc').innerHTML='<div class="md">'+mdRender(lastLesson)+'</div>';document.getElementById('doc').classList.remove('editing');editing=false;document.getElementById('editBtn').textContent='✏️ עריכה';}
+
+// ===== lesson actions =====
+let editing=false;
+document.getElementById('editBtn').onclick=()=>{const doc=document.getElementById('doc'),btn=document.getElementById('editBtn');
+  if(!editing){doc.classList.add('editing');doc.innerHTML='<textarea id="docEdit"></textarea>';document.getElementById('docEdit').value=lastLesson;btn.textContent='✓ סיום עריכה';editing=true;}
+  else{lastLesson=document.getElementById('docEdit').value;currentSlides=null;renderDoc();toast('עודכן');}};
+document.getElementById('copyLesson').onclick=()=>copyText(lastLesson);
+function copyText(t){try{navigator.clipboard.writeText(t).then(()=>toast('הועתק ✓','good')).catch(()=>toast('לא ניתן להעתיק — סמני והעתיקי ידנית'));}catch(e){toast('לא ניתן להעתיק');}}
+document.getElementById('pdfLesson').onclick=()=>downloadPdf('מערך שיעור — '+(nameOf()||'שיעור'),lastLesson);
+document.getElementById('ttsLesson').onclick=()=>speakText(lastLesson);
+document.getElementById('saveLesson').onclick=()=>{const lib=loadLib();
+  lib.push({id:uid(),num:document.getElementById('lessonNum').value.trim(),name:nameOf()||'שיעור ללא שם',body:lastLesson,slides:currentSlides,date:new Date().toLocaleDateString('he-IL')});
+  saveLib(lib);toast('נשמר בספרייה ✓','good');};
+document.getElementById('reviseLesson').onclick=async()=>{const note=prompt('מה לתקן? כתבי בקול שלך — "התחנה השנייה מנותקת מדי, תגעי קודם" / "תקרקעי את הפתיחה"');if(!note)return;
+  const doc=document.getElementById('doc');doc.innerHTML='<div class="doc-stream" id="docStream"></div>';
+  try{const revised=await callClaude(systemBase()+'\n\n'+AGENTS[3].inst,[{type:'text',text:`זו תוכנית שיעור קיימת:\n\n${lastLesson}\n\nהבקשה לתיקון: ${note}\n\nתקני, שמרי על הקול והמבנה, והחזירי את התוכנית המלאה המתוקנת ב‑Markdown.`}],8000,(d,f)=>{const ds=document.getElementById('docStream');if(ds){ds.textContent=f;doc.scrollTop=doc.scrollHeight;}});
+    lastLesson=revised;currentSlides=null;renderDoc();toast('תוקן ✓','good');}catch(e){renderDoc();toast('שגיאה: '+e.message)}};
+document.getElementById('presentBtn').onclick=()=>presentFlow(()=>lastLesson,s=>{currentSlides=s},()=>currentSlides,nameOf()||'שיעור',
+  {getExercises:()=>curArtifacts.exercises,setExercises:e=>{curArtifacts.exercises=e;},onChange:()=>{}});
+
+// ===== slides =====
+async function genSlides(text){
+  const sys=systemBase()+'\n\nאת מעצבת מצגת בסגנון שפת הנשמה: אלגנטי, חם, הרבה אוויר. כותרת גדולה + מעט טקסט תומך — מספיק כדי שהתלמידה תזכור את הרעיון, לא רק כותרת ריקה. לא פסקאות ארוכות.';
+  const raw=await callClaude(sys,[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד (בלי שום טקסט מסביב) — מערך שקופיות מעוצבות בקול של שפת הנשמה.
+לכל שקופית: {"type":"...","kicker":"תווית קטנה (אופציונלי)","title":"הכותרת — משפט אחד","body":"1–2 שורות תוכן תומך שמסבירות/מעמיקות (לא רק כותרת!)","image":"תיאור קצר באנגלית לתמונת רקע עדינה שמתאימה לשקופית (אופציונלי, רק כשמתאים)","notes":"הערת דובר פרטית מפורטת: מה לומר, איפה לעצור, איזו שאלה לשאול, דוגמה לתת"}.
+סוגי שקופית:
+- "title": פתיחה. title=שם השיעור, body=משפט הנשמה.
+- "opening": רגע פתיחה שנוגע. title=המשפט, body=שורה שמעמיקה.
+- "station": תחנה. kicker=שם התחנה, title=המסר, body=1–2 שורות שמסבירות אותו בעומק.
+- "quote": משפט מצוטט חזק. body ריק.
+- "question": שאלה להתבוננות. body=הקשר קצר.
+- "closing": קריאת הנשמה הסוגרת.
+כללים: 12–16 שקופיות. הראשונה title, האחרונה closing. ל‑station/opening תני body אמיתי (לא ריק) — שורה-שתיים שמוסיפות תוכן, כך שהשקופית לא "ריקה". תני "image" לכ‑5–7 שקופיות (לא לכולן) — תיאור עדין בסגנון המותג (חם, מינימלי, אור, טבע). שמרי על הקצב: לב קודם, נשימה, סגירה שמהדהדת.
+תוכנית השיעור:\n\n${text}`}],5000,null);
+  let arr;try{arr=JSON.parse(raw.slice(raw.indexOf('['),raw.lastIndexOf(']')+1));}catch(e){throw new Error('המצגת לא נוצרה כראוי — נסי שוב');}
+  return enrichSlides(arr);}
+function enrichSlides(slides){if(!Array.isArray(slides))return slides;
+  slides.forEach((s,i)=>{if(s&&s.image&&!s.imageUrl&&!s.video&&!s.icon){s.imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(s.image+' — '+brandStyle())}?width=1280&height=720&nologo=true&model=flux&seed=${200+i}`;}});
+  return slides;}
+// ===== סוכן עזרים חזותיים: וידאו/תמונות (Pexels) + אייקונים (Iconify, ללא מפתח) + Flux =====
+const getPexels=()=>localStorage.getItem('sn-pexels')||'';
+async function pexelsVideo(q){const k=getPexels();if(!k)return null;try{const r=await fetch('https://api.pexels.com/videos/search?per_page=1&orientation=landscape&size=medium&query='+encodeURIComponent(q),{headers:{Authorization:k}});if(!r.ok)return null;const d=await r.json();const v=d.videos&&d.videos[0];if(!v)return null;const files=(v.video_files||[]).filter(f=>f.file_type==='video/mp4');files.sort((a,b)=>(a.width||0)-(b.width||0));const pick=files.find(f=>(f.width||0)>=960)||files[files.length-1];return pick?{url:pick.link,poster:v.image}:null;}catch{return null;}}
+async function pexelsPhoto(q){const k=getPexels();if(!k)return null;try{const r=await fetch('https://api.pexels.com/v1/search?per_page=1&orientation=landscape&query='+encodeURIComponent(q),{headers:{Authorization:k}});if(!r.ok)return null;const d=await r.json();const p=d.photos&&d.photos[0];return p?p.src.landscape:null;}catch{return null;}}
+async function iconifySvg(q){try{const r=await fetch('https://api.iconify.design/search?limit=1&query='+encodeURIComponent(q));if(!r.ok)return null;const d=await r.json();const name=d.icons&&d.icons[0];if(!name)return null;const sr=await fetch('https://api.iconify.design/'+name+'.svg?color=%23A9743F&height=160');if(!sr.ok)return null;const t=await sr.text();return t.indexOf('<svg')>=0?t:null;}catch{return null;}}
+async function genMediaPlan(lessonText,slides){
+  const list=slides.map((s,i)=>`${i}: ${(s.kicker?s.kicker+' — ':'')+(normSlide(s).title||'')}`).join('\n');
+  const raw=await callClaude(systemBase()+'\n\nאת אוצרת עזרים חזותיים שממחישים מושגים בשיעור.',[{type:'text',text:`לפנייך שקופיות (מספר: כותרת). בחרי 4–6 שקופיות שבהן עזר חזותי ימחיש את המושג ויחזק אותו, וקבעי לכל אחת את הסוג הכי מתאים. החזירי JSON בלבד — מערך: {"i":מספר_שקופית,"type":"video"|"photo"|"icon","query":"מילות חיפוש קונקרטיות באנגלית למושג (למשל: water heartbeat pulse, candle light, tree roots growing)","why":"מה ממחישים"}.
+type=video למושג שתנועה ממחישה (מים, נשימה, אור, גדילה, פעימה). type=photo לאווירה/מקום. type=icon למושג סמלי פשוט (לב, מפתח, עין).
+אל תבחרי בשקופית הפתיחה (title). השקופיות:\n${list}\n\nתמצית השיעור:\n${(lessonText||'').slice(0,3500)}`}],1500,null);
+  try{return JSON.parse(raw.slice(raw.indexOf('['),raw.lastIndexOf(']')+1));}catch{return[];}}
+async function enrichSlidesMedia(slides,lessonText,onStep){
+  if(!Array.isArray(slides))return slides;
+  let plan;try{plan=await genMediaPlan(lessonText,slides);}catch{plan=[];}
+  for(const p of (plan||[])){const s=slides[p.i];if(!s||normSlide(s).type==='title')continue;
+    onStep&&onStep(p.why||p.query);
+    if(p.type==='video'){const v=await pexelsVideo(p.query);if(v){s.video=v.url;s.poster=v.poster;s.imageUrl=null;s.icon=null;continue;}}
+    if(p.type==='photo'){const ph=await pexelsPhoto(p.query);if(ph){s.imageUrl=ph;s.video=null;s.icon=null;continue;}}
+    if(p.type==='icon'){const ic=await iconifySvg(p.query);if(ic){s.icon=ic;s.video=null;s.imageUrl=null;continue;}}
+    if(!s.imageUrl&&!s.video&&!s.icon&&p.query)s.image=p.query;}
+  enrichSlides(slides);
+  return slides;}
+async function presentFlow(getText,setSlides,getSlides,title,opts){
+  let slides=getSlides&&getSlides();
+  if(!slides){toast('בונה מצגת… כמה שניות');try{slides=await genSlides(getText());setSlides&&setSlides(slides);}catch(e){toast('לא הצלחתי לבנות מצגת: '+e.message);return;}}
+  else enrichSlides(slides);
+  openPresenter(slides,title,Object.assign({getText:getText},opts||{}));}
+
+// ===== slide design system (shared by presenter / audience / export) =====
+const SPIRAL_SVG='<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M50 50 C47 43 56 40 58 48 C61 59 48 66 37 61 C23 54 26 34 41 29 C58 23 77 36 76 55"/><circle cx="50" cy="50" r="41" stroke-width="1.2" opacity=".5" stroke-dasharray="2 7"/></svg>';
+const MARK_SVG='<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M84 26 A40 40 0 1 0 95 44" opacity=".6"/><path d="M60 60 C57 53 66 50 68 58 C71 69 58 76 47 71 C33 64 36 44 51 39 C68 33 87 46 86 65"/><path d="M60 73 c-3-4-9-2.4-9 2.1 0 4.4 9 8.9 9 8.9 0 0 9-4.5 9-8.9 0-4.5-6-6.1-9-2.1z" opacity=".8" stroke-width="1.8"/></svg>';
+let LOGO_DATA=localStorage.getItem('sn-logo')||((typeof window!=='undefined'&&window.LOGO_DATA)||'');
+function logoImg(){return LOGO_DATA?'<img src="'+LOGO_DATA+'" alt="">':MARK_SVG;}
+const SLIDE_CSS=`
+.stage{width:100%;height:100%;display:grid;place-items:center;transition:opacity .2s}
+.slide{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;container-type:size;color:#41372C;border-radius:14px;overflow:hidden;
+ background:radial-gradient(55% 78% at 76% 20%,#FCEFD2 0%,rgba(252,239,210,0) 62%),linear-gradient(158deg,#FBF7EE 0%,#F3EBDB 100%);box-shadow:0 12px 44px rgba(65,55,44,.13)}
+.slide .ink{position:absolute;inset:0;padding:11cqh 11cqw;display:flex;flex-direction:column;justify-content:center;gap:2.4cqh}
+.slide .kicker{font-family:'Heebo',sans-serif;font-weight:500;font-size:2cqw;letter-spacing:.3cqw;color:#7E7B56;display:flex;align-items:center;gap:1.6cqw}
+.slide .kicker::before{content:'';width:5cqw;height:1px;background:#C29A45}
+.slide h1{font-family:'Frank Ruhl Libre',serif;font-weight:500;font-size:6.4cqw;line-height:1.3;margin:0;color:#3A3026}
+.slide .body{font-family:'Heebo',sans-serif;font-weight:300;font-size:2.7cqw;line-height:1.6;color:#6E6051;max-width:66cqw}
+.slide .foot{position:absolute;bottom:5cqh;inset-inline:11cqw;display:flex;align-items:center;gap:3cqw;font-family:'Heebo';font-weight:300;font-size:1.7cqw;color:#B0A088}
+.slide .foot .ln{flex:1;height:1px;background:#E6D8C2}
+.slide .wm{position:absolute;width:30cqw;height:30cqw;left:-4cqw;bottom:-4cqw;color:#C29A45;opacity:.07;z-index:1}
+.slide .bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.26;z-index:0}
+.slide .bgvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.58;z-index:0}
+.slide .bgveil{position:absolute;inset:0;background:radial-gradient(120% 95% at 50% 45%,rgba(251,247,238,.5),rgba(243,235,219,.86));z-index:0}
+.slide .veil-vid{background:radial-gradient(120% 98% at 50% 45%,rgba(251,247,238,.3),rgba(243,235,219,.72))}
+.slide .sicon{width:9cqw;height:9cqw;margin-bottom:1.2cqh;color:#A9743F}.slide .sicon svg{width:100%;height:100%}
+.slide .ink{z-index:2}.slide .foot{z-index:2}
+.slide .mark{width:13cqw;height:13cqw;color:#A9743F;margin-bottom:1.4cqh}
+.slide .mark img{width:100%;height:100%;object-fit:contain}
+.slide.t-title .ink,.slide.t-opening .ink,.slide.t-question .ink,.slide.t-closing .ink{align-items:center;text-align:center}
+.slide.t-title h1{font-size:8.2cqw;font-weight:700;letter-spacing:.2cqw}
+.slide.t-title .body{font-size:3cqw;color:#A9743F;font-weight:400}
+.slide.t-opening h1{font-size:5.8cqw;font-weight:400;max-width:82cqw}
+.slide.t-question h1{font-size:5.6cqw;font-weight:400;max-width:80cqw}
+.slide.t-question .qd{display:flex;gap:1.6cqw;justify-content:center;margin-top:3cqh}
+.slide.t-question .qd span{width:1.5cqw;height:1.5cqw;border-radius:50%;background:#C58E86;opacity:.55}
+.slide.t-station h1{font-size:5.4cqw}
+.slide.t-quote .ink{padding-inline-start:16cqw}
+.slide.t-quote h1{font-style:italic;font-weight:400;font-size:5.4cqw}
+.slide.t-quote .ink::before{content:'';position:absolute;inset-inline-start:11cqw;top:26cqh;bottom:26cqh;width:3px;border-radius:3px;background:linear-gradient(#C29A45,#C58E86)}
+.slide.t-closing h1{font-size:5.8cqw;font-weight:400}
+.slide.t-closing .mark{width:9cqw;height:9cqw}
+.pres-slide{border-radius:18px;display:grid;place-items:center;overflow:hidden;padding:10px;background:transparent;box-shadow:none;border:none}
+#presStage{width:100%;height:100%}`;
+function normSlide(s){if(!s)return{};if(s.title!==undefined||s.type)return s;return{type:'content',title:s.text||'',body:'',notes:s.notes||''};}
+function slideHTML(raw,ctx){const s=normSlide(raw),type=s.type||'content';
+  const t=esc(s.title||''),body=s.body?`<div class="body">${esc(s.body)}</div>`:'',kicker=s.kicker?`<div class="kicker">${esc(s.kicker)}</div>`:'';
+  const ic=(s.icon&&type!=='title'&&type!=='closing')?`<div class="sicon">${s.icon}</div>`:'';
+  let inner;
+  if(type==='title')inner=`<div class="mark">${logoImg()}</div>${kicker}<h1>${t}</h1>${body}`;
+  else if(type==='closing')inner=`<div class="mark">${logoImg()}</div><h1>${t}</h1>${body}`;
+  else if(type==='question')inner=`${ic}${kicker}<h1>${t}</h1><div class="qd"><span></span><span></span><span></span></div>`;
+  else inner=`${ic}${kicker}<h1>${t}</h1>${body}`;
+  const foot=ctx&&ctx.total?`<div class="foot"><span>עופרה אינוז · קפסולה אלוקית</span><span class="ln"></span><span>${esc(ctx.name||'')}${ctx.name?' · ':''}${ctx.idx+1}/${ctx.total}</span></div>`:'';
+  let bg='';
+  if(s.video&&type!=='title')bg=`<video class="bgvid" src="${s.video}"${s.poster?` poster="${esc(s.poster)}"`:''} autoplay muted loop playsinline></video><div class="bgveil veil-vid"></div>`;
+  else if(s.imageUrl&&type!=='title')bg=`<div class="bg" style="background-image:url('${s.imageUrl}')"></div><div class="bgveil"></div>`;
+  return `<div class="slide t-${type}">${bg}<div class="wm">${SPIRAL_SVG}</div><div class="ink">${inner}</div>${foot}</div>`;}
+
+// ===== presenter =====
+let pres={slides:[],idx:0,title:'',sec:0,timer:null,running:true,aud:null,bc:null};
+function openPresenter(slides,title,opts){if(!slides||!slides.length){toast('אין שקופיות');return;}
+  opts=opts||{};pres.slides=slides;pres.idx=0;pres.title=title;pres.sec=0;pres.running=true;
+  pres.onChange=opts.onChange||null;pres.getEx=opts.getExercises||null;pres.setEx=opts.setExercises||null;pres.text=opts.getText?opts.getText():'';
+  document.getElementById('presenter').classList.add('show');
+  if(pres.timer)clearInterval(pres.timer);pres.timer=setInterval(()=>{if(pres.running){pres.sec++;document.getElementById('presClock').textContent=fmt(pres.sec);}},1000);
+  document.addEventListener('keydown',presKeys);renderPres();}
+function slideCtx(){return {name:pres.title,idx:pres.idx,total:pres.slides.length};}
+function renderPres(){const s=normSlide(pres.slides[pres.idx]||{});
+  document.getElementById('presStage').innerHTML=slideHTML(s,slideCtx());
+  document.getElementById('presNotes').textContent=s.notes||'(אין הערה)';
+  document.getElementById('presCount').textContent=(pres.idx+1)+' / '+pres.slides.length;
+  const nx=pres.slides[pres.idx+1]?normSlide(pres.slides[pres.idx+1]):null;document.getElementById('presNext').textContent=nx?(nx.title||nx.kicker||''):'— סוף —';
+  pushAud();}
+function pushAud(){if(pres.aud&&!pres.aud.closed&&pres.aud.render){try{pres.aud.render(slideHTML(normSlide(pres.slides[pres.idx]),slideCtx()));}catch(e){}}}
+function audienceKey(key){handleNav(key);}
+function handleNav(key){if(key==='ArrowLeft'||key==='ArrowDown'||key===' ')nextSlide();else if(key==='ArrowRight'||key==='ArrowUp')prevSlide();else if(key==='Escape')closePres();}
+function presKeys(e){if(!document.getElementById('presenter').classList.contains('show'))return;handleNav(e.key);if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault();}
+function nextSlide(){if(pres.idx<pres.slides.length-1){pres.idx++;renderPres();}}
+function prevSlide(){if(pres.idx>0){pres.idx--;renderPres();}}
+document.getElementById('nextBtn').onclick=nextSlide;document.getElementById('prevBtn').onclick=prevSlide;
+document.getElementById('timerBtn').onclick=()=>{pres.running=!pres.running;document.getElementById('timerBtn').textContent=pres.running?'⏸︎':'▶︎';};
+document.getElementById('closePres').onclick=closePres;
+function closePres(){document.getElementById('presenter').classList.remove('show');document.removeEventListener('keydown',presKeys);
+  if(pres.timer)clearInterval(pres.timer);if(pres.aud&&!pres.aud.closed)pres.aud.close();pres.aud=null;}
+document.getElementById('audienceBtn').onclick=()=>{pres.aud=window.open('','sn_audience','width=1000,height=620');
+  if(!pres.aud){toast('הדפדפן חסם חלון — אשרי חלונות קופצים');return;}pres.aud.document.write(AUDIENCE_HTML);pres.aud.document.close();setTimeout(pushAud,400);toast('גררי את החלון למקרן ולחצי "מסך מלא"','good');};
+document.getElementById('revealBtn').onclick=()=>downloadText((pres.title||'מצגת')+'-מצגת.html',buildReveal(pres.title||'שיעור',pres.slides));
+document.getElementById('pptxBtn').onclick=()=>downloadPptx(pres.title||'מצגת',pres.slides);
+function fmt(s){const m=Math.floor(s/60),x=s%60;return (m<10?'0':'')+m+':'+(x<10?'0':'')+x;}
+
+const AUDIENCE_HTML=`<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>שפת הנשמה</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#F4ECDD;overflow:hidden}.wrap{height:100vh;display:grid;place-items:center;padding:2vmin}
+${SLIDE_CSS}
+#stage .slide{width:min(100vw,calc(100vh*16/9));border-radius:0;box-shadow:none}
+#fs{position:fixed;bottom:16px;left:16px;font-family:'Heebo',sans-serif;font-size:13px;background:#00000010;border:none;border-radius:20px;padding:9px 18px;cursor:pointer;color:#6E6051;z-index:5}#fs:hover{background:#0000001f}#fs:fullscreen{display:none}</style></head>
+<body><div class="wrap"><div class="stage" id="stage"></div></div><button id="fs">מסך מלא</button>
+<script>
+var stage=document.getElementById('stage');
+window.render=function(h){stage.style.opacity=0;setTimeout(function(){stage.innerHTML=h;stage.style.opacity=1;},150);};
+document.getElementById('fs').onclick=function(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen();};
+window.addEventListener('keydown',function(e){if(window.opener&&window.opener.audienceKey)window.opener.audienceKey(e.key);});
+<\/script></body></html>`;
+
+function buildReveal(title,slides,opts){opts=opts||{};
+  let sl=slides.map((s,i)=>`<section><div class="stage">${slideHTML(s,{name:title,idx:i,total:slides.length})}</div><aside class="notes">${esc(normSlide(s).notes||'')}</aside></section>`).join('\n');
+  if(opts.exercisesLink)sl+=`\n<section><div class="stage"><div class="slide t-question"><div class="ink" style="align-items:center;text-align:center"><div class="kicker">תרגול</div><h1><a href="${opts.exercisesLink}" style="color:#A9743F;text-decoration:none">לתרגילים של השיעור »</a></h1></div></div></div><aside class="notes">מעבר לקובץ התרגילים. אם פתחת מתוך תיקיית השיעור — הקישור ייפתח ישירות.</aside></section>`;
+  return `<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)} — שפת הנשמה</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+<style>${SLIDE_CSS}
+.reveal .slides section{padding:0}.reveal .stage{width:100%;height:100%}
+.reveal .slide{width:100%;height:100%;aspect-ratio:auto;border-radius:0;box-shadow:none}
+.reveal-viewport{background:#E4D7C0}.reveal .progress,.reveal .controls{color:#A9743F}</style></head>
+<body><!-- הקליקי S למסך הדובר עם ההערות הפרטיות. חצים למעבר. -->
+<div class="reveal"><div class="slides">
+${sl}
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/notes/notes.js"><\/script>
+<script>Reveal.initialize({rtl:true,hash:true,transition:'fade',transitionSpeed:'slow',width:1280,height:720,margin:0,controls:true,progress:true,plugins:[RevealNotes]});<\/script>
+</body></html>`;}
+
+// ===== images (Flux / Pollinations, free) =====
+let curAR='1024x1024',lastImgUrl='';
+document.querySelectorAll('#arSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#arSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');curAR=b.dataset.ar});
+function brandStyle(){return 'soft warm minimalist spiritual illustration, cream and desert sand palette, muted gold and copper, antique rose and smoky olive accents, gentle inner light like a candle in a quiet home, delicate continuous line art, motifs of circle spiral light heart and roots, lots of negative space, calm feminine editorial mood, analog film softness, no text, no neon, no clutter';}
+function genImage(){const p=document.getElementById('imgPrompt').value.trim();if(!p){toast('כתבי תיאור קצר');return;}
+  const [w,h]=curAR.split('x');const seed=Math.floor((performance.now()*7)%99999);
+  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(p+' — '+brandStyle())}?width=${w}&height=${h}&nologo=true&model=flux&seed=${seed}`;
+  const wrap=document.getElementById('imgWrap');wrap.innerHTML='<div class="ph"><span class="spinner" style="border-color:#0002;border-top-color:var(--copper)"></span> מציירת…</div>';
+  document.getElementById('imgActions').style.display='none';
+  const img=new Image();img.onload=()=>{wrap.innerHTML='';wrap.appendChild(img);lastImgUrl=url;document.getElementById('imgActions').style.display='flex';
+    const gal=loadGal();gal.unshift(url);saveGal(gal.slice(0,12));renderGal();};
+  img.onerror=()=>{wrap.innerHTML='<div class="ph">לא הצליח להיטען — נסי שוב</div>';};img.src=url;}
+document.getElementById('genImgBtn').onclick=genImage;
+document.getElementById('igBtn').onclick=()=>{const q=document.getElementById('igQuote').value.trim();if(!q){toast('כתבי משפט');return;}makeIGPost(q);};
+document.getElementById('regenImg').onclick=genImage;
+document.getElementById('dlImg').onclick=async()=>{try{const r=await fetch(lastImgUrl);const b=await r.blob();const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='שפת-הנשמה-תמונה.png';a.click();URL.revokeObjectURL(u);}catch(e){window.open(lastImgUrl,'_blank');}};
+function loadGal(){try{return JSON.parse(localStorage.getItem(LS.gal))||[]}catch{return[]}}
+function saveGal(d){try{localStorage.setItem(LS.gal,JSON.stringify(d))}catch(e){}}
+function renderGal(){const g=loadGal();const card=document.getElementById('galleryCard'),el=document.getElementById('gallery');
+  if(!g.length){card.style.display='none';return;}card.style.display='block';
+  el.innerHTML=g.map(u=>`<img src="${u}" loading="lazy">`).join('');
+  el.querySelectorAll('img').forEach((im,i)=>im.onclick=()=>{lastImgUrl=g[i];const wrap=document.getElementById('imgWrap');wrap.innerHTML='';const big=new Image();big.src=g[i];wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';window.scrollTo({top:0,behavior:'smooth'});});}
+
+// ===== library =====
+function loadLib(){try{return JSON.parse(localStorage.getItem(LS.lib))||[]}catch{return[]}}
+function saveLib(d){try{localStorage.setItem(LS.lib,JSON.stringify(d))}catch(e){
+  toast('⚠️ האחסון מלא — מורידה גיבוי אוטומטי כדי שכלום לא יאבד. הפעילי סנכרון ענן בהגדרות.');
+  if(!window.__bkDone){window.__bkDone=true;try{downloadText('שפת-הנשמה-גיבוי-אוטומטי.json',JSON.stringify({lessons:d,voice:getVoice(),examples:getEx()},null,2));}catch(_){}}}}
+document.getElementById('libSearch').oninput=renderLib;
+function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch').value||'').trim().toLowerCase();
+  if(q)d=d.filter(l=>(l.name+' '+l.num+' '+l.body).toLowerCase().includes(q));
+  const el=document.getElementById('libList');
+  if(!d.length){el.innerHTML='<div class="empty"><span class="big">🌱</span>'+(q?'לא נמצא שיעור מתאים':'עדיין אין שיעורים. בני את הראשון ב"שיעור חדש"')+'</div>';return;}
+  d.sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999));
+  el.innerHTML=d.map(l=>`<div class="lib-item"><div class="top"><div class="n">${esc(l.num||'—')}</div>
+    <div><div class="nm">${esc(l.name)}</div><div class="meta">${l.date||''} · ${l.body.length} תווים${l.slides?' · מצגת':''}${(l.artifacts&&l.artifacts.exercises)?' · חבילה':''}</div></div>
+    <div class="row"><button data-open="${l.id}">📂 פתיחה</button><button data-present="${l.id}">🖥️ מצגת</button>
+      <button data-package="${l.id}">📦 חבילה</button><button data-copy="${l.id}">העתקה</button><button data-del="${l.id}">מחיקה</button></div></div>
+    <div class="body" id="ob-${l.id}"></div><div id="pkg-${l.id}"></div></div>`).join('');
+  el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;const ob=document.getElementById('ob-'+id);
+    if(ob.classList.contains('show')){ob.classList.remove('show');return;}openLessonPanel(id,ob);ob.classList.add('show');});
+  el.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const l=loadLib().find(x=>x.id===b.dataset.copy);copyText(l.body);});
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('למחוק את השיעור?')){saveLib(loadLib().filter(x=>x.id!==b.dataset.del));renderLib();toast('נמחק')}});
+  el.querySelectorAll('[data-present]').forEach(b=>b.onclick=()=>{const id=b.dataset.present;const l=loadLib().find(x=>x.id===id);
+    presentFlow(()=>l.body,s=>saveLibField(id,'slides',s),()=>(loadLib().find(x=>x.id===id)||{}).slides,l.name,
+     {getExercises:()=>((loadLib().find(x=>x.id===id)||{}).artifacts||{}).exercises,
+      setExercises:e=>{const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it.artifacts=it.artifacts||{};it.artifacts.exercises=e;saveLib(lib);}},
+      onChange:()=>saveLibField(id,'slides',pres.slides)});});
+  el.querySelectorAll('[data-package]').forEach(b=>b.onclick=()=>{const id=b.dataset.package;const l=loadLib().find(x=>x.id===id);
+    buildPackage({name:l.name,num:l.num,body:l.body,getSlides:()=>(loadLib().find(x=>x.id===id)||{}).slides,
+     setSlides:s=>saveLibField(id,'slides',s),artifacts:l.artifacts||{},setArtifacts:A=>saveLibField(id,'artifacts',A),area:document.getElementById('pkg-'+id)});});}
+function saveLibField(id,field,val){const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it[field]=val;saveLib(lib);}}
+function lpRow(icon,name,btns){return '<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--paper);margin-bottom:8px;flex-wrap:wrap"><span style="font-size:1.1rem">'+icon+'</span><span style="font-weight:500;flex:1;min-width:110px">'+name+'</span><span style="display:flex;gap:5px;flex-wrap:wrap">'+btns.map(b=>'<button class="btn" style="padding:6px 11px;font-size:.82rem'+(b.del?';color:var(--red)':'')+'" data-act="'+b.a+'">'+b.t+'</button>').join('')+'</span></div>';}
+function openLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;const A=l.artifacts||{};
+  let h='<div style="padding:2px 0 8px"><div class="hint" style="margin-bottom:10px">📁 <b>'+esc(l.name)+'</b> — תיקיית השיעור. כל חלק ניתן לצפייה, עריכה והורדה.</div>';
+  h+=lpRow('📄','מערך שיעור',[{t:'צפייה',a:'view-body'},{t:'✏️ עריכה',a:'edit-body'},{t:'⬇️ PDF',a:'pdf-body'},{t:'⬇️ MD',a:'md-body'}]);
+  h+=lpRow('🖥️','מצגת',[{t:'🖥️ הצג',a:'present'},{t:'PowerPoint',a:'pptx'},{t:'HTML',a:'html'}]);
+  if(A.exercises&&A.exercises.length){
+    h+='<div style="border:1px solid var(--line);border-radius:11px;background:var(--paper);margin-bottom:8px;padding:8px 12px"><div style="display:flex;align-items:center;gap:8px;font-weight:500"><span style="font-size:1.1rem">✏️</span><span style="flex:1">תרגילים ('+A.exercises.length+' קבצים נפרדים)</span><button class="btn" style="padding:5px 10px;font-size:.8rem" data-act="add-ex">➕ הוסף תרגיל</button></div>';
+    A.exercises.forEach((ex,i)=>{h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 4px 7px 20px;border-top:1px solid var(--line2);flex-wrap:wrap"><span style="flex:1;min-width:100px;font-size:.92rem">'+(i+1)+'. '+esc(ex.title||'תרגיל')+'</span><span style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="view-ex|'+i+'">צפה</button><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="edit-ex|'+i+'">ערוך</button><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="pdf-ex|'+i+'">PDF</button><button class="btn" style="padding:5px 9px;font-size:.79rem;color:var(--red)" data-act="del-ex|'+i+'">מחק</button></span></div>';});
+    h+='</div>';
+  } else h+=lpRow('✏️','תרגילים',[{t:'צרי חבילה ליצירה (📦)',a:'need-pkg'}]);
+  if(A.homework)h+=lpRow('📋','שיעורי בית',[{t:'צפה/ערוך',a:'edit-hw'},{t:'⬇️ PDF',a:'pdf-hw'}]);else h+=lpRow('📋','שיעורי בית',[{t:'צרי חבילה (📦)',a:'need-pkg'}]);
+  if(A.whatsapp)h+=lpRow('💬','סיכום וואטסאפ',[{t:'צפה / ערוך / העתק',a:'edit-wa'}]);else h+=lpRow('💬','וואטסאפ',[{t:'צרי חבילה (📦)',a:'need-pkg'}]);
+  h+='</div><div id="lpedit-'+id+'"></div>';
+  ob.innerHTML=h;
+  ob.querySelectorAll('[data-act]').forEach(b=>{const p=b.dataset.act.split('|');b.onclick=()=>lpAct(id,p[0],p[1]!=null?+p[1]:null,ob);});}
+function lpEditBox(ob,id,label,value,onSave,big){const box=document.getElementById('lpedit-'+id);
+  box.innerHTML='<div class="card" style="margin-top:8px;background:var(--cream)"><div style="font-weight:500;margin-bottom:6px">✏️ '+esc(label)+'</div><textarea class="inp" id="lpta" style="min-height:'+(big?'320':'150')+'px;line-height:1.8"></textarea><div class="actions"><button class="btn dark" id="lpsave">✓ שמור</button><button class="btn" id="lpcancel">ביטול</button></div></div>';
+  document.getElementById('lpta').value=value;box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('lpsave').onclick=()=>{onSave(document.getElementById('lpta').value);openLessonPanel(id,ob);toast('נשמר ✓','good');};
+  document.getElementById('lpcancel').onclick=()=>{box.innerHTML='';};}
+function lpAct(id,act,i,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;const A=l.artifacts||{};
+  if(act==='view-body')openHTMLWindow(printableHTML('מערך שיעור — '+l.name,l.body,l.name));
+  else if(act==='edit-body')lpEditBox(ob,id,'מערך שיעור',l.body,v=>{saveLibField(id,'body',v);saveLibField(id,'slides',null);},true);
+  else if(act==='pdf-body')downloadPdf('מערך שיעור — '+l.name,l.body);
+  else if(act==='md-body')downloadText((l.name||'שיעור')+'.md',l.body);
+  else if(act==='present')presentFlow(()=>l.body,s=>saveLibField(id,'slides',s),()=>(loadLib().find(x=>x.id===id)||{}).slides,l.name,{getText:()=>l.body,onChange:()=>saveLibField(id,'slides',pres.slides)});
+  else if(act==='pptx'){if(l.slides)downloadPptx(l.name,l.slides);else toast('לחצי "🖥️ הצג" קודם כדי ליצור את השקופיות');}
+  else if(act==='html'){if(l.slides)downloadText(l.name+'-מצגת.html',buildReveal(l.name,l.slides));else toast('לחצי "🖥️ הצג" קודם');}
+  else if(act==='add-ex'){A.exercises=A.exercises||[];A.exercises.push({title:'תרגיל חדש',where:'בית',md:'מטרה:\n\nהוראות:\n\nדוגמה:'});saveLibField(id,'artifacts',A);openLessonPanel(id,ob);}
+  else if(act==='view-ex')openHTMLWindow(printableHTML(A.exercises[i].title||'תרגיל',A.exercises[i].md||'',l.name));
+  else if(act==='edit-ex')lpEditBox(ob,id,'תרגיל',(A.exercises[i].title?'# '+A.exercises[i].title+'\n\n':'')+(A.exercises[i].md||''),v=>{const m=v.match(/^#\s*(.+?)\n+([\s\S]*)$/);if(m){A.exercises[i].title=m[1].trim();A.exercises[i].md=m[2].trim();}else A.exercises[i].md=v;saveLibField(id,'artifacts',A);},true);
+  else if(act==='pdf-ex')downloadPdf(A.exercises[i].title||'תרגיל',A.exercises[i].md||'');
+  else if(act==='del-ex'){if(confirm('למחוק את התרגיל?')){A.exercises.splice(i,1);saveLibField(id,'artifacts',A);openLessonPanel(id,ob);toast('נמחק');}}
+  else if(act==='edit-hw')lpEditBox(ob,id,'שיעורי בית',A.homework||'',v=>{A.homework=v;saveLibField(id,'artifacts',A);},true);
+  else if(act==='pdf-hw')downloadPdf('שיעורי בית — '+l.name,A.homework||'');
+  else if(act==='edit-wa')lpEditBox(ob,id,'סיכום וואטסאפ',A.whatsapp||'',v=>{A.whatsapp=v;saveLibField(id,'artifacts',A);});
+  else if(act==='need-pkg')toast('לחצי "📦 חבילה" בשורת השיעור כדי ליצור את הקבצים');}
+function waEditorHTML(text){return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>סיכום וואטסאפ</title>
+<style>body{font-family:'Heebo',sans-serif;background:#FAF5EC;max-width:560px;margin:40px auto;padding:0 20px;color:#41372C}h2{font-family:serif;font-weight:600}textarea{width:100%;min-height:200px;padding:14px;border:1px solid #E7D9C2;border-radius:12px;font-size:1rem;line-height:1.7;font-family:inherit;background:#fff}button{margin-top:10px;background:#41372C;color:#FAF5EC;border:none;border-radius:22px;padding:10px 24px;cursor:pointer;font-size:1rem}</style></head>
+<body><h2>💬 סיכום וואטסאפ — ערכי והעתיקי</h2><textarea id="t">${esc(text)}</textarea><br>
+<button onclick="navigator.clipboard.writeText(document.getElementById('t').value);this.textContent='✓ הועתק'">📋 העתק לשליחה</button></body></html>`;}
+
+// ===== voice & settings =====
+const voiceText=document.getElementById('voiceText');voiceText.value=getVoice();
+document.getElementById('saveVoice').onclick=()=>{localStorage.setItem(LS.voice,voiceText.value);toast('פרופיל הקול נשמר ✓','good')};
+document.getElementById('resetVoice').onclick=()=>{if(confirm('לאפס לברירת מחדל?')){voiceText.value=DEFAULT_VOICE;localStorage.setItem(LS.voice,DEFAULT_VOICE);toast('אופס')}};
+const examplesText=document.getElementById('examplesText');examplesText.value=getEx();
+document.getElementById('saveExamples').onclick=()=>{localStorage.setItem(LS.ex,examplesText.value);toast('הדוגמאות נשמרו — הקול התחדד ✓','good')};
+document.getElementById('apiKey').value=getKey();document.getElementById('model').value=getModel();
+document.getElementById('saveSettings').onclick=()=>{localStorage.setItem(LS.key,document.getElementById('apiKey').value.trim());localStorage.setItem(LS.model,document.getElementById('model').value);toast('נשמר ✓','good');checkKey();};
+document.getElementById('pexelsKey').value=getPexels();
+document.getElementById('savePexels').onclick=()=>{localStorage.setItem('sn-pexels',document.getElementById('pexelsKey').value.trim());toast('מפתח Pexels נשמר ✓ — מעכשיו יוטמעו וידאו ותמונות אמיתיים','good');};
+document.getElementById('sbUrl').value=localStorage.getItem('sn-sb-url')||'';document.getElementById('sbKey').value=localStorage.getItem('sn-sb-key')||'';document.getElementById('sbId').value=localStorage.getItem('sn-sb-id')||'';
+document.getElementById('saveSb').onclick=()=>{localStorage.setItem('sn-sb-url',document.getElementById('sbUrl').value.trim());localStorage.setItem('sn-sb-key',document.getElementById('sbKey').value.trim());localStorage.setItem('sn-sb-id',document.getElementById('sbId').value.trim()||'ofra');toast('הגדרות הסנכרון נשמרו ✓','good');};
+document.getElementById('cloudPushBtn').onclick=cloudPush;
+document.getElementById('cloudPullBtn').onclick=cloudPull;
+// לוגו
+function refreshLogo(){const p=document.getElementById('logoPreview');if(p)p.src=LOGO_DATA||'assets/logo.png';const h=document.getElementById('hdrLogo');if(h)h.src=LOGO_DATA||'assets/logo.png';}
+document.getElementById('uploadLogoBtn').onclick=()=>document.getElementById('logoFile').click();
+document.getElementById('logoFile').onchange=e=>{const f=e.target.files[0];if(!f)return;
+  if(f.size>1500000){toast('הקובץ גדול מדי (עד 1.5MB)');return;}
+  const fr=new FileReader();fr.onload=()=>{LOGO_DATA=fr.result;try{localStorage.setItem('sn-logo',LOGO_DATA);}catch(err){toast('האחסון מלא');return;}refreshLogo();toast('הלוגו עודכן ✓ — מופיע בכל התוצרים','good');};fr.readAsDataURL(f);};
+document.getElementById('resetLogoBtn').onclick=()=>{localStorage.removeItem('sn-logo');LOGO_DATA=(window.LOGO_DATA||'');refreshLogo();toast('הוחזר לוגו ברירת המחדל');};
+refreshLogo();
+document.getElementById('exportAll').onclick=()=>downloadText('שפת-הנשמה-גיבוי.json',JSON.stringify({lessons:loadLib(),voice:getVoice(),examples:getEx()},null,2));
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await rTxt(f));if(d.lessons)saveLib(d.lessons);if(d.voice){localStorage.setItem(LS.voice,d.voice);voiceText.value=d.voice;}if(d.examples){localStorage.setItem(LS.ex,d.examples);examplesText.value=d.examples;}toast('הגיבוי נטען ✓','good');renderLib();}catch(err){toast('קובץ גיבוי לא תקין')}};
+
+// ===== helpers =====
+function nameOf(){return document.getElementById('lessonName').value.trim()}
+function checkKey(){document.getElementById('noKey').style.display=(!getKey()&&!window.__apiOk)?'block':'none';}
+function uid(){return Date.now().toString(36)+Math.floor(performance.now()*1000).toString(36)+Math.random().toString(36).slice(2,7)}
+function toast(msg,kind){const t=document.createElement('div');t.className='toast'+(kind==='good'?' good':'');t.textContent=msg;document.getElementById('toasts').appendChild(t);setTimeout(()=>{t.style.transition='.4s';t.style.opacity='0';t.style.transform='translateY(8px)';setTimeout(()=>t.remove(),400)},2600);}
+function downloadText(fn,txt){const b=new Blob([txt],{type:'text/plain;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u)}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+// ===== חבילת שיעור מלאה (מערך / תרגילים / שיעורי בית / וואטסאפ / עזרים → תיקייה) =====
+function printableHTML(title,md,lessonName){
+  return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>${esc(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<style>body{font-family:'Heebo',sans-serif;color:#41372C;background:#FAF5EC;max-width:760px;margin:0 auto;padding:46px 40px;line-height:1.9}
+h1{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:2rem;color:#3A3026;border-bottom:1px solid #E6D8C2;padding-bottom:12px}
+h2{font-family:'Frank Ruhl Libre',serif;color:#A9743F;margin-top:26px;font-size:1.4rem}h3{font-family:'Frank Ruhl Libre',serif;margin-top:18px}
+strong{font-weight:600}em{color:#C58E86;font-style:normal}hr{border:none;border-top:1px solid #E6D8C2;margin:24px 0}
+ul,ol{margin:8px 22px}li{margin:6px 0}blockquote{border-inline-start:3px solid #EBD6CF;padding:4px 16px;color:#6E6051}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}.top img{width:46px;height:46px;object-fit:contain}.top .b{font-family:'Frank Ruhl Libre';color:#A9743F}
+.pbar{position:fixed;top:14px;left:14px}.pbar button{font-family:'Heebo';background:#41372C;color:#FAF5EC;border:none;border-radius:20px;padding:9px 18px;cursor:pointer}
+@media print{.pbar{display:none}body{background:#fff;padding:0 6px}}</style></head>
+<body><div class="pbar"><button onclick="window.print()">🖨️ שמירה כ‑PDF / הדפסה</button></div>
+<div class="top"><img src="${LOGO_DATA}" alt=""><div class="b">שפת הנשמה<div style="font-size:.62em;font-weight:300;color:#8C876B;font-family:'Heebo'">עופרה אינוז · קפסולה אלוקית</div></div></div>
+${mdRender(md)}
+<div style="margin-top:34px;border-top:1px solid #E6D8C2;padding-top:12px;text-align:center;color:#8C876B;font-size:.85rem">עופרה אינוז · קפסולה אלוקית</div></body></html>`;
+}
+function openHTMLWindow(html){const w=window.open('','_blank');if(!w){toast('אשרי חלונות קופצים');return;}w.document.write(html);w.document.close();}
+async function genArtifact(kind,body,name){const P={
+  homework:`מתוך תוכנית השיעור, צרי "שיעורי בית" ברמה הגבוהה ביותר — חמים, מדויקים, בקול של שפת הנשמה. משימה אחת–שתיים לקחת הביתה: רכות ומזמינות (לא "מטלה"), עם דוגמה קצרה או משל שמבהיר בדיוק מה לעשות, שאלה להתבוננות, ומקום לכתיבה. שתגרום לתלמידה *לרצות* לעשות אותם ולחזור עם משהו פנימי. ב‑Markdown, כותרת "# שיעורי בית — ${name}". בלי הקדמות.`,
+  whatsapp:`כתבי הודעת וואטסאפ לקבוצת התלמידות, **בקול המדויק של שפת הנשמה** (לפי פרופיל הקול שקיבלת — זה מעל הכול).
+זו לא הודעה "מנהלתית" ולא סיכום יבש — זו לחישה חמה אל "את". קצרה (4–6 שורות, נשימה בין שורות).
+קחי משפט או תמונה אמיתיים מתוך השיעור עצמו (לא כללי) והדהדי אותם. פתחי ברגע אנושי, השאירי בסוף קריאה
+שקטה/געגוע (לא מסקנה), והזכירי בעדינות את התרגיל לבית. בלי סימני קריאה, בלי "כיתה יקרה", בלי שיווק.
+אפשר אימוג'י עדין אחד (🌿). פנייה ל"את". טקסט בלבד, בלי כותרת.`};
+  return await callClaude(systemBase()+'\n\n'+P[kind],[{type:'text',text:body}],kind==='whatsapp'?700:4000,null);}
+async function genExercisesList(body,name){
+  const raw=await callClaude(systemBase()+'\n\nאת בונה תרגילים ברמה הגבוהה ביותר — כאלה שיגרמו לתלמידה להעריץ את המורָה ולרצות לעשות כל תרגיל.',[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך תרגילים. לכל תרגיל: {"title":"שם התרגיל","where":"בכיתה" או "בית","md":"תוכן מלא ב‑Markdown בקול של שפת הנשמה: מטרה במשפט אחד, הוראות פשוטות שלב-אחר-שלב, דוגמה מהחיים / משל / סיפור מקרה שנוגע, ושאלה להתבוננות"}. 3–5 תרגילים שמשרתים את לב השיעור, מגוונים (חלקם בכיתה חלקם בבית), ברמה גבוהה, חמה ומדויקת.\n\n${body}`}],5000,null);
+  let arr;try{arr=JSON.parse(raw.slice(raw.indexOf('['),raw.lastIndexOf(']')+1));}catch{arr=[{title:'תרגיל',where:'בית',md:raw}];}
+  return arr;}
+function exercisesCombinedMd(list,name){if(!Array.isArray(list))return String(list||'');return '# תרגילים — '+name+'\n\n'+list.map((e,i)=>`## ${i+1}. ${e.title||'תרגיל'}${e.where?'  ·  '+e.where:''}\n\n${e.md||''}`).join('\n\n---\n\n');}
+function safeName(s){return String(s||'תרגיל').replace(/[\\/:*?"<>|\n]/g,'').trim().slice(0,40);}
+async function genMedia(body){
+  const raw=await callClaude(systemBase()+'\n\nאת בוחרת המחשות חזותיות לשיעור.',[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד: {"images":[3 תיאורים קצרים באנגלית לתמונות שממחישות מושגי-מפתח של השיעור],"videos":[2-3 רעיונות/מילות חיפוש בעברית לסרטוני המחשה ביוטיוב]}.\n\n${body}`}],1500,null);
+  let j;try{j=JSON.parse(raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1));}catch{j={images:[],videos:[]};}
+  const urls=(j.images||[]).slice(0,3).map((p,i)=>`https://image.pollinations.ai/prompt/${encodeURIComponent(p+' — '+brandStyle())}?width=1280&height=720&nologo=true&model=flux&seed=${100+i}`);
+  return {imageUrls:urls,videos:j.videos||[]};}
+async function imageBlob(url){try{const r=await fetch(url);if(!r.ok)return null;return await r.blob();}catch{return null;}}
+async function buildPackage(ctx){
+  const area=ctx.area;const A=ctx.artifacts||{};
+  const card=(inner)=>{if(area)area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)">'+inner+'</div>';};
+  const steps=['מצגת','תרגילים','שיעורי בית','סיכום וואטסאפ','עזרים','אריזת תיקייה'];
+  let done=0;const prog=(t)=>card('<h3>📦 בונה חבילת שיעור…</h3><div class="hint">'+t+' ('+done+'/'+steps.length+')</div>');
+  try{
+    prog('כל הסוכנים עובדים יחד…');
+    let slides=ctx.getSlides&&ctx.getSlides();
+    const bump=(t)=>{done++;prog(t);};
+    // כל הסוכנים רצים במקביל — מהיר פי כמה (קריטי למסירה חיה)
+    await Promise.all([
+      (slides?Promise.resolve(enrichSlides(slides)):genSlides(ctx.body).then(s=>{slides=s;ctx.setSlides&&ctx.setSlides(s);})).then(()=>bump('מצגת מוכנה ✓')),
+      ((A.exercises&&Array.isArray(A.exercises))?Promise.resolve():genExercisesList(ctx.body,ctx.name).then(r=>{A.exercises=r;})).then(()=>bump('תרגילים מוכנים ✓')),
+      (A.homework?Promise.resolve():genArtifact('homework',ctx.body,ctx.name).then(r=>{A.homework=r;})).then(()=>bump('שיעורי בית מוכנים ✓')),
+      (A.whatsapp?Promise.resolve():genArtifact('whatsapp',ctx.body,ctx.name).then(r=>{A.whatsapp=r;})).then(()=>bump('סיכום וואטסאפ מוכן ✓')),
+      (A.media?Promise.resolve():genMedia(ctx.body).then(r=>{A.media=r;})).then(()=>bump('עזרים מוכנים ✓')),
+    ]);
+    // עכשיו שיש שקופיות — מוסיפים להן תמונות/וידאו/אייקונים
+    prog('מוסיף עזרים חזותיים למצגת…');try{await enrichSlidesMedia(slides,ctx.body,(w)=>prog('עזר חזותי: '+w));ctx.setSlides&&ctx.setSlides(slides);}catch(e){}
+    if(A.media&&A.media.imageUrls&&A.media.imageUrls.length){saveGal([...A.media.imageUrls,...loadGal()].slice(0,12));renderGal();}
+    ctx.setArtifacts&&ctx.setArtifacts(A);
+    const folder=(ctx.num?('שיעור '+ctx.num+' - '):'')+(ctx.name||'שיעור');
+    const zip=new JSZip();const f=zip.folder(folder);
+    const exCombined=exercisesCombinedMd(A.exercises,ctx.name);
+    const PDFMIN=4500; // PDF קטן מזה = דף ריק, מדלגים ונשענים על ה-HTML
+    // ── תוצרים מרכזיים (מה שמשתמשים בו) ──
+    prog('בונה PowerPoint…');try{f.file('מצגת.pptx',await pptxBlob(ctx.name,slides));}catch(e){}
+    prog('בונה PDF — מערך שיעור…');try{const p=await makePdfBlob('מערך שיעור — '+ctx.name,ctx.body);if(p&&p.size>PDFMIN)f.file('מערך-שיעור.pdf',p);}catch(e){}
+    prog('בונה PDF — תרגילים…');try{const p=await makePdfBlob('תרגילים — '+ctx.name,exCombined);if(p&&p.size>PDFMIN)f.file('תרגילים.pdf',p);}catch(e){}
+    prog('בונה PDF — שיעורי בית…');try{const p=await makePdfBlob('שיעורי בית — '+ctx.name,A.homework);if(p&&p.size>PDFMIN)f.file('שיעורי-בית.pdf',p);}catch(e){}
+    f.file('סיכום-וואטסאפ.txt',A.whatsapp);
+    // ── תרגילים — כל תרגיל בקובץ נפרד ──
+    const exF=f.folder('תרגילים');
+    A.exercises.forEach((ex,i)=>{const nm=(i+1)+' - '+safeName(ex.title);exF.file(nm+'.html',printableHTML(ex.title||('תרגיל '+(i+1)),ex.md||'',ctx.name));exF.file(nm+'.md',ex.md||'');});
+    // ── עזרים ──
+    const media=f.folder('עזרים');
+    media.file('רעיונות-וידאו.txt','רעיונות לסרטוני המחשה (חיפוש ביוטיוב):\n\n'+(A.media.videos||[]).map(v=>'• '+v).join('\n'));
+    const mUrls=A.media.imageUrls||[];const mBlobs=await Promise.all(mUrls.map(u=>imageBlob(u)));const links=[];mBlobs.forEach((b,i)=>{if(b)media.file('תמונה-'+(i+1)+'.png',b);else links.push(mUrls[i]);});
+    if(links.length)media.file('קישורי-תמונות.txt',links.join('\n'));
+    // ── גרסאות לעריכה ולווב (לא חובה לשימוש יומיומי) ──
+    const src=f.folder('לעריכה ולווב');
+    src.file('מערך-שיעור.md',ctx.body);
+    src.file('מערך-שיעור.html',printableHTML('מערך שיעור מלא — '+ctx.name,ctx.body,ctx.name));
+    src.file('מצגת.html',buildReveal(ctx.name,slides,{exercisesLink:'../תרגילים.pdf'}));
+    src.file('תרגילים.html',printableHTML('תרגילים — '+ctx.name,exCombined,ctx.name));
+    src.file('שיעורי-בית.html',printableHTML('שיעורי בית — '+ctx.name,A.homework,ctx.name));
+    f.file('קרא-אותי.txt','תיקיית שיעור — שפת הנשמה · עופרה אינוז · קפסולה אלוקית\n\n— הקבצים המרכזיים (לשימוש) —\nמצגת.pptx        ← המצגת ל-PowerPoint (עם הערות דובר — לחצי Slide Show → Use Presenter View)\nמערך-שיעור.pdf   ← השיעור המלא\nתרגילים.pdf      ← כל התרגילים\nשיעורי-בית.pdf   ← לתלמידות\nסיכום-וואטסאפ.txt ← לשליחה לקבוצה\n\n— תיקיות —\nתרגילים/   ← כל תרגיל בקובץ נפרד (לפתיחה והדפסה)\nעזרים/     ← תמונות + רעיונות לסרטונים\nלעריכה ולווב/ ← אותם תכנים בפורמט לעריכה (md) ולדפדפן (html) — לא חובה');
+    done++;prog('מורידה…');
+    const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=folder+'.zip';a.click();URL.revokeObjectURL(u);
+    renderPkgResult(area,ctx,A);toast('חבילת השיעור ירדה 📦','good');
+  }catch(e){if(area)area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';else toast('שגיאה: '+e.message);}
+}
+function renderPkgResult(area,ctx,A){if(!area)return;
+  area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📦 חבילת השיעור מוכנה — ירדה תיקייה</h3>'
+   +'<p class="hint">בתיקייה: מערך שיעור · מצגת (עם תמונות) · תרגילים (כל אחד בקובץ נפרד) · שיעורי בית · עזרים. אפשר לפתוח כל חלק כאן:</p>'
+   +'<div class="actions"><button class="btn dark" id="pk-pptx">🖥️ PowerPoint</button><button class="btn" id="pk-lesson">📄 מערך שיעור (PDF)</button><button class="btn" id="pk-ex">✏️ תרגילים (PDF)</button>'
+   +'<button class="btn" id="pk-hw">📋 שיעורי בית (PDF)</button><button class="btn" id="pk-media">🎨 עזרים</button></div>'
+   +'<div style="margin-top:16px"><div style="font-weight:500;margin-bottom:6px">💬 סיכום וואטסאפ — לצפייה ועריכה לפני שליחה:</div>'
+   +'<textarea class="inp" id="pk-wa-text" style="min-height:120px;line-height:1.7"></textarea>'
+   +'<div class="actions"><button class="btn dark" id="pk-wa-copy">📋 העתק לשליחה</button></div></div></div>';
+  area.querySelector('#pk-pptx').onclick=()=>downloadPptx(ctx.name,(ctx.getSlides&&ctx.getSlides())||[]);
+  area.querySelector('#pk-lesson').onclick=()=>downloadPdf('מערך שיעור — '+ctx.name,ctx.body);
+  area.querySelector('#pk-ex').onclick=()=>downloadPdf('תרגילים — '+ctx.name,exercisesCombinedMd(A.exercises,ctx.name));
+  area.querySelector('#pk-hw').onclick=()=>downloadPdf('שיעורי בית — '+ctx.name,A.homework);
+  area.querySelector('#pk-media').onclick=()=>{go('images');toast('התמונות שנוצרו בלשונית תמונות 🎨','good');};
+  const wa=area.querySelector('#pk-wa-text');wa.value=A.whatsapp||'';wa.oninput=()=>{A.whatsapp=wa.value;if(ctx.setArtifacts)ctx.setArtifacts(A);};
+  area.querySelector('#pk-wa-copy').onclick=()=>copyText(wa.value);
+}
+let curArtifacts={};
+document.getElementById('packageBtn').onclick=async()=>{if(!lastLesson){toast('בני שיעור קודם');return;}
+  const b=document.getElementById('packageBtn'),o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה חבילה…';b.disabled=true;
+  const pa=document.getElementById('pkgArea');pa.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📦 בונה את החבילה…</h3><div class="hint">כל הסוכנים עובדים יחד — מצגת, PowerPoint, תרגילים, שיעורי בית, וואטסאפ, עזרים ו‑PDF. אל תסגרי.</div></div>';
+  pa.scrollIntoView({behavior:'smooth',block:'center'});
+  try{await buildPackage({name:nameOf()||'שיעור',num:document.getElementById('lessonNum').value.trim(),body:lastLesson,
+   getSlides:()=>currentSlides,setSlides:s=>{currentSlides=s;},artifacts:curArtifacts,setArtifacts:A=>{curArtifacts=A;},area:pa});}
+  finally{b.innerHTML=o;b.disabled=false;}};
+// בדיקת חיבור
+document.getElementById('testConn').onclick=async()=>{const r=document.getElementById('connResult');r.textContent='בודקת חיבור…';
+  try{const res=await claudeFetch({model:getModel(),max_tokens:16,stream:false,messages:[{role:'user',content:'עני במילה אחת: מחובר'}]});
+    if(!res.ok){let m=res.status+'';try{const e=await res.json();m=e?.error?.message||m;}catch{}throw new Error(m);}await res.json();
+    r.innerHTML='<span style="color:var(--green);font-weight:500">✓ מחובר — המנוע עונה. הכול תקין.</span>';window.__apiOk=true;checkKey();
+  }catch(e){r.innerHTML='<span style="color:#b15">✗ אין חיבור: '+esc(e.message)+'</span>';}};
+// עריכת הערות דובר חיה
+(function(){const n=document.getElementById('presNotes');if(!n)return;n.addEventListener('input',()=>{
+  if(pres.slides[pres.idx]){pres.slides[pres.idx].notes=n.innerText;if(pres.onChange)pres.onChange();
+   const s=document.getElementById('notesSaved');if(s){s.textContent='נשמר ✓';clearTimeout(window.__nt);window.__nt=setTimeout(()=>s.textContent='',1200);}}});})();
+document.getElementById('presExBtn').onclick=async()=>{let ex=pres.getEx&&pres.getEx();
+  if(!ex||!Array.isArray(ex)){if(!pres.text){toast('אין מערך שיעור לתרגילים');return;}toast('בונה תרגילים…');try{ex=await genExercisesList(pres.text,pres.title);if(pres.setEx)pres.setEx(ex);}catch(e){toast('שגיאה: '+e.message);return;}}
+  openHTMLWindow(printableHTML('תרגילים — '+pres.title,exercisesCombinedMd(ex,pres.title),pres.title));};
+document.getElementById('slideImgBtn').onclick=()=>{const s=pres.slides[pres.idx];if(!s)return;const txt=((s.title||'')+' '+(s.body||'')).trim()||'soul language';
+  s.video=null;s.imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(txt+' — '+brandStyle())}?width=1280&height=720&nologo=true&model=flux&seed=${300+pres.idx+Math.floor(performance.now()%97)}`;
+  renderPres();if(pres.onChange)pres.onChange();toast('נוספה תמונה לשקופית 🎨','good');};
+document.getElementById('autoMediaBtn').onclick=async()=>{if(!pres.slides.length)return;const b=document.getElementById('autoMediaBtn');const o=b.textContent;b.innerHTML='<span class="spinner"></span> מחפש…';b.disabled=true;
+  try{await enrichSlidesMedia(pres.slides,pres.text||'',(w)=>toast('עזר: '+w));renderPres();if(pres.onChange)pres.onChange();toast('עזרים חזותיים נוספו למצגת ✨','good');}catch(e){toast('שגיאה: '+e.message);}finally{b.textContent=o;b.disabled=false;}};
+
+// ===== ייצוא נייטיב: PowerPoint אמיתי (.pptx) =====
+function txt(s){return String(s==null?'':s);}
+function buildPptxObj(name,slides){const pptx=new PptxGenJS();pptx.defineLayout({name:'SN',width:13.333,height:7.5});pptx.layout='SN';
+  (slides||[]).forEach((raw,i)=>{const s=normSlide(raw),type=s.type||'content';const sl=pptx.addSlide();sl.background={color:'FAF7EE'};
+    sl.addText('עופרה אינוז · קפסולה אלוקית',{x:0.5,y:6.96,w:7,h:0.34,fontSize:10,color:'B0A088',rtlMode:true,align:'left',fontFace:'Arial'});
+    sl.addText(((name?name+' · ':'')+(i+1)+'/'+slides.length),{x:6,y:6.96,w:6.8,h:0.34,fontSize:10,color:'B0A088',align:'right',fontFace:'Arial'});
+    if(type==='title'){try{sl.addImage({data:LOGO_DATA,x:5.92,y:0.85,w:1.5,h:1.5});}catch(e){}
+      sl.addText(txt(s.title),{x:0.6,y:2.7,w:12.1,h:1.6,fontSize:46,bold:true,color:'3A3026',align:'center',rtlMode:true,fontFace:'David'});
+      if(s.body)sl.addText(txt(s.body),{x:0.6,y:4.35,w:12.1,h:1,fontSize:22,color:'A9743F',align:'center',rtlMode:true,fontFace:'Arial'});
+    }else{let y=1.25;if(s.kicker){sl.addText(txt(s.kicker),{x:0.8,y:y,w:11.7,h:0.5,fontSize:16,color:'7E7B56',align:'right',rtlMode:true,fontFace:'Arial'});y+=0.75;}
+      const cen=(type==='opening'||type==='question'||type==='closing');
+      sl.addText(txt(s.title),{x:0.8,y:y,w:11.7,h:2.2,fontSize:34,bold:type!=='quote',italic:type==='quote',color:'3A3026',align:cen?'center':'right',rtlMode:true,fontFace:'David',valign:'top'});
+      if(s.body)sl.addText(txt(s.body),{x:0.8,y:y+2.3,w:11.7,h:1.6,fontSize:20,color:'6E6051',align:cen?'center':'right',rtlMode:true,fontFace:'Arial',valign:'top'});}
+    if(s.notes)sl.addNotes(txt(s.notes));});
+  return pptx;}
+async function downloadPptx(name,slides){if(!window.PptxGenJS){toast('הספרייה נטענת, נסי שוב בעוד רגע');return;}toast('בונה PowerPoint…');
+  try{await buildPptxObj(name,slides).writeFile({fileName:(name||'מצגת')+'.pptx'});toast('PowerPoint ירד ✓','good');}catch(e){toast('שגיאה: '+e.message);}}
+async function pptxBlob(name,slides){return await buildPptxObj(name,slides).write('blob');}
+
+// ===== PDF אמיתי (נייטיב, עברית מלאה) =====
+async function makePdfBlob(title,md){
+  // רנדור על המסך (בתוך כיסוי) — כך html2canvas תופס תוכן ולא דף לבן
+  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:99998;background:#F4ECDD;overflow:auto;display:flex;justify-content:center;padding:12px 0';
+  const el=document.createElement('div');el.style.cssText='width:760px;max-width:94vw;padding:46px 44px;background:#fff;color:#41372C;font-family:Heebo,sans-serif;line-height:1.85;direction:rtl;box-shadow:0 6px 24px rgba(0,0,0,.12);height:max-content';
+  el.innerHTML='<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><img src="'+LOGO_DATA+'" style="width:48px;height:48px;object-fit:contain"><div style="font-family:\'Frank Ruhl Libre\',serif;color:#A9743F;font-size:1.2rem">שפת הנשמה<div style="font-size:.6em;color:#8C876B;font-weight:300">עופרה אינוז · קפסולה אלוקית</div></div></div><div class="md">'+mdRender(md)+'</div><div style="margin-top:30px;border-top:1px solid #E6D8C2;padding-top:10px;text-align:center;color:#8C876B;font-size:.85rem">עופרה אינוז · קפסולה אלוקית</div>';
+  ov.appendChild(el);document.body.appendChild(ov);
+  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+  await new Promise(r=>setTimeout(r,150));
+  try{return await html2pdf().set({margin:[12,10],image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollX:0,scrollY:0,windowWidth:el.scrollWidth},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}}).from(el).outputPdf('blob');}
+  finally{ov.remove();}}
+async function downloadPdf(title,md){if(!window.html2pdf){toast('הספרייה נטענת…');return;}toast('בונה PDF…');
+  try{const b=await makePdfBlob(title,md);const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=title+'.pdf';a.click();URL.revokeObjectURL(u);toast('PDF ירד ✓','good');}catch(e){toast('שגיאה ב‑PDF: '+e.message);}}
+
+// ===== הקראה קולית (TTS, חינם, מובנה) =====
+function speakText(text){if(!window.speechSynthesis){toast('הדפדפן לא תומך בהקראה');return;}
+  if(speechSynthesis.speaking||speechSynthesis.paused){speechSynthesis.cancel();return;}
+  const u=new SpeechSynthesisUtterance(String(text||'').replace(/[#*_>`-]/g,'').slice(0,5000));u.lang='he-IL';u.rate=.95;
+  const v=speechSynthesis.getVoices().find(x=>/he|iw|hebrew/i.test(x.lang+' '+x.name));if(v)u.voice=v;
+  speechSynthesis.speak(u);toast('מקריאה… (לחיצה נוספת לעצירה)','good');}
+
+// ===== מעצב פוסטים לאינסטגרם (canvas → PNG) =====
+function wrapCanvasText(ctx,text,x,y,maxW,lh){const words=String(text||'').split(/\s+/);let line='',lines=[];
+  for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;}if(line)lines.push(line);
+  const startY=y-(lines.length-1)*lh/2;lines.forEach((l,i)=>ctx.fillText(l,x,startY+i*lh));}
+async function makeIGPost(quote){toast('בונה פוסט…');
+  try{if(document.fonts&&document.fonts.load){await Promise.all([document.fonts.load('500 62px "Frank Ruhl Libre"'),document.fonts.load('300 30px Heebo')]);await document.fonts.ready;}}catch(e){}
+  const c=document.createElement('canvas');c.width=1080;c.height=1080;const x=c.getContext('2d');
+  const g=x.createRadialGradient(540,420,80,540,560,820);g.addColorStop(0,'#FCF1DC');g.addColorStop(1,'#EDE0CC');x.fillStyle=g;x.fillRect(0,0,1080,1080);
+  x.strokeStyle='#C29A45';x.lineWidth=2;x.strokeRect(54,54,972,972);
+  x.fillStyle='#3A3026';x.textAlign='center';x.textBaseline='middle';x.direction='rtl';x.font='500 62px "Frank Ruhl Libre", Georgia, serif';
+  wrapCanvasText(x,quote,540,500,830,84);
+  x.fillStyle='#A9743F';x.font='300 30px Heebo, Arial, sans-serif';x.fillText('עופרה אינוז · קפסולה אלוקית',540,940);
+  const done=()=>c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='פוסט-אינסטגרם.png';a.click();URL.revokeObjectURL(u);toast('הפוסט ירד 📸','good');});
+  const img=new Image();img.onload=()=>{x.drawImage(img,490,130,100,100);done();};img.onerror=done;img.src=LOGO_DATA;}
+
+// ===== סנכרון ענן (Supabase, חינם) =====
+const SB_URL=()=>localStorage.getItem('sn-sb-url')||'',SB_KEY=()=>localStorage.getItem('sn-sb-key')||'',SB_ID=()=>localStorage.getItem('sn-sb-id')||'ofra';
+function sbHeaders(){return {apikey:SB_KEY(),Authorization:'Bearer '+SB_KEY(),'Content-Type':'application/json'};}
+async function cloudPush(){if(!SB_URL()||!SB_KEY()){toast('הגדירי סנכרון ענן בהגדרות');return;}toast('מעלה לענן…');
+  try{const body=[{id:SB_ID(),data:{lessons:loadLib(),voice:getVoice(),examples:getEx()}}];
+    const r=await fetch(SB_URL().replace(/\/$/,'')+'/rest/v1/sn_library',{method:'POST',headers:Object.assign(sbHeaders(),{Prefer:'resolution=merge-duplicates'}),body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(await r.text());toast('הספרייה הועלתה לענן ✓','good');}catch(e){toast('שגיאת סנכרון: '+e.message);}}
+async function cloudPull(){if(!SB_URL()||!SB_KEY()){toast('הגדירי סנכרון ענן בהגדרות');return;}toast('מוריד מהענן…');
+  try{const r=await fetch(SB_URL().replace(/\/$/,'')+'/rest/v1/sn_library?id=eq.'+encodeURIComponent(SB_ID())+'&select=data',{headers:sbHeaders()});
+    if(!r.ok)throw new Error(await r.text());const d=await r.json();if(!d.length){toast('אין עדיין גיבוי בענן');return;}
+    const x=d[0].data||{};if(x.lessons)saveLib(x.lessons);if(x.voice)localStorage.setItem(LS.voice,x.voice);if(x.examples)localStorage.setItem(LS.ex,x.examples);
+    toast('הספרייה הורדה מהענן ✓','good');renderLib();}catch(e){toast('שגיאת סנכרון: '+e.message);}}
+
+// ===== עוזרת ההוראה — צ'אט עם כלים =====
+const CHAT_CSS=`
+#chatFab{position:fixed;bottom:22px;left:22px;z-index:150;display:flex;align-items:center;gap:8px;background:var(--ink);color:var(--cream);border:none;border-radius:30px;padding:11px 18px 11px 12px;cursor:pointer;box-shadow:var(--shadow);font-family:'Heebo';font-size:.95rem;font-weight:500;transition:.2s}
+#chatFab:hover{background:var(--copper);transform:translateY(-1px)}#chatFab svg,#chatFab img{width:26px;height:26px;color:var(--gold-soft);object-fit:contain}
+#chatPanel{position:fixed;bottom:22px;left:22px;z-index:160;width:392px;max-width:calc(100vw - 32px);height:min(620px,calc(100vh - 44px));background:var(--cream);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 64px rgba(65,55,44,.24);display:none;flex-direction:column;overflow:hidden}
+#chatPanel.show{display:flex;animation:fadeUp .3s}
+.chat-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--paper)}
+.chat-head .mk{width:30px;height:30px;color:var(--copper)}.chat-head .mk img{width:30px;height:30px;object-fit:contain}.chat-head h4{font-family:'Frank Ruhl Libre';font-size:1.1rem;flex:1;font-weight:500}
+.chat-head .x{background:none;border:none;font-size:1.5rem;color:var(--ink2);cursor:pointer;line-height:1}
+.chat-body{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;padding:10px 15px;border-radius:16px;font-size:.95rem;line-height:1.6}
+.msg.user{align-self:flex-start;background:var(--ink);color:var(--cream);border-bottom-right-radius:5px;white-space:pre-wrap}
+.msg.bot{align-self:flex-end;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.bot .md p{margin:6px 0}.msg.bot .md h1,.msg.bot .md h2,.msg.bot .md h3{font-size:1rem;margin:8px 0 4px;border:none;color:var(--copper)}
+.msg.bot .md ul{margin:6px 18px 6px 0}.msg img{max-width:100%;border-radius:12px}
+.act{align-self:center;font-size:.8rem;color:var(--olive);background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:4px 13px;display:flex;align-items:center;gap:6px}
+.typing{align-self:flex-end;color:var(--ink2);font-size:.9rem;padding:2px 10px}
+.chat-sugs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
+.chat-sugs button{font-size:.82rem;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:6px 12px;cursor:pointer;color:var(--ink2);transition:.15s}
+.chat-sugs button:hover{background:var(--rose-soft);border-color:var(--rose-soft);color:var(--copper)}
+.chat-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:var(--paper)}
+.chat-input textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:'Heebo';font-size:.95rem;max-height:110px;background:var(--cream);color:var(--ink);line-height:1.5}
+.chat-input textarea:focus{outline:none;border-color:var(--copper)}
+.chat-input button{background:var(--ink);color:var(--cream);border:none;border-radius:12px;width:46px;cursor:pointer;font-size:1.2rem;flex:none}.chat-input button:hover{background:var(--copper)}
+@media(max-width:600px){#chatPanel{left:8px;right:8px;width:auto;bottom:8px;height:calc(100vh - 16px)}#chatFab{bottom:14px;left:14px}}`;
+
+const CHAT_TOOLS=[
+ {name:'list_lessons',description:'רשימת כל השיעורים בספרייה (מספר, שם, מזהה, אורך, האם יש מצגת).',input_schema:{type:'object',properties:{}}},
+ {name:'read_lesson',description:'קריאת התוכן המלא של שיעור לפי מספר/שם/מזהה.',input_schema:{type:'object',properties:{query:{type:'string',description:'מספר/שם/מזהה השיעור'}},required:['query']}},
+ {name:'search_lessons',description:'חיפוש שיעורים לפי מילה בתוכן או בשם.',input_schema:{type:'object',properties:{query:{type:'string'}},required:['query']}},
+ {name:'draft_lesson',description:'כתיבת שיעור חדש שלם בקול של שפת הנשמה לפי נושא/הערות, ושמירתו בספרייה.',input_schema:{type:'object',properties:{name:{type:'string'},topic:{type:'string',description:'הנושא או ההערות'},length:{type:'string',enum:['short','medium','deep']}},required:['name','topic']}},
+ {name:'revise_lesson',description:'תיקון/שיפור שיעור קיים לפי הנחיה, ושמירתו.',input_schema:{type:'object',properties:{query:{type:'string'},instruction:{type:'string'}},required:['query','instruction']}},
+ {name:'make_slides',description:'יצירת מצגת מעוצבת לשיעור קיים ושמירתה.',input_schema:{type:'object',properties:{query:{type:'string'}},required:['query']}},
+ {name:'present_lesson',description:'פתיחת מצב הצגה לשיעור (יוצר מצגת אם אין).',input_schema:{type:'object',properties:{query:{type:'string'}},required:['query']}},
+ {name:'generate_image',description:'יצירת תמונה בסגנון המותג לפי תיאור. מחזיר כתובת תמונה.',input_schema:{type:'object',properties:{prompt:{type:'string'},format:{type:'string',enum:['square','wide','portrait']}},required:['prompt']}},
+ {name:'add_voice_example',description:'הוספת דוגמה לקול של עופרה כדי לדייק את המערכת.',input_schema:{type:'object',properties:{text:{type:'string'}},required:['text']}},
+ {name:'open_section',description:'מעבר ללשונית במערכת.',input_schema:{type:'object',properties:{section:{type:'string',enum:['new','library','images','voice','settings']}},required:['section']}},
+ {name:'list_folder_files',description:'רשימת קבצי הגלם בתיקיית העבודה המחוברת (שם, נתיב, סוג). דורש שתיקייה תהיה מחוברת.',input_schema:{type:'object',properties:{}}},
+ {name:'read_folder_file',description:'קריאת טקסט מקובץ בתיקייה המחוברת לפי שם/נתיב (Word ו‑טקסט בלבד). מחזיר את התוכן.',input_schema:{type:'object',properties:{query:{type:'string',description:'שם או נתיב הקובץ'}},required:['query']}},
+ {name:'save_to_folder',description:'שמירת שיעור קיים מהספרייה כקובץ Markdown לתת‑התיקייה "תוצרים" בתיקייה המחוברת.',input_schema:{type:'object',properties:{query:{type:'string',description:'מספר/שם/מזהה השיעור'}},required:['query']}},
+];
+function findLesson(q){const lib=loadLib();if(!q&&q!==0)return null;q=(''+q).trim().toLowerCase();
+  return lib.find(l=>l.id===q)||lib.find(l=>(''+l.num).toLowerCase()===q)||lib.find(l=>(l.name||'').toLowerCase().includes(q))||lib.find(l=>(''+l.num).includes(q));}
+async function chatToolRun(name,a){a=a||{};
+  if(name==='list_lessons'){const lib=loadLib();return lib.length?JSON.stringify(lib.map(l=>({num:l.num,name:l.name,id:l.id,chars:l.body.length,slides:!!l.slides}))):'אין עדיין שיעורים בספרייה.';}
+  if(name==='read_lesson'){const l=findLesson(a.query);return l?l.body:'לא נמצא שיעור מתאים.';}
+  if(name==='search_lessons'){const q=(a.query||'').toLowerCase();const r=loadLib().filter(l=>(l.name+' '+l.body).toLowerCase().includes(q)).map(l=>({num:l.num,name:l.name,id:l.id}));return r.length?JSON.stringify(r):'לא נמצא.';}
+  if(name==='draft_lesson'){const len=LEN[a.length||'medium'];
+    const body=await callClaude(systemBase()+'\n\n'+AGENTS[3].inst,[{type:'text',text:`כתבי שיעור שלם וחדש בנושא: "${a.topic}". בני ${len}. הוציאי את התוכנית הסופית במבנה המלא, בקול של שפת הנשמה.`}],8000,null);
+    const lib=loadLib();lib.push({id:uid(),num:'',name:a.name,body,slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);renderLib();
+    return 'נכתב ונשמר בספרייה כשיעור "'+a.name+'".';}
+  if(name==='revise_lesson'){const l=findLesson(a.query);if(!l)return 'לא נמצא שיעור.';
+    const body=await callClaude(systemBase()+'\n\n'+AGENTS[3].inst,[{type:'text',text:`תוכנית קיימת:\n\n${l.body}\n\nתיקון: ${a.instruction}\nהחזירי את התוכנית המלאה המתוקנת ב‑Markdown.`}],8000,null);
+    const lib=loadLib();const it=lib.find(x=>x.id===l.id);if(it){it.body=body;it.slides=null;saveLib(lib);renderLib();}return 'השיעור "'+l.name+'" תוקן ונשמר.';}
+  if(name==='make_slides'){const l=findLesson(a.query);if(!l)return 'לא נמצא שיעור.';const slides=await genSlides(l.body);const lib=loadLib();const it=lib.find(x=>x.id===l.id);if(it){it.slides=slides;saveLib(lib);renderLib();}return 'נוצרה מצגת מעוצבת ('+slides.length+' שקופיות) לשיעור "'+l.name+'".';}
+  if(name==='present_lesson'){const l=findLesson(a.query);if(!l)return 'לא נמצא שיעור.';let slides=l.slides;if(!slides||!slides.length){slides=await genSlides(l.body);const lib=loadLib();const it=lib.find(x=>x.id===l.id);if(it){it.slides=slides;saveLib(lib);}}openPresenter(slides,l.name,{getText:()=>l.body,onChange:()=>saveLibField(l.id,'slides',pres.slides)});return 'פתחתי מצב הצגה לשיעור "'+l.name+'".';}
+  if(name==='generate_image'){const m={square:'1024x1024',wide:'1280x720',portrait:'1024x1280'},ar=m[a.format||'square'],[w,h]=ar.split('x'),seed=Math.floor((performance.now()*7)%99999);
+    const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(a.prompt+' — '+brandStyle())}?width=${w}&height=${h}&nologo=true&model=flux&seed=${seed}`;const gal=loadGal();gal.unshift(url);saveGal(gal.slice(0,12));return url;}
+  if(name==='add_voice_example'){const cur=getEx(),nw=(cur?cur+'\n':'')+a.text;localStorage.setItem(LS.ex,nw);const t=document.getElementById('examplesText');if(t)t.value=nw;return 'הדוגמה נוספה לקול שלך.';}
+  if(name==='open_section'){go(a.section);return 'עברתי ללשונית.';}
+  if(name==='list_folder_files'){if(!folderHandle)return 'אין תיקייה מחוברת. בקשי מעופרה ללחוץ "חברי תיקייה" בהגדרות (Chrome/Edge במחשב, כשמריצים מ‑Vercel/localhost). או להשתמש ב"בחרי מתיקייה שלמה" בלשונית "שיעור חדש".';
+    try{const list=await fsaList(folderHandle);return list.length?JSON.stringify(list.map(f=>({name:f.name,path:f.path,type:f.ext}))):'אין קבצים נתמכים בתיקייה.';}catch(e){return 'שגיאה בקריאת התיקייה: '+e.message;}}
+  if(name==='read_folder_file'){if(!folderHandle)return 'אין תיקייה מחוברת.';
+    try{const list=await fsaList(folderHandle);const q=(a.query||'').toLowerCase();
+      const hit=list.find(f=>f.path.toLowerCase()===q)||list.find(f=>f.name.toLowerCase()===q)||list.find(f=>f.name.toLowerCase().includes(q));
+      if(!hit)return 'לא נמצא קובץ מתאים.';
+      if(!['docx','txt','md'].includes(hit.ext))return 'הקובץ "'+hit.name+'" הוא '+hit.ext.toUpperCase()+'. קריאת טקסט ישירה כאן תומכת ב‑Word/טקסט בלבד — כדי לבנות שיעור מ‑PDF/תמונה, טעני אותו דרך "שיעור חדש" → "בחרי מתיקייה שלמה".';
+      const txt=await fsaReadText(hit.path);return txt?txt.slice(0,12000):'לא הצלחתי לחלץ טקסט מהקובץ.';}catch(e){return 'שגיאה: '+e.message;}}
+  if(name==='save_to_folder'){const l=findLesson(a.query);if(!l)return 'לא נמצא שיעור.';
+    try{const safe=(l.name||'שיעור').replace(/[\\/:*?"<>|]/g,'-').trim();const fn=(l.num?l.num+' - ':'')+safe+'.md';const p=await fsaWrite(fn,l.body);return 'נשמר בתיקייה: '+p;}catch(e){return 'לא הצלחתי לשמור: '+e.message;}}
+  return 'כלי לא מוכר.';}
+function actionLabel(n){return ({list_lessons:'מעיינת בספרייה',read_lesson:'קוראת שיעור',search_lessons:'מחפשת',draft_lesson:'כותבת שיעור…',revise_lesson:'מתקנת שיעור…',make_slides:'בונה מצגת…',present_lesson:'פותחת הצגה',generate_image:'מציירת…',add_voice_example:'מעדכנת את הקול',open_section:'עוברת לשונית',list_folder_files:'מעיינת בתיקייה',read_folder_file:'קוראת קובץ מהתיקייה',save_to_folder:'שומרת לתיקייה'})[n]||n;}
+function chatSystem(){return `את "עוזרת ההוראה" של עופרה במערכת "שפת הנשמה". חכמה, חמה, מדויקת — כמו עוזרת הוראה אישית מצוינת. את מכירה את המותג והקול (למטה).
+תפקידך: לעזור לעופרה לתכנן, לחשוב יחד, לשפר, לארגן, ולבצע פעולות במערכת. דברי בעברית, קצר וברור ובחום.
+כשמבקשים פעולה (לכתוב/לתקן שיעור, ליצור מצגת/תמונה, להציג) — בצעי דרך הכלים ואז דווחי בקצרה מה עשית. כשמבקשים תוכן — כתבי בקול של שפת הנשמה. אל תמציאי שיעורים — בדקי עם הכלים. אל תכתבי תשובות ארוכות מדי.
+אם עופרה חיברה תיקיית עבודה — את יכולה לעיין בקבצים שבה (list_folder_files), לקרוא קובץ Word/טקסט (read_folder_file), ולשמור שיעור מהספרייה לתיקייה (save_to_folder). כשמבקשים לבנות שיעור מקבצים — אם אלה PDF/תמונה, הנחי לטעון אותם דרך לשונית "שיעור חדש" → "בחרי מתיקייה שלמה".
+
+— פרופיל הקול —
+`+systemBase();}
+let chatMsgs=[],chatBusy=false;
+function chatBubble(role,html){const b=document.getElementById('chatBody');const d=document.createElement('div');d.className='msg '+role;
+  d.innerHTML=role==='bot'?'<div class="md">'+mdRender(html)+'</div>':esc(html);b.appendChild(d);b.scrollTop=b.scrollHeight;return d;}
+function chatAct(label){const b=document.getElementById('chatBody');const d=document.createElement('div');d.className='act';d.innerHTML='🔧 '+esc(label);b.appendChild(d);b.scrollTop=b.scrollHeight;}
+function chatImg(url){const b=document.getElementById('chatBody');const d=document.createElement('div');d.className='msg bot';const im=new Image();im.src=url;d.appendChild(im);b.appendChild(d);b.scrollTop=b.scrollHeight;}
+let typingEl=null;
+function chatTyping(on){const b=document.getElementById('chatBody');if(on){if(typingEl)return;typingEl=document.createElement('div');typingEl.className='typing';typingEl.textContent='כותבת…';b.appendChild(typingEl);b.scrollTop=b.scrollHeight;}else if(typingEl){typingEl.remove();typingEl=null;}}
+async function chatCall(){const res=await claudeFetch({model:getModel(),max_tokens:2000,system:chatSystem(),messages:chatMsgs,tools:CHAT_TOOLS});
+  if(!res.ok){let m=res.status+'';try{const e=await res.json();m=e?.error?.message||m;}catch{}throw new Error(m);}return res.json();}
+async function chatRun(){chatBusy=true;chatTyping(true);
+  try{let guard=0;while(guard++<6){const data=await chatCall();chatTyping(false);
+    chatMsgs.push({role:'assistant',content:data.content});
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();if(text)chatBubble('bot',text);
+    const tus=(data.content||[]).filter(b=>b.type==='tool_use');
+    if(data.stop_reason==='tool_use'&&tus.length){chatTyping(true);const results=[];
+      for(const tu of tus){chatAct(actionLabel(tu.name));let out;try{out=await chatToolRun(tu.name,tu.input||{});}catch(e){out='שגיאה: '+e.message;}
+        if(tu.name==='generate_image'&&(''+out).startsWith('http'))chatImg(out);
+        results.push({type:'tool_result',tool_use_id:tu.id,content:(''+out).slice(0,8000)});}
+      chatMsgs.push({role:'user',content:results});continue;}
+    break;}
+  }catch(e){chatTyping(false);chatBubble('bot','אופס, משהו השתבש: '+e.message);}
+  chatTyping(false);chatBusy=false;}
+function chatSendText(text){if(!text||chatBusy)return;chatBubble('user',text);chatMsgs.push({role:'user',content:text});chatRun();}
+function initChat(){
+  document.head.insertAdjacentHTML('beforeend','<style>'+CHAT_CSS+'</style>');
+  document.body.insertAdjacentHTML('beforeend',`<button id="chatFab">${logoImg()} עוזרת ההוראה</button>
+   <div id="chatPanel"><div class="chat-head"><span class="mk">${logoImg()}</span><h4>עוזרת ההוראה</h4><button class="x" id="chatClose">×</button></div>
+   <div class="chat-body" id="chatBody"></div>
+   <div class="chat-sugs" id="chatSugs"></div>
+   <div class="chat-input"><button id="chatFolderBtn" title="טעני קבצים מהתיקייה" style="background:var(--paper);color:var(--copper);border:1px solid var(--line)">📂</button><textarea id="chatText" rows="1" placeholder="כתבי לי… (למשל: תכנני שיעור על כוח האותיות)"></textarea><button id="chatSend">↑</button></div></div>`);
+  const panel=document.getElementById('chatPanel'),ta=document.getElementById('chatText');
+  document.getElementById('chatFab').onclick=()=>{panel.classList.toggle('show');if(panel.classList.contains('show')){ta.focus();if(!chatMsgs.length)greet();}};
+  document.getElementById('chatClose').onclick=()=>panel.classList.remove('show');
+  document.getElementById('chatSend').onclick=()=>{const v=ta.value.trim();if(v){ta.value='';ta.style.height='auto';chatSendText(v);}};
+  ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,110)+'px';});
+  ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('chatSend').click();}});
+}
+function greet(){chatBubble('bot','שלום עופרה 🌿 אני כאן לעזור — לתכנן שיעור, לשפר, לבנות מצגת או תמונה, או פשוט לחשוב יחד. מה על ליבך?');
+  const sugs=['מה כבר לימדתי?','רעיון לשיעור הבא','בני מצגת לשיעור 1','צרי תמונה לאינסטגרם'];
+  const el=document.getElementById('chatSugs');el.innerHTML='';sugs.forEach(s=>{const b=document.createElement('button');b.textContent=s;b.onclick=()=>{el.innerHTML='';chatSendText(s);};el.appendChild(b);});}
+
+// ===== תיקיית העבודה — חיבור לקבצים (שתי שכבות: בחירת תיקייה תמיד · חיבור קבוע ב‑Chrome) =====
+const FOLDER_EXTS=['pdf','docx','txt','md','png','jpg','jpeg','webp','gif'];
+const FSA_SUPPORTED=(typeof window!=='undefined' && 'showDirectoryPicker' in window);
+let folderHandle=null;
+const FOLDER_CSS=`
+.folder-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.folder-row .hint{margin:0}
+.fmodal-bk{position:fixed;inset:0;z-index:300;background:rgba(45,38,30,.5);display:flex;align-items:center;justify-content:center;padding:20px}
+.fmodal{background:var(--cream);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 64px rgba(65,55,44,.3);width:min(560px,100%);max-height:84vh;display:flex;flex-direction:column;overflow:hidden}
+.fmodal-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--paper)}
+.fmodal-head b{flex:1;font-family:'Frank Ruhl Libre';font-size:1.08rem}
+.fmodal-head .x{background:none;border:none;font-size:1.5rem;color:var(--ink2);cursor:pointer;line-height:1}
+.fmodal-body{flex:1;overflow:auto;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.fmodal-body .frow{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:.92rem}
+.fmodal-body .frow:hover{background:var(--paper)}
+.fmodal-body .fn{flex:1;font-weight:500}
+.fmodal-body .fp{color:var(--ink2);font-size:.78rem;direction:ltr}
+.fmodal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:var(--paper)}`;
+// אחסון ה‑handle ב‑IndexedDB כדי שהחיבור יישמר בין פתיחות
+const idbFolder=(()=>{const DB='sn-fsa',ST='handles';
+  function open(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(ST);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+  return{async get(k){try{const db=await open();return await new Promise((res,rej)=>{const t=db.transaction(ST,'readonly').objectStore(ST).get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>rej(t.error);});}catch(e){return null;}},
+   async set(k,v){const db=await open();return new Promise((res,rej)=>{const tx=db.transaction(ST,'readwrite');tx.objectStore(ST).put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});},
+   async del(k){try{const db=await open();return await new Promise((res)=>{const tx=db.transaction(ST,'readwrite');tx.objectStore(ST).delete(k);tx.oncomplete=()=>res();tx.onerror=()=>res();});}catch(e){}}};})();
+async function fsaPerm(handle,write){try{const opts={mode:write?'readwrite':'read'};
+  if((await handle.queryPermission(opts))==='granted')return true;
+  if((await handle.requestPermission(opts))==='granted')return true;}catch(e){}return false;}
+async function fsaList(handle,base='',acc=[],depth=0){if(depth>4)return acc;
+  for await(const [name,h] of handle.entries()){if(name.startsWith('.'))continue;
+    const path=base?base+'/'+name:name;
+    if(h.kind==='file'){const ext=(name.split('.').pop()||'').toLowerCase();if(FOLDER_EXTS.includes(ext))acc.push({name,path,ext});}
+    else if(h.kind==='directory' && name!=='תוצרים'){await fsaList(h,path,acc,depth+1);}}
+  return acc;}
+async function fsaGetFileHandle(path){let dir=folderHandle;const parts=path.split('/');const fname=parts.pop();for(const p of parts){dir=await dir.getDirectoryHandle(p);}return dir.getFileHandle(fname);}
+async function fsaReadText(path){const fh=await fsaGetFileHandle(path);const f=await fh.getFile();const ext=(path.split('.').pop()||'').toLowerCase();
+  if(ext==='docx'){const buf=await f.arrayBuffer();const r=await mammoth.extractRawText({arrayBuffer:buf});return r.value;}
+  if(['txt','md'].includes(ext))return await f.text();
+  return null;}
+async function fsaWrite(filename,text){if(!folderHandle)throw new Error('אין תיקייה מחוברת');
+  if(!(await fsaPerm(folderHandle,true)))throw new Error('אין הרשאת כתיבה');
+  const out=await folderHandle.getDirectoryHandle('תוצרים',{create:true});
+  const fh=await out.getFileHandle(filename,{create:true});const w=await fh.createWritable();await w.write(text);await w.close();return 'תוצרים/'+filename;}
+function updateFolderStatus(){
+  const fs=document.getElementById('folderStatus');if(fs)fs.textContent=folderHandle?('🔗 מחוברת: '+folderHandle.name):'';
+  const st=document.getElementById('fsaStatus');if(st)st.innerHTML=folderHandle?('<span style="color:var(--green)">מחוברת לתיקייה: <b>'+esc(folderHandle.name)+'</b> · העוזרת יכולה לקרוא ולשמור אליה.</span>'):'אין תיקייה מחוברת עדיין.';}
+async function connectFolder(){if(!FSA_SUPPORTED){toast('הדפדפן הזה לא תומך בחיבור קבוע — השתמשי ב"בחרי מתיקייה שלמה"');return;}
+  try{const h=await window.showDirectoryPicker({mode:'readwrite'});folderHandle=h;await fsaPerm(h,true);await idbFolder.set('dir',h);updateFolderStatus();toast('התיקייה חוברה ✓','good');}
+  catch(e){if(e&&e.name!=='AbortError')toast('לא הצלחתי לחבר תיקייה');}}
+async function forgetFolder(){folderHandle=null;await idbFolder.del('dir');updateFolderStatus();toast('התיקייה נותקה');}
+async function folderLoadSaved(){if(!FSA_SUPPORTED)return;try{const h=await idbFolder.get('dir');if(h){folderHandle=h;updateFolderStatus();}}catch(e){}}
+// בחירת תיקייה שלמה (webkitdirectory) — עובד תמיד, גם ב‑file://
+function folderChoose(fl){const supported=[...fl].filter(f=>{const ext=(f.name.split('.').pop()||'').toLowerCase();return FOLDER_EXTS.includes(ext)&&!f.name.startsWith('.');});
+  if(!supported.length){toast('לא נמצאו קבצים נתמכים בתיקייה');return;}
+  supported.sort((a,b)=>(a.webkitRelativePath||a.name).localeCompare(b.webkitRelativePath||b.name,'he'));
+  openFolderModal(supported);}
+function openFolderModal(list){
+  const rows=list.map((f,i)=>{const rel=f.webkitRelativePath||f.name;return '<label class="frow"><input type="checkbox" data-i="'+i+'"> <span class="fn">'+esc(f.name)+'</span> <span class="fp">'+esc(rel)+'</span></label>';}).join('');
+  const html='<div class="fmodal-bk" id="fmodalBk"><div class="fmodal"><div class="fmodal-head"><b>בחרי קבצים להוספה — '+list.length+' נמצאו</b><button class="x" id="fmX">×</button></div>'+
+    '<div class="fmodal-body">'+rows+'</div>'+
+    '<div class="fmodal-foot"><button class="btn" id="fmAll" type="button">סמני הכל</button><button class="btn" id="fmNone" type="button">נקה</button><button class="btn dark" id="fmAdd" type="button">➕ הוסיפי נבחרים</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',html);
+  const bk=document.getElementById('fmodalBk');const close=()=>bk.remove();
+  document.getElementById('fmX').onclick=close;bk.onclick=e=>{if(e.target===bk)close();};
+  document.getElementById('fmAll').onclick=()=>bk.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true);
+  document.getElementById('fmNone').onclick=()=>bk.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
+  document.getElementById('fmAdd').onclick=async()=>{const sel=[...bk.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>list[+c.dataset.i]);
+    if(!sel.length){toast('לא נבחרו קבצים');return;}close();await addFiles(sel);toast('נוספו '+sel.length+' קבצים ✓','good');};}
+function initFolder(){
+  document.head.insertAdjacentHTML('beforeend','<style>'+FOLDER_CSS+'</style>');
+  const fi=document.getElementById('folderInput'),pick=document.getElementById('pickFolderBtn');
+  if(pick&&fi){pick.onclick=()=>fi.click();fi.onchange=e=>{folderChoose(e.target.files);fi.value='';};}
+  const cf=document.getElementById('connectFolderBtn');if(cf){if(FSA_SUPPORTED){cf.style.display='';cf.onclick=connectFolder;}else{cf.style.display='none';}}
+  const cfb=document.getElementById('chatFolderBtn');if(cfb&&fi)cfb.onclick=()=>{go('new');fi.click();};
+  const sc=document.getElementById('settingsConnectFolder');if(sc)sc.onclick=connectFolder;
+  const sf=document.getElementById('settingsForgetFolder');if(sf)sf.onclick=forgetFolder;
+  const un=document.getElementById('fsaUnsupported'),ac=document.getElementById('fsaActions');
+  if(!FSA_SUPPORTED){if(un)un.style.display='';if(ac)ac.style.display='none';}
+  folderLoadSaved();updateFolderStatus();}
+
+(function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
+checkKey();refreshRun();renderGal();
+try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{});}}catch(e){}
+document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
+initChat();
+initFolder();
+try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
+
+// ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
+(function(){
+  // רישום Service Worker (נדרש להתקנה; עובד רק ב-https או localhost, לא ב-file://)
+  if('serviceWorker' in navigator && location.protocol !== 'file:'){
+    window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+  }
+  const btn=document.getElementById('installBtn');
+  const hint=document.getElementById('installHint');
+  const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  const ua=navigator.userAgent||'';
+  const isIOS=/iphone|ipad|ipod/i.test(ua)||(/Macintosh/.test(ua)&&'ontouchend'in document);
+  let deferred=null;
+
+  function setHint(html){if(hint)hint.innerHTML=html;}
+
+  // אם כבר מותקנת
+  if(isStandalone()){
+    if(btn){btn.textContent='✓ המערכת מותקנת';btn.disabled=true;}
+    setHint('<span style="color:var(--green)">המערכת כבר רצה כאפליקציה מותקנת 🌿</span>');
+  } else if(isIOS){
+    // ב-iPhone/iPad אין כפתור אוטומטי — מנחים ידנית
+    if(btn)btn.textContent='📲 איך מתקינים באייפון';
+    setHint('באייפון/אייפד: פתחי ב-<b>Safari</b> ← לחצי על כפתור <b>שיתוף</b> (ריבוע עם חץ למעלה) ← <b>הוסף למסך הבית</b> (Add to Home Screen).');
+  } else if(location.protocol==='file:'){
+    setHint('כדי להתקין כאפליקציה צריך לפתוח את המערכת מכתובת אינטרנט (לאחר פריסה ל-Vercel) או משרת מקומי — לא מקובץ ישירות.');
+  } else {
+    setHint('לחצי על הכפתור כדי להתקין. אם הכפתור לא פעיל עדיין — רענני את הדף פעם אחת, או השתמשי בתפריט הדפדפן ← "התקן אפליקציה".');
+  }
+
+  // Chrome/Edge/Android — אירוע ההתקנה הרשמי
+  window.addEventListener('beforeinstallprompt',(e)=>{
+    e.preventDefault();deferred=e;
+    if(btn){btn.disabled=false;btn.textContent='📲 התקנת האפליקציה';}
+    setHint('המערכת מוכנה להתקנה — לחצי "התקנת האפליקציה" 🌿');
+  });
+
+  if(btn){btn.onclick=async()=>{
+    if(deferred){
+      deferred.prompt();
+      try{const c=await deferred.userChoice;if(c&&c.outcome==='accepted'){setHint('<span style="color:var(--green)">מותקנת ✓ — חפשי את האייקון של "שפת הנשמה".</span>');}else{setHint('ההתקנה בוטלה. אפשר תמיד שוב מההגדרות.');}}catch(_){}
+      deferred=null;return;
+    }
+    if(isIOS){setHint('באייפון/אייפד: <b>Safari</b> ← <b>שיתוף</b> ← <b>הוסף למסך הבית</b>.');return;}
+    if(isStandalone()){toast('המערכת כבר מותקנת ✓','good');return;}
+    setHint('פתחי את תפריט הדפדפן (⋮ בפינה) ← <b>"התקן אפליקציה" / Install</b>. אם אין — רענני את הדף פעם אחת ונסי שוב.');
+  };}
+
+  window.addEventListener('appinstalled',()=>{
+    deferred=null;toast('שפת הנשמה הותקנה כאפליקציה 🌿','good');
+    if(btn){btn.textContent='✓ המערכת מותקנת';btn.disabled=true;}
+    setHint('<span style="color:var(--green)">מותקנת ✓</span>');
+  });
+})();
+</script>
+</body>
+</html>

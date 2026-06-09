@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<!--
+  תבנית מצגת — שפת הנשמה
+  ─────────────────────────────────────────────
+  איך משתמשים:
+  1. דאבל־קליק על הקובץ → נפתח בדפדפן. מצגת מוכנה.
+  2. חצים ← → למעבר בין שקופיות.
+  3. הקליקי S → נפתח "מסך הדובר" (Speaker View) בחלון נפרד —
+     שם תראי את ההערות הפרטיות, השקופית הבאה, וטיימר. רק את רואה אותו.
+     גררי את החלון הזה למסך הנייד שלך, ואת המצגת עצמה למקרן.
+  4. כדי לערוך: כל שקופית היא <section>. ההערות הפרטיות בתוך <aside class="notes">.
+     מחליפים את הטקסט — ושומרים. אין צורך בשום התקנה.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שפת הנשמה — מצגת שיעור</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+<style>
+  :root{--sand:#F4EFE6;--cream:#FBF8F2;--ink:#3A352E;--gold:#C9A24B;--sage:#8A8466}
+  .reveal{font-family:'Heebo',sans-serif;color:var(--ink)}
+  .reveal .slides{text-align:center}
+  .reveal h1,.reveal h2,.reveal h3{font-family:'Frank Ruhl Libre',serif;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:.5px}
+  .reveal h1{font-size:2.6em}
+  .reveal h2{font-size:1.9em}
+  .reveal p{font-weight:300;line-height:1.7}
+  .reveal .muted{color:var(--sage);font-weight:300}
+  .reveal em{color:var(--gold);font-style:normal}
+  /* warm sand background on every slide */
+  .reveal-viewport{background:var(--sand)}
+  .reveal .backgrounds{background:var(--sand)}
+  /* gentle tree/circle mark */
+  .mark{width:64px;margin:0 auto 30px;display:block;color:var(--gold);opacity:.85}
+  .reveal .big{font-size:3em;font-family:'Frank Ruhl Libre',serif}
+  .reveal section{padding:0 6%}
+  /* progress + controls in brand color */
+  .reveal .progress{color:var(--gold)}
+  .reveal .controls{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- ════ שקופית פתיחה (הלב) ════ -->
+  <section data-background-color="#F4EFE6">
+    <svg class="mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="32" cy="32" r="29" stroke-width="1.2" opacity=".5"/>
+      <path d="M32 50V30"/>
+      <path d="M32 34c-6-2-9-7-8-13 5 0 9 4 8 13Z" fill="currentColor" opacity=".15"/>
+      <path d="M32 30c6-2 9-8 8-15-6 1-9 6-8 15Z" fill="currentColor" opacity=".15"/>
+    </svg>
+    <h1>שם השיעור</h1>
+    <p class="muted">שפת הנשמה</p>
+    <aside class="notes">
+      פתיחה — הלב קודם. אל תכריזי על הנושא.
+      פתחי ברגע אנושי שמעיר געגוע. עצרי. תני שקט.
+      [כאן את מדביקה את הערות הדובר מתוך תוכנית השיעור]
+    </aside>
+  </section>
+
+  <!-- ════ רגע פתיחה — משפט אחד ════ -->
+  <section data-background-color="#FBF8F2">
+    <p class="big">משפט אחד שנוגע</p>
+    <aside class="notes">
+      המשפט שמעיר את הגעגוע. אמרי אותו לאט. אל תסבירי אותו מיד.
+    </aside>
+  </section>
+
+  <!-- ════ תחנה 1 ════ -->
+  <section data-background-color="#F4EFE6">
+    <h2>תחנה ראשונה</h2>
+    <p>מילה או משפט אחד בלבד</p>
+    <aside class="notes">
+      תחנה 1 — מה להדגיש · איפה לעצור · איזו שאלה לשאול.
+      [הערת דובר מתוך תוכנית השיעור]
+    </aside>
+  </section>
+
+  <!-- ════ רגע עצירה / שאלה ════ -->
+  <section data-background-color="#FBF8F2">
+    <p class="big muted">שאלה שמזמינה פנימה</p>
+    <aside class="notes">
+      עצרי כאן. שאלי, ותני זמן. אל תמהרי למלא את השקט.
+    </aside>
+  </section>
+
+  <!-- ════ תחנה 2 ════ -->
+  <section data-background-color="#F4EFE6">
+    <h2>תחנה שנייה</h2>
+    <p>נובעת מהקודמת</p>
+    <aside class="notes">[הערת דובר]</aside>
+  </section>
+
+  <!-- ════ תחנה 3 ════ -->
+  <section data-background-color="#F4EFE6">
+    <h2>תחנה שלישית</h2>
+    <p>הכול קשור</p>
+    <aside class="notes">[הערת דובר]</aside>
+  </section>
+
+  <!-- ════ סגירה — קריאת נשמה ════ -->
+  <section data-background-color="#FBF8F2">
+    <svg class="mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="32" cy="32" r="20" opacity=".5"/>
+      <path d="M32 12a20 20 0 0 1 0 40" stroke="var(--gold)"/>
+    </svg>
+    <p class="big"><em>המשפט שנשאר</em></p>
+    <aside class="notes">
+      סגירה — קריאת נשמה, לא מסקנה. אמרי לאט, ואל תוסיפי אחריו כלום.
+      תני לו להדהד. זה הרגע שהן לוקחות הביתה.
+    </aside>
+  </section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    rtl:true, hash:true, transition:'fade', transitionSpeed:'slow',
+    controls:true, progress:true, center:true,
+    plugins:[ RevealNotes ]
+  });
+</script>
+</body>
+</html>

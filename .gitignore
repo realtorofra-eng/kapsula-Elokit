@@ -1,0 +1,17 @@
+# חומרי גלם פרטיים — לא עולים לאינטרנט
+כללי/
+
+# גיבויים מקומיים
+index.backup-*.html
+*.backup
+*.bak
+
+# מערכת
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# תלויות / זמני
+node_modules/
+.vercel
+*.log
