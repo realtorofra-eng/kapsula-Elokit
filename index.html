@@ -1354,6 +1354,8 @@ const FOLDER_CSS=`
 .src-file>span:not(.tag){flex:1}
 .src-file .mini{background:none;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.75rem;padding:2px 7px;color:var(--ink2);margin-inline-start:4px;flex:none}
 .src-file .mini:hover{background:var(--paper);color:var(--copper)}
+.src-file .mini.del{color:var(--red);border-color:var(--rose-soft)}
+.src-file .mini.del:hover{background:var(--rose-soft)}
 .lib-edit{padding:4px 2px}
 .lib-edit .inp{width:100%;margin:6px 0;font-family:'Heebo'}
 .lib-edit textarea.inp{line-height:1.6;resize:vertical}
@@ -1507,8 +1509,8 @@ async function renderSource(){const el=document.getElementById('sourceList');if(
   const libNums=new Set(loadLib().map(l=>(''+l.num).replace(/\D/g,'')).filter(Boolean));
   el.innerHTML=lessons.map(L=>{const num=(L.lesson.match(/\d+/)||[''])[0];const ready=num&&libNums.has(String(+num));
     const rows=L.files.length?L.files.map(f=>'<div class="src-file">📄 <span>'+esc(f.name)+'</span>'+(f.type?'<span class="tag">'+esc(f.type)+'</span>':'')+
-        '<button class="mini" data-renamefile="'+esc(f.path)+'" data-fname="'+esc(f.name)+'" title="שינוי שם">✏️</button>'+
-        '<button class="mini" data-delfile="'+esc(f.path)+'" title="מחיקה">🗑️</button></div>').join(''):'<div class="src-empty">אין קבצים נתמכים — אפשר להוסיף למטה</div>';
+        '<button class="mini" data-renamefile="'+esc(f.path)+'" data-fname="'+esc(f.name)+'" title="שינוי שם">✏️ שם</button>'+
+        '<button class="mini del" data-delfile="'+esc(f.path)+'" title="מחיקה">🗑️ מחק</button></div>').join(''):'<div class="src-empty">אין קבצים נתמכים — אפשר להוסיף למטה</div>';
     return '<div class="src-card"><div class="src-head"><h4>'+esc(L.lesson)+'</h4><span class="src-status'+(ready?' ready':'')+'">'+(ready?'מוכן':'גלם')+'</span></div>'+
       '<div class="src-files">'+rows+'</div>'+
       '<div class="actions"><button class="btn dark src-build" data-lesson="'+esc(L.lesson)+'" data-num="'+num+'"'+(L.files.length?'':' disabled')+'>✨ בני שיעור עם הסוכנים</button>'+
