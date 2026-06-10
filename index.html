@@ -149,6 +149,8 @@
   .lib-item .row{margin-inline-start:auto;display:flex;gap:7px;flex-wrap:wrap}
   .lib-item .row button{font-size:.83rem;border:1px solid var(--line);background:var(--cream);border-radius:9px;padding:7px 12px;cursor:pointer;transition:.2s}
   .lib-item .row button:hover{background:var(--copper);color:#fff;border-color:var(--copper)}
+  .lib-item .row button.danger{color:var(--red);border-color:var(--rose-soft);background:var(--rose-soft)}
+  .lib-item .row button.danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
   .lib-item .body{display:none;margin-top:16px;background:var(--cream);border:1px solid var(--line);border-radius:11px;padding:24px 28px;max-height:460px;overflow:auto}
   .lib-item .body.show{display:block;animation:fadeUp .3s}
   .empty{text-align:center;color:var(--ink2);font-weight:300;padding:48px 0;font-size:1.05rem}
@@ -843,7 +845,7 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
   el.innerHTML=d.map(l=>`<div class="lib-item"><div class="top"><div class="n">${esc(l.num||'—')}</div>
     <div><div class="nm">${esc(l.name)}</div><div class="meta">${l.date||''} · ${l.body.length} תווים${l.slides?' · מצגת':''}${(l.artifacts&&l.artifacts.exercises)?' · חבילה':''}</div></div>
     <div class="row"><button data-open="${l.id}">📂 פתיחה</button><button data-edit="${l.id}">✏️ עריכה</button><button data-present="${l.id}">🖥️ מצגת</button>
-      <button data-package="${l.id}">📦 חבילה</button><button data-copy="${l.id}">העתקה</button>${l.slides?`<button data-delslides="${l.id}">🗑️ מצגת</button>`:''}${(l.artifacts&&(l.artifacts.exercises||l.artifacts.homework))?`<button data-delex="${l.id}">🗑️ תרגילים</button>`:''}<button data-del="${l.id}">🗑️ שיעור</button></div></div>
+      <button data-package="${l.id}">📦 חבילה</button><button data-copy="${l.id}">העתקה</button>${l.slides?`<button class="danger" data-delslides="${l.id}">🗑️ מצגת</button>`:''}${(l.artifacts&&(l.artifacts.exercises||l.artifacts.homework))?`<button class="danger" data-delex="${l.id}">🗑️ תרגילים</button>`:''}<button class="danger" data-del="${l.id}">🗑️ מחק שיעור</button></div></div>
     <div class="body" id="ob-${l.id}"></div><div id="pkg-${l.id}"></div></div>`).join('');
   el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;const ob=document.getElementById('ob-'+id);
     if(ob.classList.contains('show')){ob.classList.remove('show');return;}openLessonPanel(id,ob);ob.classList.add('show');});
@@ -1576,7 +1578,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v7 · 2026-06-09 · מזעור עוזרת + מחיקות';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v8 · 2026-06-09 · מחיקה אדומה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
