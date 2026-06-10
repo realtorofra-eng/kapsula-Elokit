@@ -306,7 +306,7 @@
   <section class="tab" id="tab-library">
     <div class="section-head"><h2 class="section">ספריית השיעורים</h2>
       <p class="lead">כל שיעור שבנית נשמר כאן, אצלך במחשב. אפשר לפתוח, להציג, להעתיק או להוריד.</p></div>
-    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"><button class="btn dark" id="libAddBtn" type="button">➕ הוסף שיעור</button></div>
+    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"><button class="btn dark" id="libAddBtn" type="button">➕ הוסף שיעור</button><button class="btn" id="libImportBtn" type="button">📥 ייבא קובץ</button></div>
     <div id="libList"></div>
   </section>
 
@@ -318,6 +318,7 @@
       <div class="folder-row">
         <button class="btn" id="sourceConnectBtn" type="button">🔗 חברי תיקייה</button>
         <button class="btn dark" id="organizeBtn" type="button">🗂️ סדרי את חומרי הגלם</button>
+        <button class="btn" id="sourceAddBtn" type="button">➕ הוסף קבצים</button>
         <button class="btn" id="sourceRefreshBtn" type="button">🔄 רענני</button>
       </div>
       <p class="hint" id="sourceOrgStatus" style="margin-top:8px"></p>
@@ -1425,6 +1426,33 @@ async function uploadToLesson(lessonFolder,fileList){
       const nf=await ldir.getFileHandle(f.name,{create:true});const w=await nf.createWritable();await w.write(await f.arrayBuffer());await w.close();}
     progSet('הסתיים — נוספו '+arr.length+' קבצים ✓',1,1);toast('נוספו '+arr.length+' קבצים ✓','good');
   }catch(e){toast('שגיאה בהעלאה: '+e.message);}finally{setTimeout(progEnd,1100);renderSource();}}
+// כפתור ברמת התיקייה: הוספת קבצים לחומרי גלם (משייך אוטומטית לפי "שיעור N" בשם)
+function addSourceFilesPrompt(){const inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif';
+  inp.onchange=()=>{if(inp.files&&inp.files.length)uploadAndFileToSource(inp.files);};inp.click();}
+async function uploadAndFileToSource(fileList){
+  if(!folderHandle){toast('חברי תיקייה קודם');return;}
+  if(!(await fsaPerm(folderHandle,true))){toast('אין הרשאת כתיבה');return;}
+  const srcRoot=await folderHandle.getDirectoryHandle('קבצי מקור',{create:true});
+  const arr=[...fileList];progStart('הוספת קבצים לחומרי גלם');let done=0,filed=0;const noNum=[];
+  try{for(const f of arr){progSet('מעלה '+(++done)+' מתוך '+arr.length+' — '+f.name,done,arr.length);
+      const m=f.name.match(/שיעור\s*0*(\d+)/);let dir;
+      if(m){const n=String(m[1]).padStart(2,'0');const ld=await srcRoot.getDirectoryHandle('שיעור '+n,{create:true});dir=await ld.getDirectoryHandle('הועלו',{create:true});filed++;}
+      else{dir=await srcRoot.getDirectoryHandle('ללא שיעור',{create:true});noNum.push(f.name);}
+      const nf=await dir.getFileHandle(f.name,{create:true});const w=await nf.createWritable();await w.write(await f.arrayBuffer());await w.close();}
+    progSet('הסתיים ✓',1,1);toast('נוספו '+filed+' קבצים לשיעורים'+(noNum.length?(' · '+noNum.length+' ללא מספר שיעור (תחת "ללא שיעור")'):'')+' ✓','good');
+  }catch(e){toast('שגיאה: '+e.message);}finally{setTimeout(progEnd,1100);renderSource();}}
+// כפתור ברמת התיקייה: ייבוא קובץ לספרייה (Word/טקסט → שיעור)
+function libImportPrompt(){const inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='.md,.txt,.docx';
+  inp.onchange=()=>{if(inp.files&&inp.files.length)libImportFiles(inp.files);};inp.click();}
+async function libImportFiles(fileList){const arr=[...fileList];let added=0;progStart('ייבוא לספרייה');
+  try{let done=0;for(const f of arr){progSet('מייבא '+(++done)+' מתוך '+arr.length+' — '+f.name,done,arr.length);
+      const ext=(f.name.split('.').pop()||'').toLowerCase();let body='';
+      if(ext==='docx'){const buf=await f.arrayBuffer();const r=await mammoth.extractRawText({arrayBuffer:buf});body=r.value;}
+      else{body=await f.text();}
+      const nm=f.name.replace(/\.[^.]+$/,'');const num=(nm.match(/\d+/)||[''])[0];
+      const lib=loadLib();lib.push({id:uid(),num:String(+num||''),name:nm,body,slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);added++;}
+    progSet('הסתיים ✓',1,1);toast('יובאו '+added+' שיעורים לספרייה ✓','good');renderLib();
+  }catch(e){toast('שגיאה בייבוא: '+e.message);}finally{setTimeout(progEnd,1000);}}
 async function organizeSourceFiles(onProg){const all=await fsaListFull(folderHandle);
   const re=/שיעור\s*0*\d+/;const matched=all.filter(f=>re.test(f.name));const skipped=all.filter(f=>!re.test(f.name)).map(f=>f.name);
   const srcRoot=await folderHandle.getDirectoryHandle('קבצי מקור',{create:true});
@@ -1541,7 +1569,9 @@ function initFolder(){
   const scb=document.getElementById('sourceConnectBtn');if(scb)scb.onclick=async()=>{await connectFolder();renderSource();};
   const ob=document.getElementById('organizeBtn');if(ob)ob.onclick=runOrganizer;
   const srb=document.getElementById('sourceRefreshBtn');if(srb)srb.onclick=renderSource;
+  const sab=document.getElementById('sourceAddBtn');if(sab)sab.onclick=addSourceFilesPrompt;
   const lab=document.getElementById('libAddBtn');if(lab)lab.onclick=libAddLesson;
+  const lib2=document.getElementById('libImportBtn');if(lib2)lib2.onclick=libImportPrompt;
   folderLoadSaved();updateFolderStatus();}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
