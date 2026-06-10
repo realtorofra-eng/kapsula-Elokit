@@ -306,7 +306,7 @@
   <section class="tab" id="tab-library">
     <div class="section-head"><h2 class="section">ספריית השיעורים</h2>
       <p class="lead">כל שיעור שבנית נשמר כאן, אצלך במחשב. אפשר לפתוח, להציג, להעתיק או להוריד.</p></div>
-    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"></div>
+    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"><button class="btn dark" id="libAddBtn" type="button">➕ הוסף שיעור</button></div>
     <div id="libList"></div>
   </section>
 
@@ -863,13 +863,15 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
   d.sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999));
   el.innerHTML=d.map(l=>`<div class="lib-item"><div class="top"><div class="n">${esc(l.num||'—')}</div>
     <div><div class="nm">${esc(l.name)}</div><div class="meta">${l.date||''} · ${l.body.length} תווים${l.slides?' · מצגת':''}${(l.artifacts&&l.artifacts.exercises)?' · חבילה':''}</div></div>
-    <div class="row"><button data-open="${l.id}">📂 פתיחה</button><button data-present="${l.id}">🖥️ מצגת</button>
+    <div class="row"><button data-open="${l.id}">📂 פתיחה</button><button data-edit="${l.id}">✏️ עריכה</button><button data-present="${l.id}">🖥️ מצגת</button>
       <button data-package="${l.id}">📦 חבילה</button><button data-copy="${l.id}">העתקה</button><button data-del="${l.id}">מחיקה</button></div></div>
     <div class="body" id="ob-${l.id}"></div><div id="pkg-${l.id}"></div></div>`).join('');
   el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;const ob=document.getElementById('ob-'+id);
     if(ob.classList.contains('show')){ob.classList.remove('show');return;}openLessonPanel(id,ob);ob.classList.add('show');});
   el.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const l=loadLib().find(x=>x.id===b.dataset.copy);copyText(l.body);});
   el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('למחוק את השיעור?')){saveLib(loadLib().filter(x=>x.id!==b.dataset.del));renderLib();toast('נמחק')}});
+  el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const id=b.dataset.edit;const ob=document.getElementById('ob-'+id);if(ob.classList.contains('show')&&ob.dataset.mode==='edit'){ob.classList.remove('show');ob.dataset.mode='';return;}editLessonPanel(id,ob);ob.dataset.mode='edit';ob.classList.add('show');});
+  const ab=document.getElementById('libAddBtn');if(ab)ab.onclick=libAddLesson;
   el.querySelectorAll('[data-present]').forEach(b=>b.onclick=()=>{const id=b.dataset.present;const l=loadLib().find(x=>x.id===id);
     presentFlow(()=>l.body,s=>saveLibField(id,'slides',s),()=>(loadLib().find(x=>x.id===id)||{}).slides,l.name,
      {getExercises:()=>((loadLib().find(x=>x.id===id)||{}).artifacts||{}).exercises,
@@ -879,6 +881,15 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
     buildPackage({name:l.name,num:l.num,body:l.body,getSlides:()=>(loadLib().find(x=>x.id===id)||{}).slides,
      setSlides:s=>saveLibField(id,'slides',s),artifacts:l.artifacts||{},setArtifacts:A=>saveLibField(id,'artifacts',A),area:document.getElementById('pkg-'+id)});});}
 function saveLibField(id,field,val){const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it[field]=val;saveLib(lib);}}
+function editLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;
+  ob.innerHTML='<div class="lib-edit"><div class="field-row"><input class="inp num" id="ed-num-'+id+'" value="'+esc(l.num||'')+'" placeholder="מס\'"><input class="inp grow" id="ed-name-'+id+'" value="'+esc(l.name||'')+'" placeholder="שם השיעור"></div>'+
+    '<textarea class="inp" id="ed-body-'+id+'" style="min-height:260px" placeholder="תוכן השיעור (Markdown)"></textarea>'+
+    '<div class="actions"><button class="btn dark" id="ed-save-'+id+'">💾 שמירה</button><button class="btn" id="ed-cancel-'+id+'">ביטול</button></div></div>';
+  document.getElementById('ed-body-'+id).value=l.body||'';
+  document.getElementById('ed-save-'+id).onclick=()=>{const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it.num=document.getElementById('ed-num-'+id).value.trim();it.name=document.getElementById('ed-name-'+id).value.trim()||'שיעור ללא שם';const nb=document.getElementById('ed-body-'+id).value;if(nb!==it.body)it.slides=null;it.body=nb;saveLib(lib);}renderLib();toast('נשמר ✓','good');};
+  document.getElementById('ed-cancel-'+id).onclick=()=>renderLib();}
+function libAddLesson(){const lib=loadLib();const id=uid();lib.push({id,num:'',name:'שיעור חדש',body:'',slides:null,date:new Date().toLocaleDateString('he-IL')});saveLib(lib);renderLib();
+  const ob=document.getElementById('ob-'+id);if(ob){editLessonPanel(id,ob);ob.dataset.mode='edit';ob.classList.add('show');ob.scrollIntoView({behavior:'smooth',block:'center'});}}
 function lpRow(icon,name,btns){return '<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--paper);margin-bottom:8px;flex-wrap:wrap"><span style="font-size:1.1rem">'+icon+'</span><span style="font-weight:500;flex:1;min-width:110px">'+name+'</span><span style="display:flex;gap:5px;flex-wrap:wrap">'+btns.map(b=>'<button class="btn" style="padding:6px 11px;font-size:.82rem'+(b.del?';color:var(--red)':'')+'" data-act="'+b.a+'">'+b.t+'</button>').join('')+'</span></div>';}
 function openLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;const A=l.artifacts||{};
   let h='<div style="padding:2px 0 8px"><div class="hint" style="margin-bottom:10px">📁 <b>'+esc(l.name)+'</b> — תיקיית השיעור. כל חלק ניתן לצפייה, עריכה והורדה.</div>';
@@ -1338,7 +1349,19 @@ const FOLDER_CSS=`
 .src-files{display:flex;flex-direction:column;gap:3px;margin:8px 0 12px}
 .src-file{font-size:.9rem;color:var(--ink2);display:flex;align-items:center;gap:7px}
 .src-file .tag{font-size:.72rem;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:1px 8px;color:var(--olive)}
-.src-empty{color:var(--ink2);font-size:.88rem}`;
+.src-empty{color:var(--ink2);font-size:.88rem}
+.src-file>span:not(.tag){flex:1}
+.src-file .mini{background:none;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.75rem;padding:2px 7px;color:var(--ink2);margin-inline-start:4px;flex:none}
+.src-file .mini:hover{background:var(--paper);color:var(--copper)}
+.lib-edit{padding:4px 2px}
+.lib-edit .inp{width:100%;margin:6px 0;font-family:'Heebo'}
+.lib-edit textarea.inp{line-height:1.6;resize:vertical}
+.prog-box{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:400;background:var(--cream);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 48px rgba(65,55,44,.28);padding:14px 18px;width:min(440px,calc(100vw - 32px));display:none}
+.prog-box.show{display:block;animation:fadeUp .25s}
+.prog-title{font-weight:600;margin-bottom:5px;font-family:'Frank Ruhl Libre'}
+.prog-line{font-size:.84rem;color:var(--ink2);margin-bottom:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl}
+.prog-bar{height:7px;background:var(--sand);border-radius:6px;overflow:hidden}
+.prog-bar i{display:block;height:100%;width:0;background:var(--copper);transition:width .25s}`;
 // אחסון ה‑handle ב‑IndexedDB כדי שהחיבור יישמר בין פתיחות
 const idbFolder=(()=>{const DB='sn-fsa',ST='handles';
   function open(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(ST);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
@@ -1382,16 +1405,36 @@ async function fsaListFull(handle,base='',acc=[],depth=0,parentName=''){if(depth
   return acc;}
 async function fsaCopyInto(srcPath,destDir,name){const sfh=await fsaGetFileHandle(srcPath);const f=await sfh.getFile();
   const dfh=await destDir.getFileHandle(name,{create:true});const w=await dfh.createWritable();await w.write(await f.arrayBuffer());await w.close();}
-async function organizeSourceFiles(){const all=await fsaListFull(folderHandle);
+// חיווי התקדמות (העלאה/סידור)
+function progStart(title){let p=document.getElementById('progBox');if(!p){p=document.createElement('div');p.id='progBox';p.className='prog-box';document.body.appendChild(p);}
+  p.innerHTML='<div class="prog-title">'+esc(title)+'</div><div class="prog-line" id="progLine">מתחיל…</div><div class="prog-bar"><i id="progFill"></i></div>';p.classList.add('show');}
+function progSet(line,done,total){const l=document.getElementById('progLine');if(l)l.textContent=line;const f=document.getElementById('progFill');if(f)f.style.width=(total?Math.round(done/total*100):8)+'%';}
+function progEnd(){const p=document.getElementById('progBox');if(p)p.classList.remove('show');}
+// פעולות קובץ בתיקייה המחוברת
+async function fsaDeleteFile(path){const parts=path.split('/');const fname=parts.pop();let dir=folderHandle;for(const p of parts){dir=await dir.getDirectoryHandle(p);}await dir.removeEntry(fname);}
+async function fsaRenameFile(path,newName){const parts=path.split('/');const fname=parts.pop();let dir=folderHandle;for(const p of parts){dir=await dir.getDirectoryHandle(p);}
+  const sf=await dir.getFileHandle(fname);const file=await sf.getFile();const nf=await dir.getFileHandle(newName,{create:true});const w=await nf.createWritable();await w.write(await file.arrayBuffer());await w.close();await dir.removeEntry(fname);}
+function addToLessonPrompt(lessonFolder){const inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif';
+  inp.onchange=()=>{if(inp.files&&inp.files.length)uploadToLesson(lessonFolder,inp.files);};inp.click();}
+async function uploadToLesson(lessonFolder,fileList){
+  if(!(await fsaPerm(folderHandle,true))){toast('אין הרשאת כתיבה לתיקייה');return;}
+  let root;try{root=await folderHandle.getDirectoryHandle('קבצי מקור');}catch(e){toast('אין עדיין תיקיית "קבצי מקור" — הריצי קודם "סדרי"');return;}
+  let ldir;try{ldir=await root.getDirectoryHandle(lessonFolder);}catch(e){toast('לא נמצאה תיקיית השיעור');return;}
+  const arr=[...fileList];progStart('הוספת קבצים — '+lessonFolder);
+  try{let done=0;for(const f of arr){progSet('מעלה '+(++done)+' מתוך '+arr.length+' — '+f.name,done,arr.length);
+      const nf=await ldir.getFileHandle(f.name,{create:true});const w=await nf.createWritable();await w.write(await f.arrayBuffer());await w.close();}
+    progSet('הסתיים — נוספו '+arr.length+' קבצים ✓',1,1);toast('נוספו '+arr.length+' קבצים ✓','good');
+  }catch(e){toast('שגיאה בהעלאה: '+e.message);}finally{setTimeout(progEnd,1100);renderSource();}}
+async function organizeSourceFiles(onProg){const all=await fsaListFull(folderHandle);
+  const re=/שיעור\s*0*\d+/;const matched=all.filter(f=>re.test(f.name));const skipped=all.filter(f=>!re.test(f.name)).map(f=>f.name);
   const srcRoot=await folderHandle.getDirectoryHandle('קבצי מקור',{create:true});
-  let copied=0;const skipped=[];const lessons=new Set();
-  for(const file of all){const m=file.name.match(/שיעור\s*0*(\d+)/);
-    if(!m){skipped.push(file.name);continue;}
-    const n=String(m[1]).padStart(2,'0');const typeFolder=(file.parentName&&file.parentName!=='')?file.parentName:'כללי';
+  let copied=0;const lessons=new Set();let i=0;
+  for(const file of matched){i++;if(onProg)onProg(i,matched.length,file.name);
+    const n=String(file.name.match(/שיעור\s*0*(\d+)/)[1]).padStart(2,'0');const typeFolder=(file.parentName&&file.parentName!=='')?file.parentName:'כללי';
     const lessonDir=await srcRoot.getDirectoryHandle('שיעור '+n,{create:true});
     const typeDir=await lessonDir.getDirectoryHandle(typeFolder,{create:true});
     let exists=false;try{await typeDir.getFileHandle(file.name);exists=true;}catch(e){}
-    if(!exists){try{await fsaCopyInto(file.path,typeDir,file.name);copied++;}catch(e){skipped.push(file.name+' (שגיאת העתקה)');continue;}}
+    if(!exists){try{await fsaCopyInto(file.path,typeDir,file.name);copied++;}catch(e){}}
     lessons.add(n);}
   return {copied,skipped,lessons:[...lessons].sort()};}
 async function fsaListSource(){let root;try{root=await folderHandle.getDirectoryHandle('קבצי מקור');}catch(e){return [];}
@@ -1419,11 +1462,13 @@ async function runOrganizer(){
   if(!folderHandle){toast('חברי תיקייה קודם');return;}
   if(!(await fsaPerm(folderHandle,true))){toast('אין הרשאת כתיבה לתיקייה');return;}
   const btn=document.getElementById('organizeBtn');const st=document.getElementById('sourceOrgStatus');
-  if(btn){btn.disabled=true;btn.textContent='מסדר…';}if(st)st.textContent='סורק ומעתיק… (לא מוחק כלום)';
-  try{const res=await organizeSourceFiles();
-    if(st)st.innerHTML='<span style="color:var(--green)">סודרו '+res.copied+' קבצים ל-'+res.lessons.length+' שיעורים.</span>'+(res.skipped.length?(' '+res.skipped.length+' קבצים בלי "שיעור N" לא שויכו (אפשר לשייך ידנית).'):'');
+  if(btn){btn.disabled=true;btn.textContent='מסדר…';}if(st)st.textContent='';
+  progStart('סידור חומרי גלם');progSet('סורק קבצים…',0,0);
+  try{const res=await organizeSourceFiles((d,t,nm)=>progSet('מסדר לתיקיות: מעתיק '+d+' מתוך '+t+' — '+nm,d,t));
+    progSet('הסתיים ✓',1,1);setTimeout(progEnd,1100);
+    if(st)st.innerHTML='<span style="color:var(--green)">סודרו '+res.copied+' קבצים ל-'+res.lessons.length+' שיעורים.</span>'+(res.skipped.length?(' '+res.skipped.length+' קבצים בלי "שיעור N" לא שויכו (אפשר להוסיף ידנית לכל שיעור).'):'');
     renderSource();
-  }catch(e){if(st)st.textContent='שגיאה: '+e.message;}
+  }catch(e){progEnd();if(st)st.textContent='שגיאה: '+e.message;}
   finally{if(btn){btn.disabled=false;btn.textContent='🗂️ סדרי את חומרי הגלם';}}}
 async function renderSource(){const el=document.getElementById('sourceList');if(!el)return;
   if(!FSA_SUPPORTED){el.innerHTML='<p class="src-empty">דף זה דורש Chrome/Edge במחשב, על כתובת האינטרנט (Vercel).</p>';return;}
@@ -1433,11 +1478,17 @@ async function renderSource(){const el=document.getElementById('sourceList');if(
   if(!lessons.length){el.innerHTML='<p class="src-empty">עוד אין תיקיית "קבצי מקור". לחצי <b>🗂️ סדרי את חומרי הגלם</b> כדי לבנות אותה מהקבצים שלך.</p>';return;}
   const libNums=new Set(loadLib().map(l=>(''+l.num).replace(/\D/g,'')).filter(Boolean));
   el.innerHTML=lessons.map(L=>{const num=(L.lesson.match(/\d+/)||[''])[0];const ready=num&&libNums.has(String(+num));
-    const rows=L.files.length?L.files.map(f=>'<div class="src-file">📄 <span>'+esc(f.name)+'</span>'+(f.type?'<span class="tag">'+esc(f.type)+'</span>':'')+'</div>').join(''):'<div class="src-empty">אין קבצים נתמכים</div>';
+    const rows=L.files.length?L.files.map(f=>'<div class="src-file">📄 <span>'+esc(f.name)+'</span>'+(f.type?'<span class="tag">'+esc(f.type)+'</span>':'')+
+        '<button class="mini" data-renamefile="'+esc(f.path)+'" data-fname="'+esc(f.name)+'" title="שינוי שם">✏️</button>'+
+        '<button class="mini" data-delfile="'+esc(f.path)+'" title="מחיקה">🗑️</button></div>').join(''):'<div class="src-empty">אין קבצים נתמכים — אפשר להוסיף למטה</div>';
     return '<div class="src-card"><div class="src-head"><h4>'+esc(L.lesson)+'</h4><span class="src-status'+(ready?' ready':'')+'">'+(ready?'מוכן':'גלם')+'</span></div>'+
       '<div class="src-files">'+rows+'</div>'+
-      '<div class="actions"><button class="btn dark src-build" data-lesson="'+esc(L.lesson)+'" data-num="'+num+'"'+(L.files.length?'':' disabled')+'>✨ בני שיעור עם הסוכנים</button></div></div>';}).join('');
-  el.querySelectorAll('.src-build').forEach(b=>b.onclick=()=>buildFromSourceUI(b.dataset.lesson,b.dataset.num,b));}
+      '<div class="actions"><button class="btn dark src-build" data-lesson="'+esc(L.lesson)+'" data-num="'+num+'"'+(L.files.length?'':' disabled')+'>✨ בני שיעור עם הסוכנים</button>'+
+        '<button class="btn" data-addto="'+esc(L.lesson)+'">➕ הוסף קבצים</button></div></div>';}).join('');
+  el.querySelectorAll('.src-build').forEach(b=>b.onclick=()=>buildFromSourceUI(b.dataset.lesson,b.dataset.num,b));
+  el.querySelectorAll('[data-addto]').forEach(b=>b.onclick=()=>addToLessonPrompt(b.dataset.addto));
+  el.querySelectorAll('[data-delfile]').forEach(b=>b.onclick=async()=>{if(!confirm('למחוק לצמיתות את הקובץ?\n'+b.dataset.delfile.split('/').pop()))return;try{await fsaDeleteFile(b.dataset.delfile);toast('נמחק');renderSource();}catch(e){toast('שגיאה: '+e.message);}});
+  el.querySelectorAll('[data-renamefile]').forEach(b=>b.onclick=async()=>{const nn=prompt('שם חדש לקובץ (כולל סיומת):',b.dataset.fname);if(!nn||nn.trim()===''||nn===b.dataset.fname)return;try{await fsaRenameFile(b.dataset.renamefile,nn.trim());toast('השם שונה ✓','good');renderSource();}catch(e){toast('שגיאה: '+e.message);}});}
 async function buildFromSourceUI(lessonFolder,num,btn){
   if(!folderHandle){toast('אין תיקייה מחוברת');return;}
   let lessons;try{lessons=await fsaListSource();}catch(e){toast('שגיאה: '+e.message);return;}
@@ -1490,6 +1541,7 @@ function initFolder(){
   const scb=document.getElementById('sourceConnectBtn');if(scb)scb.onclick=async()=>{await connectFolder();renderSource();};
   const ob=document.getElementById('organizeBtn');if(ob)ob.onclick=runOrganizer;
   const srb=document.getElementById('sourceRefreshBtn');if(srb)srb.onclick=renderSource;
+  const lab=document.getElementById('libAddBtn');if(lab)lab.onclick=libAddLesson;
   folderLoadSaved();updateFolderStatus();}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
