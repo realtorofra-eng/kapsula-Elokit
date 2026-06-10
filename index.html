@@ -22,8 +22,8 @@
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-<script>try{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js"></script>
+<script>try{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';}catch(e){}</script>
 <style>
   :root{
     --cream:#FAF5EC; --sand:#EFE3D0; --beige:#E7D9C0; --terra:#D2A284;
@@ -457,7 +457,7 @@
   </div>
 </div>
 
-<footer>שפת הנשמה · עופרה אינוז — קפסולה אלוקית<br><span style="opacity:.75">לחזור להקשיב פנימה 🌿</span></footer>
+<footer>שפת הנשמה · עופרה אינוז — קפסולה אלוקית<br><span style="opacity:.75">לחזור להקשיב פנימה 🌿</span><br><span id="appVer" style="opacity:.5;font-size:.72rem"></span></footer>
 <div id="toasts"></div>
 
 <script>
@@ -1595,13 +1595,20 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
+const APP_VERSION='v5 · 2026-06-09 · PDF→טקסט';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
 (function(){
   // רישום Service Worker (נדרש להתקנה; עובד רק ב-https או localhost, לא ב-file://)
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
-    window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+    window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then((reg)=>{
+      try{reg.update();}catch(e){}
+      // כשיש גרסה חדשה ממתינה — מפעילים אותה וטוענים מחדש פעם אחת אוטומטית
+      reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;
+        nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){window.__snReload=true;try{reg.waiting&&reg.waiting.postMessage('skip');}catch(e){}location.reload();}});});
+    }).catch(()=>{});
+    let __reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(__reloaded)return;__reloaded=true;location.reload();});});
   }
   const btn=document.getElementById('installBtn');
   const hint=document.getElementById('installHint');
