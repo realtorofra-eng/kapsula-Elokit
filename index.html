@@ -843,12 +843,14 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
   el.innerHTML=d.map(l=>`<div class="lib-item"><div class="top"><div class="n">${esc(l.num||'—')}</div>
     <div><div class="nm">${esc(l.name)}</div><div class="meta">${l.date||''} · ${l.body.length} תווים${l.slides?' · מצגת':''}${(l.artifacts&&l.artifacts.exercises)?' · חבילה':''}</div></div>
     <div class="row"><button data-open="${l.id}">📂 פתיחה</button><button data-edit="${l.id}">✏️ עריכה</button><button data-present="${l.id}">🖥️ מצגת</button>
-      <button data-package="${l.id}">📦 חבילה</button><button data-copy="${l.id}">העתקה</button><button data-del="${l.id}">מחיקה</button></div></div>
+      <button data-package="${l.id}">📦 חבילה</button><button data-copy="${l.id}">העתקה</button>${l.slides?`<button data-delslides="${l.id}">🗑️ מצגת</button>`:''}${(l.artifacts&&(l.artifacts.exercises||l.artifacts.homework))?`<button data-delex="${l.id}">🗑️ תרגילים</button>`:''}<button data-del="${l.id}">🗑️ שיעור</button></div></div>
     <div class="body" id="ob-${l.id}"></div><div id="pkg-${l.id}"></div></div>`).join('');
   el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;const ob=document.getElementById('ob-'+id);
     if(ob.classList.contains('show')){ob.classList.remove('show');return;}openLessonPanel(id,ob);ob.classList.add('show');});
   el.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const l=loadLib().find(x=>x.id===b.dataset.copy);copyText(l.body);});
-  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('למחוק את השיעור?')){saveLib(loadLib().filter(x=>x.id!==b.dataset.del));renderLib();toast('נמחק')}});
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('למחוק את השיעור כולו?')){saveLib(loadLib().filter(x=>x.id!==b.dataset.del));renderLib();toast('השיעור נמחק')}});
+  el.querySelectorAll('[data-delslides]').forEach(b=>b.onclick=()=>{if(confirm('למחוק את המצגת של השיעור? השיעור עצמו יישאר.')){saveLibField(b.dataset.delslides,'slides',null);renderLib();toast('המצגת נמחקה')}});
+  el.querySelectorAll('[data-delex]').forEach(b=>b.onclick=()=>{if(confirm('למחוק את התרגילים/החבילה של השיעור? השיעור עצמו יישאר.')){const lib=loadLib();const it=lib.find(x=>x.id===b.dataset.delex);if(it){it.artifacts=null;saveLib(lib);}renderLib();toast('התרגילים נמחקו')}});
   el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const id=b.dataset.edit;const ob=document.getElementById('ob-'+id);if(ob.classList.contains('show')&&ob.dataset.mode==='edit'){ob.classList.remove('show');ob.dataset.mode='';return;}editLessonPanel(id,ob);ob.dataset.mode='edit';ob.classList.add('show');});
   const ab=document.getElementById('libAddBtn');if(ab)ab.onclick=libAddLesson;
   el.querySelectorAll('[data-present]').forEach(b=>b.onclick=()=>{const id=b.dataset.present;const l=loadLib().find(x=>x.id===id);
@@ -1152,6 +1154,9 @@ const CHAT_CSS=`
 #chatFab:hover{background:var(--copper);transform:translateY(-1px)}#chatFab svg,#chatFab img{width:26px;height:26px;color:var(--gold-soft);object-fit:contain}
 #chatPanel{position:fixed;bottom:22px;left:22px;z-index:160;width:392px;max-width:calc(100vw - 32px);height:min(620px,calc(100vh - 44px));background:var(--cream);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 64px rgba(65,55,44,.24);display:none;flex-direction:column;overflow:hidden}
 #chatPanel.show{display:flex;animation:fadeUp .3s}
+#chatPanel.min{height:auto}
+#chatPanel.min .chat-body,#chatPanel.min .chat-sugs,#chatPanel.min .chat-input{display:none}
+#chatPanel.min .chat-head{cursor:pointer}
 .chat-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--paper)}
 .chat-head .mk{width:30px;height:30px;color:var(--copper)}.chat-head .mk img{width:30px;height:30px;object-fit:contain}.chat-head h4{font-family:'Frank Ruhl Libre';font-size:1.1rem;flex:1;font-weight:500}
 .chat-head .x{background:none;border:none;font-size:1.5rem;color:var(--ink2);cursor:pointer;line-height:1}
@@ -1282,13 +1287,17 @@ function chatSendText(text){if(!text||chatBusy)return;chatBubble('user',text);ch
 function initChat(){
   document.head.insertAdjacentHTML('beforeend','<style>'+CHAT_CSS+'</style>');
   document.body.insertAdjacentHTML('beforeend',`<button id="chatFab">${logoImg()} עוזרת ההוראה</button>
-   <div id="chatPanel"><div class="chat-head"><span class="mk">${logoImg()}</span><h4>עוזרת ההוראה</h4><button class="x" id="chatClose">×</button></div>
+   <div id="chatPanel"><div class="chat-head"><span class="mk">${logoImg()}</span><h4>עוזרת ההוראה</h4><button class="x" id="chatMin" title="מזעור — מפנה מקום, השיחה נשמרת">⌄</button><button class="x" id="chatClose" title="סגירה">×</button></div>
    <div class="chat-body" id="chatBody"></div>
    <div class="chat-sugs" id="chatSugs"></div>
    <div class="chat-input"><button id="chatFolderBtn" title="טעני קבצים מהתיקייה" style="background:var(--paper);color:var(--copper);border:1px solid var(--line)">📂</button><textarea id="chatText" rows="1" placeholder="כתבי לי… (למשל: תכנני שיעור על כוח האותיות)"></textarea><button id="chatSend">↑</button></div></div>`);
   const panel=document.getElementById('chatPanel'),ta=document.getElementById('chatText');
-  document.getElementById('chatFab').onclick=()=>{panel.classList.toggle('show');if(panel.classList.contains('show')){ta.focus();if(!chatMsgs.length)greet();}};
-  document.getElementById('chatClose').onclick=()=>panel.classList.remove('show');
+  const minBtn=document.getElementById('chatMin');
+  function setMin(on){panel.classList.toggle('min',on);if(minBtn){minBtn.textContent=on?'⌃':'⌄';minBtn.title=on?'הגדלה':'מזעור — מפנה מקום, השיחה נשמרת';}}
+  document.getElementById('chatFab').onclick=()=>{panel.classList.toggle('show');if(panel.classList.contains('show')){setMin(false);ta.focus();if(!chatMsgs.length)greet();}};
+  minBtn.onclick=(e)=>{e.stopPropagation();setMin(!panel.classList.contains('min'));};
+  panel.querySelector('.chat-head').addEventListener('click',(e)=>{if(panel.classList.contains('min')&&!e.target.closest('#chatClose')&&!e.target.closest('#chatMin'))setMin(false);});
+  document.getElementById('chatClose').onclick=()=>{panel.classList.remove('show');setMin(false);};
   document.getElementById('chatSend').onclick=()=>{const v=ta.value.trim();if(v){ta.value='';ta.style.height='auto';chatSendText(v);}};
   ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,110)+'px';});
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('chatSend').click();}});
@@ -1567,7 +1576,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v6 · 2026-06-09 · קול אנושי זורם';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v7 · 2026-06-09 · מזעור עוזרת + מחיקות';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
