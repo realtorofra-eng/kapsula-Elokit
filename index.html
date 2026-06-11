@@ -1541,6 +1541,7 @@ async function readPipelineInputs(items){const docContent=[],textBlocks=[];
 async function runOrganizer(){
   if(!FSA_SUPPORTED){toast('דרוש Chrome/Edge במחשב על כתובת האינטרנט');return;}
   if(!folderHandle){toast('חברי תיקייה קודם');return;}
+  if(!confirm('שימי לב: הפעולה מסדרת מחדש את "קבצי מקור" מהקבצים בתיקייה.\n\nאם התיקייה כבר מסודרת — זה עלול ליצור כפילויות. להריץ רק כשהוספת קבצים חדשים שצריך לשייך.\n\nלהמשיך?'))return;
   if(!(await fsaPerm(folderHandle,true))){toast('אין הרשאת כתיבה לתיקייה');return;}
   const btn=document.getElementById('organizeBtn');const st=document.getElementById('sourceOrgStatus');
   if(btn){btn.disabled=true;btn.textContent='מסדר…';}if(st)st.textContent='';
@@ -1667,7 +1668,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v16 · בלי רענון שמפריע';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v17 · אזהרה בכפתור סדרי';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
