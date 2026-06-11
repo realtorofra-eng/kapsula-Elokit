@@ -268,6 +268,15 @@
       <span>כדי להתחיל צריך מנוע בינה. אם את עובדת מקומית — הזיני מפתח ב<a href="#" onclick="go('settings');return false">הגדרות</a>. אם פרסת ל‑Vercel — ודאי שהגדרת שם את המפתח (ANTHROPIC_API_KEY) ולחצי <a href="#" onclick="go('settings');return false">🔌 בדיקת חיבור</a>. ההודעה תיעלם ברגע שהחיבור עובד.</span></div>
 
     <div class="card"><h3><span class="step-badge">1</span> הקבצים</h3>
+      <div class="lesson-pick">
+        <label class="lbl" style="margin:0">📚 בחרי שיעור מוכן מחומרי הגלם:</label>
+        <div class="lesson-pick-row">
+          <select class="inp grow" id="lessonPicker"><option value="">— בחרי שיעור —</option></select>
+          <button class="btn dark" id="loadLessonBtn" type="button">טען שיעור</button>
+        </div>
+        <span class="hint" id="lessonPickerHint"></span>
+      </div>
+      <div class="or-divider"><span>או טעני קבצים ידנית</span></div>
       <div class="drop" id="drop"><div class="ico">🌿</div><div class="t">גררי לכאן קבצים, או לחצי לבחירה</div>
         <p>PDF · וורד · תמונה · טקסט — כל מספר של קבצים</p></div>
       <input type="file" id="fileInput" multiple hidden accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif">
@@ -532,7 +541,7 @@ const nav=document.getElementById('nav');
 tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
 function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new')checkKey();if(id==='source'&&typeof renderSource==='function')renderSource();
+  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();
   try{const a=document.querySelector('nav button.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
 
 document.querySelectorAll('#lenSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#lenSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');lenChoice=b.dataset.len});
@@ -1351,6 +1360,12 @@ const FOLDER_CSS=`
 .src-file{font-size:.9rem;color:var(--ink2);display:flex;align-items:center;gap:7px}
 .src-file .tag{font-size:.72rem;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:1px 8px;color:var(--olive)}
 .src-empty{color:var(--ink2);font-size:.88rem}
+.lesson-pick{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.lesson-pick-row{display:flex;gap:9px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.lesson-pick-row select{flex:1;min-width:180px}
+.or-divider{display:flex;align-items:center;text-align:center;color:var(--ink2);font-size:.82rem;margin:6px 0 12px}
+.or-divider::before,.or-divider::after{content:"";flex:1;border-top:1px solid var(--line)}
+.or-divider span{padding:0 12px}
 .src-file>span:not(.tag){flex:1}
 .src-file .mini{background:none;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.75rem;padding:2px 7px;color:var(--ink2);margin-inline-start:4px;flex:none}
 .src-file .mini:hover{background:var(--paper);color:var(--copper)}
@@ -1545,6 +1560,39 @@ async function buildFromSourceUI(lessonFolder,num,btn){
     toast('השיעור נבנה ונשמר בספרייה 🌳','good');go('library');
   }catch(e){toast('שגיאה בבנייה: '+e.message);}
   finally{all.forEach(b=>b.disabled=false);if(btn)btn.textContent=old;}}
+// ===== בורר שיעור ל"שיעור חדש" — טוען שיעור מוכן מחומרי הגלם =====
+function lessonNiceName(L){const tf=(L.files||[]).find(f=>f.type&&f.type.indexOf('תמלול')>=0)||(L.files||[])[0];
+  if(tf){const n=tf.name.replace(/\.[^.]+$/,'').replace(/^\s*שיעור\s*\d+\s*[-–]\s*/,'').trim();if(n)return n;}return '';}
+async function populateLessonPicker(){const sel=document.getElementById('lessonPicker'),hint=document.getElementById('lessonPickerHint');if(!sel)return;
+  if(!FSA_SUPPORTED){if(hint)hint.textContent='(הטעינה האוטומטית זמינה ב‑Chrome/Edge במחשב, על כתובת האינטרנט)';return;}
+  if(!folderHandle){sel.innerHTML='<option value="">— בחרי שיעור —</option>';if(hint){hint.innerHTML='<a href="#" id="lpConnect">חברי תיקייה</a> כדי לבחור שיעור מוכן';const lc=document.getElementById('lpConnect');if(lc)lc.onclick=async(e)=>{e.preventDefault();await connectFolder();populateLessonPicker();};}return;}
+  let lessons;try{lessons=await fsaListSource();}catch(e){if(hint)hint.textContent='שגיאה בקריאת התיקייה';return;}
+  if(!lessons.length){if(hint)hint.textContent='אין עדיין תיקיית "קבצי מקור" מסודרת';return;}
+  if(hint)hint.textContent='';
+  sel.innerHTML='<option value="">— בחרי שיעור —</option>'+lessons.map(L=>{const nm=lessonNiceName(L);return '<option value="'+esc(L.lesson)+'">'+esc(L.lesson+(nm?' — '+nm:''))+'</option>';}).join('');}
+async function loadLessonIntoNewTab(lessonFolder){
+  if(!lessonFolder){toast('בחרי שיעור מהרשימה');return;}
+  if(!folderHandle){toast('חברי תיקייה קודם');return;}
+  let lessons;try{lessons=await fsaListSource();}catch(e){toast('שגיאה: '+e.message);return;}
+  const L=lessons.find(x=>x.lesson===lessonFolder);
+  if(!L||!L.files.length){toast('אין קבצים בשיעור הזה');return;}
+  progStart('טוען '+lessonFolder);files.length=0;let done=0;
+  try{for(const it of L.files){progSet('קורא '+(++done)+' מתוך '+L.files.length+' — '+it.name,done,L.files.length);
+    try{const fh=await fsaGetFileHandle(it.path);const f=await fh.getFile();const ext=it.ext;
+      if(ext==='pdf'){let t='';try{t=await pdfToText(f);}catch(e){}
+        if(t&&t.length>40){files.push({name:it.name,kind:'text',data:t});}
+        else{const d=await rURL(f);const b64=d.split(',')[1];if(b64.length<3300000)files.push({name:it.name,kind:'doc',data:b64});}}
+      else if(['png','jpg','jpeg','webp','gif'].includes(ext)){const d=await rURL(f);files.push({name:it.name,kind:'image',data:d.split(',')[1],media:'image/'+(ext==='jpg'?'jpeg':ext)});}
+      else if(ext==='docx'){const buf=await rBuf(f);const r=await mammoth.extractRawText({arrayBuffer:buf});files.push({name:it.name,kind:'text',data:r.value});}
+      else{const t=await rTxt(f);files.push({name:it.name,kind:'text',data:t});}
+    }catch(e){}}
+  }finally{progEnd();}
+  if(!files.length){toast('לא הצלחתי לקרוא את קבצי השיעור');return;}
+  const num=(lessonFolder.match(/\d+/)||[''])[0];const ni=document.getElementById('lessonNum');if(ni)ni.value=String(+num||'');
+  const na=document.getElementById('lessonName');if(na)na.value=lessonNiceName(L)||lessonFolder;
+  renderFiles();refreshRun();
+  toast('נטענו '+files.length+' קבצים — אפשר לבנות ✨','good');
+  const rb=document.getElementById('runBtn');if(rb)rb.scrollIntoView({behavior:'smooth',block:'center'});}
 function updateFolderStatus(){
   const fs=document.getElementById('folderStatus');if(fs)fs.textContent=folderHandle?('🔗 מחוברת: '+folderHandle.name):'';
   const st=document.getElementById('fsaStatus');if(st)st.innerHTML=folderHandle?('<span style="color:var(--green)">מחוברת לתיקייה: <b>'+esc(folderHandle.name)+'</b> · העוזרת יכולה לקרוא ולשמור אליה.</span>'):'אין תיקייה מחוברת עדיין.';}
@@ -1586,7 +1634,8 @@ function initFolder(){
   const sab=document.getElementById('sourceAddBtn');if(sab)sab.onclick=addSourceFilesPrompt;
   const lab=document.getElementById('libAddBtn');if(lab)lab.onclick=libAddLesson;
   const lib2=document.getElementById('libImportBtn');if(lib2)lib2.onclick=libImportPrompt;
-  folderLoadSaved();updateFolderStatus();}
+  const llb=document.getElementById('loadLessonBtn');if(llb)llb.onclick=()=>loadLessonIntoNewTab(document.getElementById('lessonPicker').value);
+  folderLoadSaved();updateFolderStatus();try{populateLessonPicker();}catch(e){}}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
 checkKey();refreshRun();renderGal();
@@ -1594,7 +1643,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v12 · סיכום מלא ונאמן';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v13 · בורר שיעור בשיעור חדש';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
