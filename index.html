@@ -1667,7 +1667,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v15 · חיבור מרענן את הבורר';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v16 · בלי רענון שמפריע';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
@@ -1676,11 +1676,10 @@ try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
     window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then((reg)=>{
       try{reg.update();}catch(e){}
-      // כשיש גרסה חדשה ממתינה — מפעילים אותה וטוענים מחדש פעם אחת אוטומטית
+      // גרסה חדשה ברקע — לא טוענים מחדש לבד (שלא להפריע באמצע בנייה); רק מציעים לרענן
       reg.addEventListener('updatefound',()=>{const nw=reg.installing;if(!nw)return;
-        nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){window.__snReload=true;try{reg.waiting&&reg.waiting.postMessage('skip');}catch(e){}location.reload();}});});
-    }).catch(()=>{});
-    let __reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(__reloaded)return;__reloaded=true;location.reload();});});
+        nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){try{toast('עדכון מוכן — רענני את הדף כשנוח 🌿','good');}catch(e){}}});});
+    }).catch(()=>{});});
   }
   const btn=document.getElementById('installBtn');
   const hint=document.getElementById('installHint');
