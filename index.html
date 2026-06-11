@@ -1621,7 +1621,7 @@ function updateFolderStatus(){
   const fs=document.getElementById('folderStatus');if(fs)fs.textContent=folderHandle?('🔗 מחוברת: '+folderHandle.name):'';
   const st=document.getElementById('fsaStatus');if(st)st.innerHTML=folderHandle?('<span style="color:var(--green)">מחוברת לתיקייה: <b>'+esc(folderHandle.name)+'</b> · העוזרת יכולה לקרוא ולשמור אליה.</span>'):'אין תיקייה מחוברת עדיין.';}
 async function connectFolder(){if(!FSA_SUPPORTED){toast('הדפדפן הזה לא תומך בחיבור קבוע — השתמשי ב"בחרי מתיקייה שלמה"');return;}
-  try{const h=await window.showDirectoryPicker({mode:'readwrite'});folderHandle=h;await fsaPerm(h,true);await idbFolder.set('dir',h);updateFolderStatus();toast('התיקייה חוברה ✓','good');}
+  try{const h=await window.showDirectoryPicker({mode:'readwrite'});folderHandle=h;await fsaPerm(h,true);await idbFolder.set('dir',h);updateFolderStatus();toast('התיקייה חוברה ✓','good');try{populateLessonPicker();}catch(e){}try{renderSource();}catch(e){}}
   catch(e){if(e&&e.name!=='AbortError')toast('לא הצלחתי לחבר תיקייה');}}
 async function forgetFolder(){folderHandle=null;await idbFolder.del('dir');updateFolderStatus();toast('התיקייה נותקה');}
 async function folderLoadSaved(){if(!FSA_SUPPORTED)return;try{const h=await idbFolder.get('dir');if(h){folderHandle=h;updateFolderStatus();}}catch(e){}}
@@ -1667,7 +1667,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v14 · דוגמת זהב לסוכנים';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v15 · חיבור מרענן את הבורר';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
