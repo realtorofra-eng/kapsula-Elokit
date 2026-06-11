@@ -2,7 +2,7 @@
    נותן התקנה כאפליקציה + טעינה מהירה/אופליין של שלד המערכת.
    אסטרטגיה: שלד מקומי = cache-first (מהיר ועובד אופליין);
    ניווט = network-first עם נפילה ל-cache; שאר = נסה רשת, שמור ב-cache. */
-const CACHE = 'shfat-hanshama-v8';
+const CACHE = 'shfat-hanshama-v9';
 self.addEventListener('message', (e) => { if (e.data === 'skip') self.skipWaiting(); });
 const SHELL = [
   './',
