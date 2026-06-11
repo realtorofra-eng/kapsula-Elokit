@@ -284,6 +284,7 @@
       <div class="folder-row">
         <button class="btn" id="pickFolderBtn" type="button">📂 בחרי מתיקייה שלמה</button>
         <button class="btn" id="connectFolderBtn" type="button" style="display:none">🔗 חברי תיקייה קבועה</button>
+        <button class="btn" id="clearNewBtn" type="button">🗑️ נקה הכל</button>
         <span class="hint" id="folderStatus"></span></div>
       <div class="filelist" id="filelist"></div></div>
 
@@ -310,6 +311,7 @@
         <button class="btn" id="ttsLesson">🔊 הקראה</button>
         <button class="btn" id="copyLesson">📋 העתקה</button>
         <button class="btn" id="reviseLesson">🔁 תיקון בקול</button>
+        <button class="btn" id="clearNewBtn2">🗑️ נקה והתחל מחדש</button>
       </div>
       <div class="meta-line" id="metaLine"></div>
       <div id="pkgArea"></div></div></div>
@@ -632,7 +634,19 @@ async function callClaude(systemText,content,maxTokens,onText){
       let ev;try{ev=JSON.parse(js)}catch{continue}
       if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){full+=ev.delta.text;onText&&onText(ev.delta.text,full);}
       else if(ev.type==='message_start'&&ev.message?.usage){usage.in+=ev.message.usage.input_tokens||0;}
-      else if(ev.type==='message_delta'&&ev.usage){usage.out+=ev.usage.output_tokens||0;}}}
+      else if(ev.type==='message_delta'){if(ev.usage)usage.out+=ev.usage.output_tokens||0;if(ev.delta&&ev.delta.stop_reason)lastStop=ev.delta.stop_reason;}}}
+  return full.trim();}
+let lastStop='';
+// כתיבת שיעור שלם — ממשיך אוטומטית אם נקטע באמצע (עד 4 חלקים)
+async function writeLessonComplete(sys,baseContent,maxT,onText){
+  let full='';
+  for(let i=0;i<4;i++){
+    const cont=i===0?baseContent:[...baseContent,{type:'text',text:'כתבת עד כאן את מערך השיעור:\n\n…'+full.slice(-1800)+'\n\nהמשיכי בדיוק מהמקום שבו נעצרת, עד סוף השיעור — כל החלקים שנותרו, כולל כל ההנהגות עד האחרונה. אותו קול ואותה רמה. אל תחזרי על מה שכבר נכתב ואל תפתחי מחדש — פשוט המשיכי את הטקסט מהמילה האחרונה.'}];
+    const before=full;
+    const part=await callClaude(sys,cont,maxT,onText?((d,f)=>onText(d,before+(before?'\n':'')+f)):null);
+    full+=(full?'\n':'')+part;
+    if(lastStop!=='max_tokens')break;
+  }
   return full.trim();}
 function costStr(){const p=PRICE[getModel()]||PRICE['claude-opus-4-8'];return '$'+((usage.in/1e6*p[0])+(usage.out/1e6*p[1])).toFixed(3);}
 
@@ -658,6 +672,17 @@ function startRun(){usage={in:0,out:0};currentSlides=null;curArtifacts={};docume
   content.push({type:'text',text:intro});pState.content1=content;
   document.getElementById('pipe').classList.add('show');document.getElementById('lesson').classList.remove('show');
   buildSteps();runFrom(1);}
+function clearNewLesson(){
+  files.length=0;try{renderFiles();}catch(e){}try{refreshRun();}catch(e){}
+  lastLesson='';currentSlides=null;curArtifacts={};
+  const pipe=document.getElementById('pipe');if(pipe)pipe.classList.remove('show');
+  const lesson=document.getElementById('lesson');if(lesson)lesson.classList.remove('show');
+  const doc=document.getElementById('doc');if(doc)doc.innerHTML='<div class="md" id="docMd"></div>';
+  const pkg=document.getElementById('pkgArea');if(pkg)pkg.innerHTML='';
+  const ni=document.getElementById('lessonNum');if(ni)ni.value='';
+  const na=document.getElementById('lessonName');if(na)na.value='';
+  const lp=document.getElementById('lessonPicker');if(lp)lp.value='';
+  toast('נוקה — אפשר להתחיל שיעור חדש 🌿','good');window.scrollTo({top:0,behavior:'smooth'});}
 function priorLessonsContext(){const lib=loadLib();if(!lib.length)return '';
   const items=lib.slice(-10).map(l=>'• '+(l.num?l.num+'. ':'')+(l.name||'')).join('\n');
   return '\n\nשיעורים שכבר לימדת (לרצף וקוהרנטיות של הסדרה — בני על מה שכבר נלמד, אל תחזרי על אותו תוכן בלי צורך, וקשרי בעדינות לשיעורים קודמים אם מתאים):\n'+items;}
@@ -667,7 +692,7 @@ async function runFrom(start){const err=document.getElementById('err');err.class
     setStep(1,'run','כותבת את השיעור… (זה לוקח כמה דקות לשיעור מלא)');
     document.getElementById('lesson').classList.add('show');
     const doc=document.getElementById('doc');doc.innerHTML='<div class="doc-stream" id="docStream"></div>';
-    const final=await callClaude(sys,pState.content1,20000,(d,f)=>{liveAppend(1,d,f);const ds=document.getElementById('docStream');if(ds){ds.textContent=f;doc.scrollTop=doc.scrollHeight;}});
+    const final=await writeLessonComplete(sys,pState.content1,16000,(d,f)=>{liveAppend(1,d,f);const ds=document.getElementById('docStream');if(ds){ds.textContent=f;doc.scrollTop=doc.scrollHeight;}});
     setStep(1,'done','✓ השיעור מוכן');lastLesson=final;renderDoc();
     document.getElementById('metaLine').innerHTML=`<span>🌿 מוכן</span><span>עלות: ~${costStr()}</span><span>${final.length} תווים</span>`;
     document.getElementById('lesson').scrollIntoView({behavior:'smooth',block:'nearest'});toast('השיעור מוכן 🌳','good');
@@ -1443,7 +1468,7 @@ async function runPipelineHeadless(name,len,docContent,textBlocks){
   if(textBlocks&&textBlocks.length)intro+='קבצי טקסט של השיעור:\n\n'+textBlocks.join('\n\n')+'\n\n';
   intro+='כתבי עכשיו את מערך השיעור המלא לפי ההוראות — מלא, נאמן, חי, ועד הסוף.';
   const content1=[...(docContent||[]),{type:'text',text:intro}];
-  return await callClaude(sys,content1,20000,null);}
+  return await writeLessonComplete(sys,content1,16000,null);}
 // ===== חומרי גלם: סריקה, סידור פיזי, תצוגה, ובנייה =====
 async function fsaListFull(handle,base='',acc=[],depth=0,parentName=''){if(depth>5)return acc;
   for await(const [name,h] of handle.entries()){if(name.startsWith('.'))continue;
@@ -1665,6 +1690,8 @@ function initFolder(){
   const lab=document.getElementById('libAddBtn');if(lab)lab.onclick=libAddLesson;
   const lib2=document.getElementById('libImportBtn');if(lib2)lib2.onclick=libImportPrompt;
   const llb=document.getElementById('loadLessonBtn');if(llb)llb.onclick=()=>loadLessonIntoNewTab(document.getElementById('lessonPicker').value);
+  const cnb=document.getElementById('clearNewBtn');if(cnb)cnb.onclick=clearNewLesson;
+  const cnb2=document.getElementById('clearNewBtn2');if(cnb2)cnb2.onclick=clearNewLesson;
   folderLoadSaved();updateFolderStatus();try{populateLessonPicker();}catch(e){}}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
@@ -1673,7 +1700,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v20 · מעבר אחד (בלי שרשרת סוכנים)';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v21 · כפתור נקה + שיעור שלם';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
