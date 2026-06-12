@@ -398,8 +398,8 @@
       <input class="inp" id="apiKey" type="password" placeholder="sk-ant-...">
       <p class="hint"><a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> → API Keys → Create Key.</p>
       <label class="lbl">איכות המנוע</label>
-      <select class="inp" id="model"><option value="claude-opus-4-8">עופרה — האיכותי ביותר לקול (Opus) · מומלץ</option>
-        <option value="claude-sonnet-4-6">חסכוני ומהיר (Sonnet)</option></select>
+      <select class="inp" id="model"><option value="claude-sonnet-4-6">חסכוני ואיכותי (Sonnet) · מומלץ</option>
+        <option value="claude-opus-4-8">האיכותי ביותר לקול (Opus) · יקר יותר</option></select>
       <div class="actions"><button class="btn dark" id="saveSettings">שמירה</button>
         <button class="btn" id="testConn">🔌 בדיקת חיבור</button></div>
       <div class="hint" id="connResult" style="margin-top:10px"></div></div>
@@ -482,7 +482,8 @@ function mdRender(s){ if(window.marked){try{return marked.parse(s)}catch(e){}}
 // ===== storage =====
 const LS={key:'sn-apikey',model:'sn-model',voice:'sn-voice',ex:'sn-examples',lib:'sn-lessons',gal:'sn-gallery'};
 const getKey=()=>localStorage.getItem(LS.key)||'';
-const getModel=()=>localStorage.getItem(LS.model)||'claude-opus-4-8';
+try{if(!localStorage.getItem('sn-mig-sonnet')){localStorage.setItem(LS.model,'claude-sonnet-4-6');localStorage.setItem('sn-mig-sonnet','1');}}catch(e){}
+const getModel=()=>localStorage.getItem(LS.model)||'claude-sonnet-4-6';
 const getEx=()=>localStorage.getItem(LS.ex)||'';
 
 const DEFAULT_VOICE=`את שפת הנשמה.
