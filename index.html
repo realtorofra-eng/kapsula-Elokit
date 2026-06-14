@@ -1081,7 +1081,9 @@ function lpRow(icon,name,btns){return '<div style="display:flex;align-items:cent
 function openLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;const A=l.artifacts||{};
   let h='<div style="padding:2px 0 8px"><div class="hint" style="margin-bottom:10px">📁 <b>'+esc(l.name)+'</b> — תיקיית השיעור. כל חלק ניתן לצפייה, עריכה והורדה.</div>';
   h+=lpRow('📄','מערך שיעור',[{t:'צפייה',a:'view-body'},{t:'✏️ עריכה',a:'edit-body'},{t:'⬇️ PDF',a:'pdf-body'},{t:'⬇️ MD',a:'md-body'}]);
-  h+=lpRow('🖥️','מצגת',[{t:'🖥️ הצג',a:'present'},{t:'PowerPoint',a:'pptx'},{t:'HTML',a:'html'}]);
+  h+=(l.slides&&l.slides.length)
+    ? lpRow('🖥️','מצגת ('+l.slides.length+' שקופיות)',[{t:'▶︎ הצג',a:'present'},{t:'🔄 בנה מחדש',a:'rebuild'},{t:'🖥️ PowerPoint',a:'pptx'},{t:'🌐 HTML',a:'html'},{t:'🗑️ מחק מצגת',a:'delslides',del:true}])
+    : lpRow('🖥️','מצגת',[{t:'✨ צור מצגת',a:'present'}]);
   if(A.exercises&&A.exercises.length){
     h+='<div style="border:1px solid var(--line);border-radius:11px;background:var(--paper);margin-bottom:8px;padding:8px 12px"><div style="display:flex;align-items:center;gap:8px;font-weight:500"><span style="font-size:1.1rem">✏️</span><span style="flex:1">תרגילים ('+A.exercises.length+' קבצים נפרדים)</span><button class="btn" style="padding:5px 10px;font-size:.8rem" data-act="add-ex">➕ הוסף תרגיל</button></div>';
     A.exercises.forEach((ex,i)=>{h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 4px 7px 20px;border-top:1px solid var(--line2);flex-wrap:wrap"><span style="flex:1;min-width:100px;font-size:.92rem">'+(i+1)+'. '+esc(ex.title||'תרגיל')+'</span><span style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="view-ex|'+i+'">צפה</button><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="edit-ex|'+i+'">ערוך</button><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="pdf-ex|'+i+'">PDF</button><button class="btn" style="padding:5px 9px;font-size:.79rem;color:var(--red)" data-act="del-ex|'+i+'">מחק</button></span></div>';});
@@ -1103,6 +1105,8 @@ function lpAct(id,act,i,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;co
   else if(act==='pdf-body')downloadPdf('מערך שיעור — '+l.name,l.body);
   else if(act==='md-body')downloadText((l.name||'שיעור')+'.md',l.body);
   else if(act==='present')presentFlow(()=>l.body,s=>saveLibField(id,'slides',s),()=>(loadLib().find(x=>x.id===id)||{}).slides,l.name,{getText:()=>l.body,onChange:()=>saveLibField(id,'slides',pres.slides)});
+  else if(act==='rebuild'){if(confirm('לבנות מצגת חדשה? המצגת הנוכחית תוחלף.')){saveLibField(id,'slides',null);openLessonPanel(id,ob);presentFlow(()=>l.body,s=>saveLibField(id,'slides',s),()=>(loadLib().find(x=>x.id===id)||{}).slides,l.name,{getText:()=>l.body,onChange:()=>saveLibField(id,'slides',pres.slides)});}}
+  else if(act==='delslides'){if(confirm('למחוק את המצגת? השיעור עצמו יישאר.')){saveLibField(id,'slides',null);openLessonPanel(id,ob);toast('המצגת נמחקה');}}
   else if(act==='pptx'){if(l.slides)downloadPptx(l.name,l.slides);else toast('לחצי "🖥️ הצג" קודם כדי ליצור את השקופיות');}
   else if(act==='html'){if(l.slides)downloadText(l.name+'-מצגת.html',buildReveal(l.name,l.slides));else toast('לחצי "🖥️ הצג" קודם');}
   else if(act==='add-ex'){A.exercises=A.exercises||[];A.exercises.push({title:'תרגיל חדש',where:'בית',md:'מטרה:\n\nהוראות:\n\nדוגמה:'});saveLibField(id,'artifacts',A);openLessonPanel(id,ob);}
@@ -1825,7 +1829,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v31 · מנוע מצגות יצירתי + חזותי';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v32 · ניהול מצגת: הצג/בנה מחדש/מחק';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
