@@ -614,17 +614,17 @@ function refreshRun(){document.getElementById('runBtn').disabled=!files.length}
 const PRICE={'claude-opus-4-8':[5,25],'claude-sonnet-4-6':[3,15]};
 let usage={in:0,out:0},API_MODE=null;
 async function claudeFetch(body){
-  if(API_MODE!=='direct'){
-    try{
-      const r=await fetch('/api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-      if(r.ok){API_MODE='proxy';window.__apiOk=true;checkKey();return r;}
-      if(getKey())API_MODE='direct'; else return r; // surface proxy error if no local key
-    }catch(e){ if(getKey())API_MODE='direct'; else throw new Error('אין חיבור למנוע. הזיני מפתח בהגדרות או פרסי ל‑Vercel.'); }
-  }
-  const key=getKey(); if(!key) throw new Error('חסר מפתח — הזיני אותו בהגדרות.');
-  return fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+  const key=getKey();
+  const withTimeout=async(url,init,ms)=>{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),ms||35000);try{const r=await fetch(url,Object.assign({},init,{signal:ctl.signal}));clearTimeout(tm);return r;}catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')throw new Error('המנוע לא הגיב בזמן (timeout). נסי שוב.');throw e;}};
+  // מפתח אישי? הולכים ישירות אליו ועוקפים את הפרוקסי המשותף לחלוטין
+  if(key){API_MODE='direct';return withTimeout('https://api.anthropic.com/v1/messages',{method:'POST',
     headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify(body)});
+    body:JSON.stringify(body)},35000);}
+  // אין מפתח אישי — דרך הפרוקסי של Vercel
+  let r;try{r=await withTimeout('/api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)},35000);}
+  catch(e){throw new Error('אין חיבור למנוע. הזיני מפתח API בהגדרות (מומלץ), או פרסי ל‑Vercel והגדירי שם ANTHROPIC_API_KEY. ('+e.message+')');}
+  if(r.ok){API_MODE='proxy';window.__apiOk=true;checkKey();}
+  return r;
 }
 async function callClaude(systemText,content,maxTokens,onText,opts){
   const _body={model:getModel(),max_tokens:maxTokens,stream:true,system:systemText,messages:[{role:'user',content}]};
@@ -1822,7 +1822,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v23 · טיים-אאוט + הצגת שגיאה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v24 · מפתח אישי ישיר (עוקף פרוקסי)';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
