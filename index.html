@@ -615,14 +615,14 @@ const PRICE={'claude-opus-4-8':[5,25],'claude-sonnet-4-6':[3,15]};
 let usage={in:0,out:0},API_MODE=null;
 async function claudeFetch(body){
   const key=getKey();
-  const withTimeout=async(url,init,ms)=>{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),ms||35000);try{const r=await fetch(url,Object.assign({},init,{signal:ctl.signal}));clearTimeout(tm);return r;}catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')throw new Error('המנוע לא הגיב בזמן (timeout). נסי שוב.');throw e;}};
+  const withTimeout=async(url,init,ms)=>{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),ms||25000);try{const r=await fetch(url,Object.assign({},init,{signal:ctl.signal}));clearTimeout(tm);return r;}catch(e){clearTimeout(tm);if(e&&e.name==='AbortError')throw new Error('המנוע לא הגיב בזמן (timeout). נסי שוב.');throw e;}};
   // מפתח אישי? הולכים ישירות אליו ועוקפים את הפרוקסי המשותף לחלוטין
   if(key){API_MODE='direct';return withTimeout('https://api.anthropic.com/v1/messages',{method:'POST',
     headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify(body)},35000);}
+    body:JSON.stringify(body)},25000);}
   // אין מפתח אישי — דרך הפרוקסי של Vercel
-  let r;try{r=await withTimeout('/api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)},35000);}
-  catch(e){throw new Error('אין חיבור למנוע. הזיני מפתח API בהגדרות (מומלץ), או פרסי ל‑Vercel והגדירי שם ANTHROPIC_API_KEY. ('+e.message+')');}
+  let r;try{r=await withTimeout('/api/claude',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)},25000);}
+  catch(e){throw new Error('אין חיבור למנוע — ואין מפתח אישי בהגדרות. הזיני מפתח API שמתחיל ב‑sk-ant בהגדרות → "מנוע הבינה" → שמירה. ('+e.message+')');}
   if(r.ok){API_MODE='proxy';window.__apiOk=true;checkKey();}
   return r;
 }
@@ -651,11 +651,12 @@ function progStart(title){
     +'<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:1.12rem;color:#4a3520;margin-bottom:4px">'+title+'</div>'
     +'<div id="progStage" style="font-size:.84rem;color:#8b6f47;margin-bottom:13px">מתחילה…</div>'
     +'<div style="height:10px;background:#efe6d6;border-radius:6px;overflow:hidden"><div id="progBar" style="height:100%;width:0%;background:#8b6f47;transition:width .4s ease"></div></div>'
-    +'<div id="progPct" style="font-size:.82rem;color:#b89968;margin-top:8px;text-align:left">0%</div></div>';
-  const bar=el.querySelector('#progBar'),pct=el.querySelector('#progPct'),stg=el.querySelector('#progStage');
+    +'<div id="progPct" style="font-size:.82rem;color:#b89968;margin-top:8px;text-align:left">0%</div>'
+    +'<div id="progDiag" style="font-size:.74rem;color:#a98c63;margin-top:6px"></div></div>';
+  const bar=el.querySelector('#progBar'),pct=el.querySelector('#progPct'),stg=el.querySelector('#progStage'),dg=el.querySelector('#progDiag');
   let cur=0,timer=null;
   const set=(p,label)=>{cur=Math.max(cur,Math.min(100,Math.round(p)));bar.style.width=cur+'%';pct.textContent=cur+'%';if(label)stg.textContent=label;};
-  const auto=(seconds,ceil)=>{const c=ceil||90,t0=Date.now();clearInterval(timer);const tick=()=>{const f=1-Math.exp(-(Date.now()-t0)/(seconds*1000));set(Math.max(3,c*f));};tick();timer=setInterval(tick,450);};
+  const auto=(seconds,ceil)=>{const c=ceil||90,t0=Date.now();clearInterval(timer);const tick=()=>{const s=Math.round((Date.now()-t0)/1000);const f=1-Math.exp(-(Date.now()-t0)/(seconds*1000));set(Math.max(3,c*f));if(dg)dg.textContent='עובד כבר '+s+' שניות…';};tick();timer=setInterval(tick,500);};
   const streamLen=(len,est,ceil)=>set(Math.min(ceil||92,len/Math.max(1,est)*(ceil||92)));
   const stage=(t)=>{stg.textContent=t;};
   const done=(label)=>{clearInterval(timer);set(100,label||'מוכן ✓');setTimeout(()=>{if(el)el.style.display='none';},700);};
@@ -1822,7 +1823,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v24 · מפתח אישי ישיר (עוקף פרוקסי)';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v25 · מונה חי + אבחון';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
