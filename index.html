@@ -765,9 +765,9 @@ async function genCarousel(text,onProg){
 - אל תעתיקי משפטים מהשיעור כמו שהם — חיי אותם מחדש בקול שלך.
 - האחרון type=closing — קריאת נשמה סוגרת + הזמנה רכה לשמור ולשלוח (למשל: "שמרי, ושלחי לאישה שצריכה היום להיזכר").
 - 10–14 האשטגים רלוונטיים בעברית ובאנגלית.
-מערך השיעור:\n\n${(text||'').slice(0,9000)}`}],6000,null,{think:false,stream:false});
+מערך השיעור:\n\n${(text||'').slice(0,9000)}`}],4500,onProg?((d,f)=>onProg(f.length)):null,{think:false});
   let d;try{d=JSON.parse(extractJsonStr(raw,'{','}'));}catch(e){}
-  if(!d||!d.cards||!d.cards.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד במבנה {"title","cards":[{type,kicker,title,body}],"caption","hashtags"} — בלי שום טקסט מסביב, בלי הסברים.\n\nמערך השיעור:\n\n'+(text||'').slice(0,9000)}],6000,null,{think:false,stream:false});try{d=JSON.parse(extractJsonStr(raw2,'{','}'));}catch(e){}}
+  if(!d||!d.cards||!d.cards.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד במבנה {"title","cards":[{type,kicker,title,body}],"caption","hashtags"} — בלי שום טקסט מסביב, בלי הסברים.\n\nמערך השיעור:\n\n'+(text||'').slice(0,9000)}],4500,onProg?((d,f)=>onProg(f.length)):null,{think:false});try{d=JSON.parse(extractJsonStr(raw2,'{','}'));}catch(e){}}
   if(!d||!d.cards||!d.cards.length)throw new Error('הקרוסלה לא נוצרה כראוי — נסי שוב');
   return d;}
 function carWrapLines(x,text,maxW){const words=String(text||'').replace(/\n/g,' \n ').split(/\s+/);let line='',out=[];
@@ -843,7 +843,7 @@ document.getElementById('carouselBtn').onclick=async()=>{
 async function genSlides(text,onProg){
   const sys=systemBase()+'\n\nאת מעצבת מצגת בסגנון שפת הנשמה: אלגנטי, חם, הרבה אוויר. כותרת גדולה + מעט טקסט תומך — מספיק כדי שהתלמידה תזכור את הרעיון, לא רק כותרת ריקה. לא פסקאות ארוכות.';
   const raw=await callClaude(sys,[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד (בלי שום טקסט מסביב) — מערך שקופיות מעוצבות בקול של שפת הנשמה.
-לכל שקופית: {"type":"...","kicker":"תווית קטנה (אופציונלי)","title":"הכותרת — משפט אחד","body":"1–2 שורות תוכן תומך שמסבירות/מעמיקות (לא רק כותרת!)","image":"תיאור קצר באנגלית לתמונת רקע עדינה שמתאימה לשקופית (אופציונלי, רק כשמתאים)","notes":"הערת דובר פרטית מפורטת: מה לומר, איפה לעצור, איזו שאלה לשאול, דוגמה לתת"}.
+לכל שקופית: {"type":"...","kicker":"תווית קטנה (אופציונלי)","title":"הכותרת — משפט אחד","body":"1–2 שורות תוכן תומך שמסבירות/מעמיקות (לא רק כותרת!)","image":"תיאור קצר באנגלית לתמונת רקע עדינה שמתאימה לשקופית (אופציונלי, רק כשמתאים)","notes":"הערת דובר קצרה — משפט אחד: מה להדגיש או איזו שאלה לשאול"}.
 סוגי שקופית:
 - "title": פתיחה. title=שם השיעור, body=משפט הנשמה.
 - "opening": רגע פתיחה שנוגע. title=המשפט, body=שורה שמעמיקה.
@@ -851,10 +851,10 @@ async function genSlides(text,onProg){
 - "quote": משפט מצוטט חזק. body ריק.
 - "question": שאלה להתבוננות. body=הקשר קצר.
 - "closing": קריאת הנשמה הסוגרת.
-כללים: 12–16 שקופיות. הראשונה title, האחרונה closing. ל‑station/opening תני body אמיתי (לא ריק) — שורה-שתיים שמוסיפות תוכן, כך שהשקופית לא "ריקה". תני "image" לכ‑5–7 שקופיות (לא לכולן) — תיאור עדין בסגנון המותג (חם, מינימלי, אור, טבע). שמרי על הקצב: לב קודם, נשימה, סגירה שמהדהדת.
-תוכנית השיעור:\n\n${text}`}],8000,null,{think:false,stream:false});
+כללים: 9–12 שקופיות (לא יותר — קצר וממוקד). הראשונה title, האחרונה closing. ל‑station/opening תני body אמיתי (לא ריק) — שורה-שתיים שמוסיפות תוכן, כך שהשקופית לא "ריקה". תני "image" לכ‑5–7 שקופיות (לא לכולן) — תיאור עדין בסגנון המותג (חם, מינימלי, אור, טבע). שמרי על הקצב: לב קודם, נשימה, סגירה שמהדהדת.
+תוכנית השיעור:\n\n${text}`}],4000,onProg?((d,f)=>onProg(f.length)):null,{think:false});
   let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch(e){}
-  if(!Array.isArray(arr)||!arr.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד — מערך שקופיות, בלי שום טקסט מסביב ובלי הסברים.\n\nתוכנית השיעור:\n\n'+text}],8000,null,{think:false,stream:false});try{arr=JSON.parse(extractJsonStr(raw2,'[',']'));}catch(e){}}
+  if(!Array.isArray(arr)||!arr.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד — מערך שקופיות, בלי שום טקסט מסביב ובלי הסברים.\n\nתוכנית השיעור:\n\n'+text}],4000,onProg?((d,f)=>onProg(f.length)):null,{think:false});try{arr=JSON.parse(extractJsonStr(raw2,'[',']'));}catch(e){}}
   if(!Array.isArray(arr)||!arr.length)throw new Error('המצגת לא נוצרה כראוי — נסי שוב');
   return enrichSlides(arr);}
 function enrichSlides(slides){if(!Array.isArray(slides))return slides;
@@ -1180,7 +1180,7 @@ async function genArtifact(kind,body,name){const P={
 אפשר אימוג'י עדין אחד (🌿). פנייה ל"את". טקסט בלבד, בלי כותרת.`};
   return await callClaude(systemBase()+'\n\n'+P[kind],[{type:'text',text:body}],kind==='whatsapp'?1200:5000,null,{think:false,stream:false});}
 async function genExercisesList(body,name){
-  const raw=await callClaude(systemBase()+'\n\nאת בונה תרגילים ברמה הגבוהה ביותר — כאלה שיגרמו לתלמידה להעריץ את המורָה ולרצות לעשות כל תרגיל.',[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך תרגילים. לכל תרגיל: {"title":"שם התרגיל","where":"בכיתה" או "בית","md":"תוכן מלא ב‑Markdown בקול של שפת הנשמה: מטרה במשפט אחד, הוראות פשוטות שלב-אחר-שלב, דוגמה מהחיים / משל / סיפור מקרה שנוגע, ושאלה להתבוננות"}. 3–5 תרגילים שמשרתים את לב השיעור, מגוונים (חלקם בכיתה חלקם בבית), ברמה גבוהה, חמה ומדויקת.\n\n${body}`}],6000,null,{think:false,stream:false});
+  const raw=await callClaude(systemBase()+'\n\nאת בונה תרגילים ברמה הגבוהה ביותר — כאלה שיגרמו לתלמידה להעריץ את המורָה ולרצות לעשות כל תרגיל.',[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך תרגילים. לכל תרגיל: {"title":"שם התרגיל","where":"בכיתה" או "בית","md":"תוכן מלא ב‑Markdown בקול של שפת הנשמה: מטרה במשפט אחד, הוראות פשוטות שלב-אחר-שלב, דוגמה מהחיים / משל / סיפור מקרה שנוגע, ושאלה להתבוננות"}. 3–5 תרגילים שמשרתים את לב השיעור, מגוונים (חלקם בכיתה חלקם בבית), ברמה גבוהה, חמה ומדויקת.\n\n${body}`}],4500,null,{think:false});
   let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch{arr=[{title:'תרגיל',where:'בית',md:raw}];}
   return arr;}
 function exercisesCombinedMd(list,name){if(!Array.isArray(list))return String(list||'');return '# תרגילים — '+name+'\n\n'+list.map((e,i)=>`## ${i+1}. ${e.title||'תרגיל'}${e.where?'  ·  '+e.where:''}\n\n${e.md||''}`).join('\n\n---\n\n');}
@@ -1825,7 +1825,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v26 · יצירה במצב רגיל (ללא זרימה)';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v27 · מהיר יותר + משוב חי בזרימה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
