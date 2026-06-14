@@ -642,6 +642,27 @@ async function callClaude(systemText,content,maxTokens,onText,opts){
   return full.trim();}
 let lastStop='';
 function extractJsonStr(raw,open,close){let s=String(raw||'').replace(/```json/gi,'').replace(/```/g,'');const a=s.indexOf(open),b=s.lastIndexOf(close);if(a<0||b<0)return '';return s.slice(a,b+1).replace(/,\s*([}\]])/g,'$1');}
+// ===== מד התקדמות (overlay עם פס ואחוזים) =====
+function progStart(title){
+  let el=document.getElementById('progOv');
+  if(!el){el=document.createElement('div');el.id='progOv';document.body.appendChild(el);}
+  el.style.cssText='position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(40,32,22,.30)';
+  el.innerHTML='<div dir="rtl" style="background:#faf6ef;border:1px solid #e4d6c0;border-radius:16px;padding:22px 24px;width:min(360px,86vw);box-shadow:0 18px 54px rgba(65,55,44,.28);font-family:Heebo,sans-serif">'
+    +'<div style="font-family:\'Frank Ruhl Libre\',serif;font-size:1.12rem;color:#4a3520;margin-bottom:4px">'+title+'</div>'
+    +'<div id="progStage" style="font-size:.84rem;color:#8b6f47;margin-bottom:13px">מתחילה…</div>'
+    +'<div style="height:10px;background:#efe6d6;border-radius:6px;overflow:hidden"><div id="progBar" style="height:100%;width:0%;background:#8b6f47;transition:width .4s ease"></div></div>'
+    +'<div id="progPct" style="font-size:.82rem;color:#b89968;margin-top:8px;text-align:left">0%</div></div>';
+  const bar=el.querySelector('#progBar'),pct=el.querySelector('#progPct'),stg=el.querySelector('#progStage');
+  let cur=0,timer=null;
+  const set=(p,label)=>{cur=Math.max(cur,Math.min(100,Math.round(p)));bar.style.width=cur+'%';pct.textContent=cur+'%';if(label)stg.textContent=label;};
+  const auto=(seconds,ceil)=>{const c=ceil||90,t0=Date.now();clearInterval(timer);timer=setInterval(()=>{const f=1-Math.exp(-(Date.now()-t0)/(seconds*1000));set(c*f);},450);};
+  const streamLen=(len,est,ceil)=>set(Math.min(ceil||92,len/Math.max(1,est)*(ceil||92)));
+  const stage=(t)=>{stg.textContent=t;};
+  const done=(label)=>{clearInterval(timer);set(100,label||'מוכן ✓');setTimeout(()=>{if(el)el.style.display='none';},700);};
+  const fail=()=>{clearInterval(timer);if(el)el.style.display='none';};
+  el.style.display='flex';
+  return {set,auto,streamLen,stage,done,fail};
+}
 // כתיבת שיעור שלם — ממשיך אוטומטית אם נקטע באמצע (עד 7 חלקים)
 async function writeLessonComplete(sys,baseContent,maxT,onText){
   let full='';
@@ -730,7 +751,7 @@ document.getElementById('presentBtn').onclick=()=>presentFlow(()=>lastLesson,s=>
 // ===== סוכן קרוסלה לאינסטגרם (מערכת שמנת 4:5, מרכוז, עריכה+מחיקה) =====
 let lastCarousel=null;
 const CARC={cream:'#FAF6EF',ink:'#4A3520',body:'#5C4A38',copper:'#8B6F47',cop2:'#B89968',line:'#E4D6C0',wm:'#A98C63'};
-async function genCarousel(text){
+async function genCarousel(text,onProg){
   const sys=systemBase()+'\n\nאת עופרה — כותבת קרוסלות לאינסטגרם בשפת הנשמה. קרוסלה היא לא תקציר ולא רשימת נקודות, אלא מסע קצר שנוגע: רצף שקופיות שכל אחת עוצרת גלילה לבדה. כל כרטיס נפתח ממקום אנושי אמיתי — שאלה מהלב, רגע מהיומיום, או עצירה קטנה ("קחי רגע", "שימי לב") — ומשם נוגע. את מדברת לאישה אחת, אלייך, בגובה העיניים, מהלב. קצר אבל חי — נשימה אחת לכל כרטיס. אסור: לסכם, להעתיק משפטים מהשיעור כמו שהם, רשימות יבשות, סטטיסטיקות מנותקות, דרמה או שירה ריקה, ז\'רגון מיסטי, וסימני קריאה. כן: דימוי מוחשי אחד, אמת רגשית, ושפה פשוטה שאישה בלי רקע מרגישה שמדברים אליה דווקא. מותר ורצוי לגשר בין מדע/חכמה למקור — אך רק כשזה נמצא בשיעור, בלי להמציא מקורות או ציטוטים.';
   const raw=await callClaude(sys,[{type:'text',text:`מתוך מערך השיעור הבא, בני קרוסלה לאינסטגרם בשפת הנשמה — לא תקציר, אלא מסע קצר שנוגע. החזירי JSON בלבד (בלי שום טקסט מסביב), במבנה המדויק:
 {"title":"נושא השיעור בקצרה","cards":[{"type":"cover|content|closing","kicker":"תווית קצרה אופציונלית","title":"כותרת הכרטיס — משפט אחד קצר וחד","body":"1–3 שורות קצרות שנוגעות (לא בכריכה)"}],"caption":"כיתוב לפוסט בגוף ראשון, אינטימי, כאילו את כותבת לאישה אחת — 3–5 שורות + הזמנה רכה לשמור/לשתף","hashtags":["#דוגמה"]}
@@ -740,9 +761,9 @@ async function genCarousel(text){
 - אל תעתיקי משפטים מהשיעור כמו שהם — חיי אותם מחדש בקול שלך.
 - האחרון type=closing — קריאת נשמה סוגרת + הזמנה רכה לשמור ולשלוח (למשל: "שמרי, ושלחי לאישה שצריכה היום להיזכר").
 - 10–14 האשטגים רלוונטיים בעברית ובאנגלית.
-מערך השיעור:\n\n${(text||'').slice(0,9000)}`}],6000,null,{think:false});
+מערך השיעור:\n\n${(text||'').slice(0,9000)}`}],6000,onProg?((d,f)=>onProg(f.length)):null,{think:false});
   let d;try{d=JSON.parse(extractJsonStr(raw,'{','}'));}catch(e){}
-  if(!d||!d.cards||!d.cards.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד במבנה {"title","cards":[{type,kicker,title,body}],"caption","hashtags"} — בלי שום טקסט מסביב, בלי הסברים.\n\nמערך השיעור:\n\n'+(text||'').slice(0,9000)}],6000,null,{think:false});try{d=JSON.parse(extractJsonStr(raw2,'{','}'));}catch(e){}}
+  if(!d||!d.cards||!d.cards.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד במבנה {"title","cards":[{type,kicker,title,body}],"caption","hashtags"} — בלי שום טקסט מסביב, בלי הסברים.\n\nמערך השיעור:\n\n'+(text||'').slice(0,9000)}],6000,onProg?((d,f)=>onProg(f.length)):null,{think:false});try{d=JSON.parse(extractJsonStr(raw2,'{','}'));}catch(e){}}
   if(!d||!d.cards||!d.cards.length)throw new Error('הקרוסלה לא נוצרה כראוי — נסי שוב');
   return d;}
 function carWrapLines(x,text,maxW){const words=String(text||'').replace(/\n/g,' \n ').split(/\s+/);let line='',out=[];
@@ -808,13 +829,14 @@ function renderCarousel(d,area){lastCarousel=d;area=area||document.getElementByI
 document.getElementById('carouselBtn').onclick=async()=>{
   if(!lastLesson){toast('בני שיעור קודם');return;}
   const b=document.getElementById('carouselBtn'),o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה קרוסלה…';b.disabled=true;
-  const area=document.getElementById('carouselArea');area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📱 בונה קרוסלה…</h3><div class="hint">סוכן הרשתות לוקח את השיעור והופך אותו לכרטיסים לאינסטגרם. רגע.</div></div>';
-  try{const d=await genCarousel(lastLesson);renderCarousel(d);toast('הקרוסלה מוכנה 📱','good');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
-  catch(e){area.innerHTML='';toast('שגיאה: '+e.message);}
+  const area=document.getElementById('carouselArea');area.innerHTML='';
+  const p=progStart('📱 בונה קרוסלה');p.stage('סוכן הרשתות כותב את הכרטיסים…');p.auto(20);
+  try{const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));renderCarousel(d);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  catch(e){p.fail();area.innerHTML='';toast('שגיאה: '+e.message);}
   finally{b.innerHTML=o;b.disabled=false;}};
 
 // ===== slides =====
-async function genSlides(text){
+async function genSlides(text,onProg){
   const sys=systemBase()+'\n\nאת מעצבת מצגת בסגנון שפת הנשמה: אלגנטי, חם, הרבה אוויר. כותרת גדולה + מעט טקסט תומך — מספיק כדי שהתלמידה תזכור את הרעיון, לא רק כותרת ריקה. לא פסקאות ארוכות.';
   const raw=await callClaude(sys,[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד (בלי שום טקסט מסביב) — מערך שקופיות מעוצבות בקול של שפת הנשמה.
 לכל שקופית: {"type":"...","kicker":"תווית קטנה (אופציונלי)","title":"הכותרת — משפט אחד","body":"1–2 שורות תוכן תומך שמסבירות/מעמיקות (לא רק כותרת!)","image":"תיאור קצר באנגלית לתמונת רקע עדינה שמתאימה לשקופית (אופציונלי, רק כשמתאים)","notes":"הערת דובר פרטית מפורטת: מה לומר, איפה לעצור, איזו שאלה לשאול, דוגמה לתת"}.
@@ -826,9 +848,9 @@ async function genSlides(text){
 - "question": שאלה להתבוננות. body=הקשר קצר.
 - "closing": קריאת הנשמה הסוגרת.
 כללים: 12–16 שקופיות. הראשונה title, האחרונה closing. ל‑station/opening תני body אמיתי (לא ריק) — שורה-שתיים שמוסיפות תוכן, כך שהשקופית לא "ריקה". תני "image" לכ‑5–7 שקופיות (לא לכולן) — תיאור עדין בסגנון המותג (חם, מינימלי, אור, טבע). שמרי על הקצב: לב קודם, נשימה, סגירה שמהדהדת.
-תוכנית השיעור:\n\n${text}`}],8000,null,{think:false});
+תוכנית השיעור:\n\n${text}`}],8000,onProg?((d,f)=>onProg(f.length)):null,{think:false});
   let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch(e){}
-  if(!Array.isArray(arr)||!arr.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד — מערך שקופיות, בלי שום טקסט מסביב ובלי הסברים.\n\nתוכנית השיעור:\n\n'+text}],8000,null,{think:false});try{arr=JSON.parse(extractJsonStr(raw2,'[',']'));}catch(e){}}
+  if(!Array.isArray(arr)||!arr.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד — מערך שקופיות, בלי שום טקסט מסביב ובלי הסברים.\n\nתוכנית השיעור:\n\n'+text}],8000,onProg?((d,f)=>onProg(f.length)):null,{think:false});try{arr=JSON.parse(extractJsonStr(raw2,'[',']'));}catch(e){}}
   if(!Array.isArray(arr)||!arr.length)throw new Error('המצגת לא נוצרה כראוי — נסי שוב');
   return enrichSlides(arr);}
 function enrichSlides(slides){if(!Array.isArray(slides))return slides;
@@ -858,7 +880,7 @@ async function enrichSlidesMedia(slides,lessonText,onStep){
   return slides;}
 async function presentFlow(getText,setSlides,getSlides,title,opts){
   let slides=getSlides&&getSlides();
-  if(!slides){toast('בונה מצגת… כמה שניות');try{slides=await genSlides(getText());setSlides&&setSlides(slides);}catch(e){toast('לא הצלחתי לבנות מצגת: '+e.message);return;}}
+  if(!slides){const p=progStart('🖥️ בונה מצגת');p.stage('מעצבת השקופיות עובדת…');p.auto(24);try{slides=await genSlides(getText(),(len)=>p.streamLen(len,5200));setSlides&&setSlides(slides);p.done('המצגת מוכנה 🖥️');}catch(e){p.fail();toast('לא הצלחתי לבנות מצגת: '+e.message);return;}}
   else enrichSlides(slides);
   openPresenter(slides,title,Object.assign({getText:getText},opts||{}));}
 
@@ -1038,8 +1060,9 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
     buildPackage({name:l.name,num:l.num,body:l.body,getSlides:()=>(loadLib().find(x=>x.id===id)||{}).slides,
      setSlides:s=>saveLibField(id,'slides',s),artifacts:l.artifacts||{},setArtifacts:A=>saveLibField(id,'artifacts',A),area:document.getElementById('pkg-'+id)});});
   el.querySelectorAll('[data-carousel]').forEach(b=>b.onclick=async()=>{const id=b.dataset.carousel;const l=loadLib().find(x=>x.id===id);if(!l)return;
-    const area=document.getElementById('pkg-'+id);area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📱 בונה קרוסלה…</h3><div class="hint">הסוכן הופך את "'+esc(l.name)+'" לכרטיסים לאינסטגרם. רגע.</div></div>';
-    b.disabled=true;try{const d=await genCarousel(l.body);renderCarousel(d,area);toast('הקרוסלה מוכנה 📱','good');area.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){area.innerHTML='';toast('שגיאה: '+e.message);}finally{b.disabled=false;}});}
+    const area=document.getElementById('pkg-'+id);area.innerHTML='';
+    const p=progStart('📱 בונה קרוסלה');p.stage('הסוכן הופך את "'+esc(l.name)+'" לכרטיסים…');p.auto(20);
+    b.disabled=true;try{const d=await genCarousel(l.body,(len)=>p.streamLen(len,2600));renderCarousel(d,area);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){p.fail();area.innerHTML='';toast('שגיאה: '+e.message);}finally{b.disabled=false;}});}
 function saveLibField(id,field,val){const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it[field]=val;saveLib(lib);}}
 function editLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;
   ob.innerHTML='<div class="lib-edit"><div class="field-row"><input class="inp num" id="ed-num-'+id+'" value="'+esc(l.num||'')+'" placeholder="מס\'"><input class="inp grow" id="ed-name-'+id+'" value="'+esc(l.name||'')+'" placeholder="שם השיעור"></div>'+
@@ -1168,7 +1191,8 @@ async function buildPackage(ctx){
   const area=ctx.area;const A=ctx.artifacts||{};
   const card=(inner)=>{if(area)area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)">'+inner+'</div>';};
   const steps=['מצגת','תרגילים','שיעורי בית','סיכום וואטסאפ','עזרים','אריזת תיקייה'];
-  let done=0;const prog=(t)=>card('<h3>📦 בונה חבילת שיעור…</h3><div class="hint">'+t+' ('+done+'/'+steps.length+')</div>');
+  let done=0,_pstage=0;const _ptotal=15;const pov=progStart('📦 בונה חבילת שיעור');pov.auto(45);
+  const prog=(t)=>{_pstage++;pov.set(Math.min(96,_pstage/_ptotal*100),t);card('<h3>📦 בונה חבילת שיעור…</h3><div class="hint">'+t+' ('+done+'/'+steps.length+')</div>');};
   try{
     prog('כל הסוכנים עובדים יחד…');
     let slides=ctx.getSlides&&ctx.getSlides();
@@ -1213,8 +1237,8 @@ async function buildPackage(ctx){
     f.file('קרא-אותי.txt','תיקיית שיעור — שפת הנשמה · עופרה אינוז · קפסולה אלוקית\n\n— הקבצים המרכזיים (לשימוש) —\nמצגת.pptx        ← המצגת ל-PowerPoint (עם הערות דובר — לחצי Slide Show → Use Presenter View)\nמערך-שיעור.pdf   ← השיעור המלא\nתרגילים.pdf      ← כל התרגילים\nשיעורי-בית.pdf   ← לתלמידות\nסיכום-וואטסאפ.txt ← לשליחה לקבוצה\n\n— תיקיות —\nתרגילים/   ← כל תרגיל בקובץ נפרד (לפתיחה והדפסה)\nעזרים/     ← תמונות + רעיונות לסרטונים\nלעריכה ולווב/ ← אותם תכנים בפורמט לעריכה (md) ולדפדפן (html) — לא חובה');
     done++;prog('מורידה…');
     const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=folder+'.zip';a.click();URL.revokeObjectURL(u);
-    renderPkgResult(area,ctx,A);toast('חבילת השיעור ירדה 📦','good');
-  }catch(e){if(area)area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';else toast('שגיאה: '+e.message);}
+    renderPkgResult(area,ctx,A);pov.done('החבילה מוכנה 📦');toast('חבילת השיעור ירדה 📦','good');
+  }catch(e){pov.fail();if(area)area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';else toast('שגיאה: '+e.message);}
 }
 function renderPkgResult(area,ctx,A){if(!area)return;
   area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📦 חבילת השיעור מוכנה — ירדה תיקייה</h3>'
