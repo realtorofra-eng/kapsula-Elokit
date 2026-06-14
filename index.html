@@ -632,7 +632,7 @@ async function callClaude(systemText,content,maxTokens,onText,opts){
   const res=await claudeFetch(_body);
   if(!res.ok){let m=res.status+'';try{const e=await res.json();m=e?.error?.message||m;}catch{}throw new Error(m);}
   const reader=res.body.getReader(),dec=new TextDecoder();let buf='',full='';
-  while(true){const {done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
+  while(true){let _to;const _tp=new Promise((_,rej)=>{_to=setTimeout(()=>rej(new Error('המנוע לא הגיב בזמן (timeout). נסי שוב, ואם חוזר — בדקי חיבור/מפתח בהגדרות.')),90000);});let _r;try{_r=await Promise.race([reader.read(),_tp]);}catch(_e){clearTimeout(_to);try{reader.cancel();}catch(__){}throw _e;}clearTimeout(_to);const {done,value}=_r;if(done)break;buf+=dec.decode(value,{stream:true});
     let idx;while((idx=buf.indexOf('\n'))>=0){const line=buf.slice(0,idx);buf=buf.slice(idx+1);
       if(!line.startsWith('data:'))continue;const js=line.slice(5).trim();if(!js||js==='[DONE]')continue;
       let ev;try{ev=JSON.parse(js)}catch{continue}
@@ -655,13 +655,14 @@ function progStart(title){
   const bar=el.querySelector('#progBar'),pct=el.querySelector('#progPct'),stg=el.querySelector('#progStage');
   let cur=0,timer=null;
   const set=(p,label)=>{cur=Math.max(cur,Math.min(100,Math.round(p)));bar.style.width=cur+'%';pct.textContent=cur+'%';if(label)stg.textContent=label;};
-  const auto=(seconds,ceil)=>{const c=ceil||90,t0=Date.now();clearInterval(timer);timer=setInterval(()=>{const f=1-Math.exp(-(Date.now()-t0)/(seconds*1000));set(c*f);},450);};
+  const auto=(seconds,ceil)=>{const c=ceil||90,t0=Date.now();clearInterval(timer);const tick=()=>{const f=1-Math.exp(-(Date.now()-t0)/(seconds*1000));set(Math.max(3,c*f));};tick();timer=setInterval(tick,450);};
   const streamLen=(len,est,ceil)=>set(Math.min(ceil||92,len/Math.max(1,est)*(ceil||92)));
   const stage=(t)=>{stg.textContent=t;};
   const done=(label)=>{clearInterval(timer);set(100,label||'מוכן ✓');setTimeout(()=>{if(el)el.style.display='none';},700);};
   const fail=()=>{clearInterval(timer);if(el)el.style.display='none';};
+  const error=(msg)=>{clearInterval(timer);el.innerHTML='<div dir="rtl" style="background:#faf6ef;border:1px solid #e4d6c0;border-radius:16px;padding:22px 24px;width:min(390px,88vw);box-shadow:0 18px 54px rgba(65,55,44,.28);font-family:Heebo,sans-serif"><div style="font-family:\'Frank Ruhl Libre\',serif;font-size:1.12rem;color:#9a3b27;margin-bottom:8px">נתקלנו בבעיה</div><div style="font-size:.9rem;color:#5c4a38;line-height:1.6;white-space:pre-wrap">'+String(msg||"שגיאה")+'</div><button id="progClose" style="margin-top:14px;border:1px solid #e4d6c0;background:#fff;border-radius:9px;padding:7px 16px;cursor:pointer;font-family:Heebo;color:#4a3520">סגרי</button></div>';const cb=el.querySelector("#progClose");if(cb)cb.onclick=()=>{el.style.display="none";};};
   el.style.display='flex';
-  return {set,auto,streamLen,stage,done,fail};
+  return {set,auto,streamLen,stage,done,fail,error};
 }
 // כתיבת שיעור שלם — ממשיך אוטומטית אם נקטע באמצע (עד 7 חלקים)
 async function writeLessonComplete(sys,baseContent,maxT,onText){
@@ -832,7 +833,7 @@ document.getElementById('carouselBtn').onclick=async()=>{
   const area=document.getElementById('carouselArea');area.innerHTML='';
   const p=progStart('📱 בונה קרוסלה');p.stage('סוכן הרשתות כותב את הכרטיסים…');p.auto(20);
   try{const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));renderCarousel(d);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
-  catch(e){p.fail();area.innerHTML='';toast('שגיאה: '+e.message);}
+  catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='';}
   finally{b.innerHTML=o;b.disabled=false;}};
 
 // ===== slides =====
@@ -880,7 +881,7 @@ async function enrichSlidesMedia(slides,lessonText,onStep){
   return slides;}
 async function presentFlow(getText,setSlides,getSlides,title,opts){
   let slides=getSlides&&getSlides();
-  if(!slides){const p=progStart('🖥️ בונה מצגת');p.stage('מעצבת השקופיות עובדת…');p.auto(24);try{slides=await genSlides(getText(),(len)=>p.streamLen(len,5200));setSlides&&setSlides(slides);p.done('המצגת מוכנה 🖥️');}catch(e){p.fail();toast('לא הצלחתי לבנות מצגת: '+e.message);return;}}
+  if(!slides){const p=progStart('🖥️ בונה מצגת');p.stage('מעצבת השקופיות עובדת…');p.auto(24);try{slides=await genSlides(getText(),(len)=>p.streamLen(len,5200));setSlides&&setSlides(slides);p.done('המצגת מוכנה 🖥️');}catch(e){p.error('לא הצלחתי לבנות מצגת.\n'+e.message);return;}}
   else enrichSlides(slides);
   openPresenter(slides,title,Object.assign({getText:getText},opts||{}));}
 
@@ -1062,7 +1063,7 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
   el.querySelectorAll('[data-carousel]').forEach(b=>b.onclick=async()=>{const id=b.dataset.carousel;const l=loadLib().find(x=>x.id===id);if(!l)return;
     const area=document.getElementById('pkg-'+id);area.innerHTML='';
     const p=progStart('📱 בונה קרוסלה');p.stage('הסוכן הופך את "'+esc(l.name)+'" לכרטיסים…');p.auto(20);
-    b.disabled=true;try{const d=await genCarousel(l.body,(len)=>p.streamLen(len,2600));renderCarousel(d,area);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){p.fail();area.innerHTML='';toast('שגיאה: '+e.message);}finally{b.disabled=false;}});}
+    b.disabled=true;try{const d=await genCarousel(l.body,(len)=>p.streamLen(len,2600));renderCarousel(d,area);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='';}finally{b.disabled=false;}});}
 function saveLibField(id,field,val){const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it[field]=val;saveLib(lib);}}
 function editLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;
   ob.innerHTML='<div class="lib-edit"><div class="field-row"><input class="inp num" id="ed-num-'+id+'" value="'+esc(l.num||'')+'" placeholder="מס\'"><input class="inp grow" id="ed-name-'+id+'" value="'+esc(l.name||'')+'" placeholder="שם השיעור"></div>'+
@@ -1238,7 +1239,7 @@ async function buildPackage(ctx){
     done++;prog('מורידה…');
     const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=folder+'.zip';a.click();URL.revokeObjectURL(u);
     renderPkgResult(area,ctx,A);pov.done('החבילה מוכנה 📦');toast('חבילת השיעור ירדה 📦','good');
-  }catch(e){pov.fail();if(area)area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';else toast('שגיאה: '+e.message);}
+  }catch(e){pov.error('לא הצלחתי לבנות חבילה.\n'+e.message);if(area)area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
 }
 function renderPkgResult(area,ctx,A){if(!area)return;
   area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📦 חבילת השיעור מוכנה — ירדה תיקייה</h3>'
@@ -1821,7 +1822,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v22 · קרוסלה + תיקון סוכנים + מד התקדמות';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v23 · טיים-אאוט + הצגת שגיאה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
