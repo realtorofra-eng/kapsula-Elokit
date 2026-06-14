@@ -369,13 +369,44 @@
         <button class="btn" id="dlImg">⬇️ הורדה</button>
         <button class="btn" id="regenImg">🔁 וריאציה נוספת</button></div>
     </div>
+    <div class="card" id="galleryCard" style="display:none"><h3>נוצרו לאחרונה</h3><div class="imggrid" id="gallery"></div></div>
+  </section>
+
+  <!-- ===== אינסטגרם ===== -->
+  <section class="tab" id="tab-instagram">
+    <div class="section-head"><h2 class="section">אינסטגרם</h2>
+      <p class="lead">חלל נפרד לתוכן הרשת — קרוסלות, פוסטים, כיתובים ורעיונות. הכל בקול של שפת הנשמה, נפרד מהלימוד.</p></div>
+
+    <div class="card" id="igCarCard">
+      <h3>📱 קרוסלה עצמאית</h3>
+      <p class="hint" style="margin-bottom:10px">כתבי נושא חופשי (לא חייב שיעור) — והסוכן יבנה קרוסלה מעוצבת לעריכה ולהורדה.</p>
+      <textarea class="inp" id="igCarTopic" style="min-height:90px" placeholder="למשל: למה אנחנו מפחדות מהשקט — ומה מסתתר בו"></textarea>
+      <div class="actions"><button class="btn dark" id="igCarBtn">✨ בנה קרוסלה</button></div>
+      <div id="igCarArea"></div>
+    </div>
+
     <div class="card">
-      <h3>📸 פוסט לאינסטגרם</h3>
+      <h3>📸 פוסט בודד</h3>
       <p class="hint" style="margin-bottom:10px">משפט אחד שנוגע → פוסט מרובע ממותג, מוכן לאינסטגרם.</p>
-      <textarea class="inp" id="igQuote" style="min-height:90px" placeholder="למשל: כשהלב מתעורר — המציאות משתנה"></textarea>
+      <textarea class="inp" id="igQuote" style="min-height:80px" placeholder="למשל: כשהלב מתעורר — המציאות משתנה"></textarea>
       <div class="actions"><button class="btn dark" id="igBtn">📸 צור פוסט</button></div>
     </div>
-    <div class="card" id="galleryCard" style="display:none"><h3>נוצרו לאחרונה</h3><div class="imggrid" id="gallery"></div></div>
+
+    <div class="card">
+      <h3>✍️ כיתוב + האשטגים</h3>
+      <p class="hint" style="margin-bottom:10px">נושא → כיתוב בקול שלך + האשטגים מתאימים, מוכן להעתקה.</p>
+      <textarea class="inp" id="igCapTopic" style="min-height:80px" placeholder="למשל: המתנה שיש בלהאט — להאט בכל מה שאנחנו עושות"></textarea>
+      <div class="actions"><button class="btn dark" id="igCapBtn">✍️ כתבי כיתוב</button></div>
+      <div id="igCapArea"></div>
+    </div>
+
+    <div class="card">
+      <h3>💡 רעיונות לפוסטים</h3>
+      <p class="hint" style="margin-bottom:10px">נושא כללי (או ריק לרעיונות חופשיים) → רשימת רעיונות לתוכן שבועי בנושאי שפת הנשמה.</p>
+      <textarea class="inp" id="igIdeaTopic" style="min-height:70px" placeholder="למשל: שקט, האטה, חזרה פנימה (או השאירי ריק)"></textarea>
+      <div class="actions"><button class="btn dark" id="igIdeaBtn">💡 תני לי רעיונות</button></div>
+      <div id="igIdeaArea"></div>
+    </div>
   </section>
 
   <!-- ===== פרופיל קול ===== -->
@@ -582,7 +613,7 @@ const AGENTS=[
 ];
 
 // ===== nav =====
-const tabs=[{id:'new',label:'שיעור חדש'},{id:'library',label:'ספרייה'},{id:'source',label:'חומרי גלם'},{id:'images',label:'תמונות'},{id:'voice',label:'פרופיל הקול'},{id:'settings',label:'הגדרות'}];
+const tabs=[{id:'new',label:'שיעור חדש'},{id:'library',label:'ספרייה'},{id:'source',label:'חומרי גלם'},{id:'images',label:'תמונות'},{id:'instagram',label:'אינסטגרם'},{id:'voice',label:'פרופיל הקול'},{id:'settings',label:'הגדרות'}];
 const nav=document.getElementById('nav');
 tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
 function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
@@ -1105,6 +1136,52 @@ async function renderAids(area,d,name){
   try{const d=await genAids(body,name);await renderAids(area,d,name);p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
   catch(e){p.error('לא הצלחתי לבנות ערכה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
   finally{b.innerHTML=o;b.disabled=false;}};})();
+
+// ===== אינסטגרם — חלון נפרד =====
+(function(){
+  const carBtn=document.getElementById('igCarBtn');
+  if(carBtn)carBtn.onclick=async()=>{
+    const topic=(document.getElementById('igCarTopic').value||'').trim();
+    if(!topic){toast('כתבי נושא קצר');return;}
+    const o=carBtn.innerHTML;carBtn.innerHTML='<span class="spinner"></span> בונה קרוסלה…';carBtn.disabled=true;
+    const area=document.getElementById('igCarArea');area.innerHTML='';
+    const p=aiProg('📱 בונה קרוסלה');p.auto(20);
+    try{const d=await genCarousel('נושא לקרוסלה (לא שיעור): '+topic+'\n\nבני קרוסלה לאינסטגרם סביב הנושא הזה.',(len)=>p.streamLen(len,2600));
+      renderCarousel(d,area);const rg=area.querySelector('#carRegen');if(rg)rg.onclick=()=>carBtn.click();
+      p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+    catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
+    finally{carBtn.innerHTML=o;carBtn.disabled=false;}};
+
+  const capBtn=document.getElementById('igCapBtn');
+  if(capBtn)capBtn.onclick=async()=>{
+    const topic=(document.getElementById('igCapTopic').value||'').trim();
+    if(!topic){toast('כתבי נושא קצר');return;}
+    const o=capBtn.innerHTML;capBtn.innerHTML='<span class="spinner"></span> כותבת…';capBtn.disabled=true;
+    const area=document.getElementById('igCapArea');area.innerHTML='';
+    const p=aiProg('✍️ כותבת כיתוב');p.auto(12);
+    try{const raw=await callClaude(systemBase()+'\n\nאת כותבת כיתוב (caption) לאינסטגרם בקול של שפת הנשמה — חם, אישי, פנייה ל"את", בלי שיווק ובלי דרמה.',
+      [{type:'text',text:`נושא: ${topic}\n\nכתבי כיתוב לפוסט אינסטגרם (3-6 שורות, נשימה בין שורות), ואז שורה ריקה, "—", ואז שורת האשטגים (8-12 האשטגים רלוונטיים).`}],900,null,{think:false,stream:false});
+      area.innerHTML='<div style="margin-top:12px"><textarea class="inp" id="igCapOut" style="min-height:160px;line-height:1.7"></textarea><div class="actions"><button class="btn dark" id="igCapCopy">📋 העתק</button></div></div>';
+      area.querySelector('#igCapOut').value=raw.trim();
+      area.querySelector('#igCapCopy').onclick=()=>copyText(area.querySelector('#igCapOut').value);
+      p.done('הכיתוב מוכן ✍️');}
+    catch(e){p.error('לא הצלחתי.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
+    finally{capBtn.innerHTML=o;capBtn.disabled=false;}};
+
+  const ideaBtn=document.getElementById('igIdeaBtn');
+  if(ideaBtn)ideaBtn.onclick=async()=>{
+    const topic=(document.getElementById('igIdeaTopic').value||'').trim();
+    const o=ideaBtn.innerHTML;ideaBtn.innerHTML='<span class="spinner"></span> חושבת…';ideaBtn.disabled=true;
+    const area=document.getElementById('igIdeaArea');area.innerHTML='';
+    const p=aiProg('💡 רעיונות לפוסטים');p.auto(12);
+    try{const raw=await callClaude(systemBase()+'\n\nאת מציעה רעיונות לתוכן אינסטגרם בקול של שפת הנשמה.',
+      [{type:'text',text:`${topic?('בנושא: '+topic+'\n\n'):''}תני 7 רעיונות לפוסטים לאינסטגרם בנושאי שפת הנשמה. כל רעיון: כותרת קצרה + שורה אחת מה הפוסט אומר. בקול חם, בלי דרמה. ב-Markdown, רשימה ממוספרת.`}],1200,null,{think:false,stream:false});
+      area.innerHTML='<div class="card" style="margin-top:12px;background:var(--cream)"><div class="md">'+mdRender(raw)+'</div><div class="actions"><button class="btn dark" id="igIdeaCopy">📋 העתק</button></div></div>';
+      area.querySelector('#igIdeaCopy').onclick=()=>copyText(raw);
+      p.done('הרעיונות מוכנים 💡');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+    catch(e){p.error('לא הצלחתי.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
+    finally{ideaBtn.innerHTML=o;ideaBtn.disabled=false;}};
+})();
 
 // ===== library =====
 function loadLib(){try{return JSON.parse(localStorage.getItem(LS.lib))||[]}catch{return[]}}
@@ -1906,7 +1983,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v35 · שיעור מלא בפקודה אחת + ערכת עזרים לתלמידות';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v36 · חלון אינסטגרם נפרד';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
