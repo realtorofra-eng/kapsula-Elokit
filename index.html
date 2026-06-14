@@ -765,9 +765,9 @@ async function genCarousel(text,onProg){
 - אל תעתיקי משפטים מהשיעור כמו שהם — חיי אותם מחדש בקול שלך.
 - האחרון type=closing — קריאת נשמה סוגרת + הזמנה רכה לשמור ולשלוח (למשל: "שמרי, ושלחי לאישה שצריכה היום להיזכר").
 - 10–14 האשטגים רלוונטיים בעברית ובאנגלית.
-מערך השיעור:\n\n${(text||'').slice(0,9000)}`}],4500,onProg?((d,f)=>onProg(f.length)):null,{think:false});
+מערך השיעור:\n\n${(text||'').slice(0,9000)}`}],3000,null,{think:false,stream:false});
   let d;try{d=JSON.parse(extractJsonStr(raw,'{','}'));}catch(e){}
-  if(!d||!d.cards||!d.cards.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד במבנה {"title","cards":[{type,kicker,title,body}],"caption","hashtags"} — בלי שום טקסט מסביב, בלי הסברים.\n\nמערך השיעור:\n\n'+(text||'').slice(0,9000)}],4500,onProg?((d,f)=>onProg(f.length)):null,{think:false});try{d=JSON.parse(extractJsonStr(raw2,'{','}'));}catch(e){}}
+  if(!d||!d.cards||!d.cards.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד במבנה {"title","cards":[{type,kicker,title,body}],"caption","hashtags"} — בלי שום טקסט מסביב, בלי הסברים.\n\nמערך השיעור:\n\n'+(text||'').slice(0,9000)}],3000,null,{think:false,stream:false});try{d=JSON.parse(extractJsonStr(raw2,'{','}'));}catch(e){}}
   if(!d||!d.cards||!d.cards.length)throw new Error('הקרוסלה לא נוצרה כראוי — נסי שוב');
   return d;}
 function carWrapLines(x,text,maxW){const words=String(text||'').replace(/\n/g,' \n ').split(/\s+/);let line='',out=[];
@@ -851,10 +851,10 @@ async function genSlides(text,onProg){
 - "quote": משפט מצוטט חזק. body ריק.
 - "question": שאלה להתבוננות. body=הקשר קצר.
 - "closing": קריאת הנשמה הסוגרת.
-כללים: 9–12 שקופיות (לא יותר — קצר וממוקד). הראשונה title, האחרונה closing. ל‑station/opening תני body אמיתי (לא ריק) — שורה-שתיים שמוסיפות תוכן, כך שהשקופית לא "ריקה". תני "image" לכ‑5–7 שקופיות (לא לכולן) — תיאור עדין בסגנון המותג (חם, מינימלי, אור, טבע). שמרי על הקצב: לב קודם, נשימה, סגירה שמהדהדת.
-תוכנית השיעור:\n\n${text}`}],4000,onProg?((d,f)=>onProg(f.length)):null,{think:false});
+כללים: 8–10 שקופיות בלבד (קצר וממוקד מאוד, לא יותר). הראשונה title, האחרונה closing. ל‑station/opening תני body אמיתי (לא ריק) — שורה-שתיים שמוסיפות תוכן, כך שהשקופית לא "ריקה". תני "image" לכ‑5–7 שקופיות (לא לכולן) — תיאור עדין בסגנון המותג (חם, מינימלי, אור, טבע). שמרי על הקצב: לב קודם, נשימה, סגירה שמהדהדת.
+תוכנית השיעור:\n\n${text}`}],2500,null,{think:false,stream:false});
   let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch(e){}
-  if(!Array.isArray(arr)||!arr.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד — מערך שקופיות, בלי שום טקסט מסביב ובלי הסברים.\n\nתוכנית השיעור:\n\n'+text}],4000,onProg?((d,f)=>onProg(f.length)):null,{think:false});try{arr=JSON.parse(extractJsonStr(raw2,'[',']'));}catch(e){}}
+  if(!Array.isArray(arr)||!arr.length){const raw2=await callClaude(sys,[{type:'text',text:'החזירי שוב JSON תקין בלבד — מערך שקופיות, בלי שום טקסט מסביב ובלי הסברים.\n\nתוכנית השיעור:\n\n'+text}],2500,null,{think:false,stream:false});try{arr=JSON.parse(extractJsonStr(raw2,'[',']'));}catch(e){}}
   if(!Array.isArray(arr)||!arr.length)throw new Error('המצגת לא נוצרה כראוי — נסי שוב');
   return enrichSlides(arr);}
 function enrichSlides(slides){if(!Array.isArray(slides))return slides;
