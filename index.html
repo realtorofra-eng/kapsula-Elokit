@@ -645,7 +645,7 @@ async function callClaude(systemText,content,maxTokens,onText,opts){
 let lastStop='';
 function extractJsonStr(raw,open,close){let s=String(raw||'').replace(/```json/gi,'').replace(/```/g,'');const a=s.indexOf(open),b=s.lastIndexOf(close);if(a<0||b<0)return '';return s.slice(a,b+1).replace(/,\s*([}\]])/g,'$1');}
 // ===== מד התקדמות (overlay עם פס ואחוזים) =====
-function progStart(title){
+function aiProg(title){
   let el=document.getElementById('progOv');
   if(!el){el=document.createElement('div');el.id='progOv';document.body.appendChild(el);}
   el.style.cssText='position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(40,32,22,.30)';
@@ -834,7 +834,7 @@ document.getElementById('carouselBtn').onclick=async()=>{
   if(!lastLesson){toast('בני שיעור קודם');return;}
   const b=document.getElementById('carouselBtn'),o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה קרוסלה…';b.disabled=true;
   const area=document.getElementById('carouselArea');area.innerHTML='';
-  const p=progStart('📱 בונה קרוסלה');p.stage('סוכן הרשתות כותב את הכרטיסים…');p.auto(20);
+  const p=aiProg('📱 בונה קרוסלה');p.stage('סוכן הרשתות כותב את הכרטיסים…');p.auto(20);
   try{const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));renderCarousel(d);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
   catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='';}
   finally{b.innerHTML=o;b.disabled=false;}};
@@ -884,7 +884,7 @@ async function enrichSlidesMedia(slides,lessonText,onStep){
   return slides;}
 async function presentFlow(getText,setSlides,getSlides,title,opts){
   let slides=getSlides&&getSlides();
-  if(!slides){const p=progStart('🖥️ בונה מצגת');p.stage('מעצבת השקופיות עובדת…');p.auto(24);try{slides=await genSlides(getText(),(len)=>p.streamLen(len,5200));setSlides&&setSlides(slides);p.done('המצגת מוכנה 🖥️');}catch(e){p.error('לא הצלחתי לבנות מצגת.\n'+e.message);return;}}
+  if(!slides){const p=aiProg('🖥️ בונה מצגת');p.stage('מעצבת השקופיות עובדת…');p.auto(24);try{slides=await genSlides(getText(),(len)=>p.streamLen(len,5200));setSlides&&setSlides(slides);p.done('המצגת מוכנה 🖥️');}catch(e){p.error('לא הצלחתי לבנות מצגת.\n'+e.message);return;}}
   else enrichSlides(slides);
   openPresenter(slides,title,Object.assign({getText:getText},opts||{}));}
 
@@ -1065,7 +1065,7 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
      setSlides:s=>saveLibField(id,'slides',s),artifacts:l.artifacts||{},setArtifacts:A=>saveLibField(id,'artifacts',A),area:document.getElementById('pkg-'+id)});});
   el.querySelectorAll('[data-carousel]').forEach(b=>b.onclick=async()=>{const id=b.dataset.carousel;const l=loadLib().find(x=>x.id===id);if(!l)return;
     const area=document.getElementById('pkg-'+id);area.innerHTML='';
-    const p=progStart('📱 בונה קרוסלה');p.stage('הסוכן הופך את "'+esc(l.name)+'" לכרטיסים…');p.auto(20);
+    const p=aiProg('📱 בונה קרוסלה');p.stage('הסוכן הופך את "'+esc(l.name)+'" לכרטיסים…');p.auto(20);
     b.disabled=true;try{const d=await genCarousel(l.body,(len)=>p.streamLen(len,2600));renderCarousel(d,area);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='';}finally{b.disabled=false;}});}
 function saveLibField(id,field,val){const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it[field]=val;saveLib(lib);}}
 function editLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;
@@ -1195,7 +1195,7 @@ async function buildPackage(ctx){
   const area=ctx.area;const A=ctx.artifacts||{};
   const card=(inner)=>{if(area)area.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)">'+inner+'</div>';};
   const steps=['מצגת','תרגילים','שיעורי בית','סיכום וואטסאפ','עזרים','אריזת תיקייה'];
-  let done=0,_pstage=0;const _ptotal=15;const pov=progStart('📦 בונה חבילת שיעור');pov.auto(45);
+  let done=0,_pstage=0;const _ptotal=15;const pov=aiProg('📦 בונה חבילת שיעור');pov.auto(45);
   const prog=(t)=>{_pstage++;pov.set(Math.min(96,_pstage/_ptotal*100),t);card('<h3>📦 בונה חבילת שיעור…</h3><div class="hint">'+t+' ('+done+'/'+steps.length+')</div>');};
   try{
     prog('כל הסוכנים עובדים יחד…');
@@ -1825,7 +1825,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v29 · מצגת מינימלית ומהירה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v30 · תיקון מד התקדמות (התנגשות שמות)';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
