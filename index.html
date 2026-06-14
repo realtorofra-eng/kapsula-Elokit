@@ -291,9 +291,10 @@
     <div class="card"><h3><span class="step-badge">2</span> פרטי השיעור</h3>
       <div class="field-row"><input class="inp num" id="lessonNum" type="text" placeholder="מס'">
         <input class="inp grow" id="lessonName" type="text" placeholder="שם השיעור (למשל: מבוא למבטולוגיה)"></div>
-      <label class="lbl">אורך ועומק</label>
-      <div class="seg" id="lenSeg"><button data-len="short">קצר · 3 תחנות</button>
-        <button data-len="medium" class="on">בינוני · 4 תחנות</button><button data-len="deep">עמוק · 5 תחנות</button></div></div>
+      <label class="lbl">מה לבנות?</label>
+      <div class="seg" id="modeSeg"><button data-mode="full" class="on">🌿 שיעור מלא · הכל בפקודה אחת</button>
+        <button data-mode="lesson">📄 מערך בלבד · מהיר וחסכוני</button></div>
+      <p class="hint" id="modeHint">שיעור מלא בונה הכל יחד: מערך · מצגת · תרגילים · שיעורי בית · סיכום וואטסאפ · קרוסלה · עזרים חזותיים. פקודה אחת, בלי להריץ כל דבר בנפרד.</p></div>
 
     <div class="card tight"><button class="btn-primary" id="runBtn" disabled>✨ בנה את השיעור</button>
       <div class="err-box" id="err"></div></div>
@@ -345,8 +346,16 @@
 
   <!-- ===== תמונות ===== -->
   <section class="tab" id="tab-images">
-    <div class="section-head"><h2 class="section">תמונות</h2>
-      <p class="lead">תמונות בסגנון שפת הנשמה — לשקופיות, לאינסטגרם, לכל מקום. כל תמונה נוצרת בפלטה ובתחושה של המותג.</p></div>
+    <div class="section-head"><h2 class="section">תמונות ועזרים</h2>
+      <p class="lead">תמונות בסגנון שפת הנשמה — וערכת עזרים לתלמידות לפי סגנונות למידה: מי שלומדת בעין, מי שבתנועה, ומי שדרך סיפור.</p></div>
+    <div class="card" id="aidCard">
+      <h3>🎁 ערכת עזרים לשיעור</h3>
+      <p class="hint" style="margin-bottom:10px">בחרי שיעור — והסוכן יכין ערכה לתלמידות: 🖼️ תמונות להמחשה · 🎬 סרטוני וידאו · 📖 סיפורים ודוגמאות מהחיים. מוכן לשליחה לקבוצה.</p>
+      <label class="lbl">השיעור</label>
+      <select class="inp" id="aidLesson"></select>
+      <div class="actions"><button class="btn dark" id="aidBtn">✨ בנה ערכת עזרים</button></div>
+      <div id="aidArea"></div>
+    </div>
     <div class="card">
       <label class="lbl">מה לצייר? (בעברית, פשוט)</label>
       <textarea class="inp" id="imgPrompt" style="min-height:90px" placeholder="למשל: אישה יושבת בשקט מול חלון, אור רך נכנס, תחושת חזרה פנימה"></textarea>
@@ -578,10 +587,12 @@ const nav=document.getElementById('nav');
 tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
 function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();
+  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();if(id==='images'&&typeof fillAidLessons==='function')fillAidLessons();
   try{const a=document.querySelector('nav button.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
 
-document.querySelectorAll('#lenSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#lenSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');lenChoice=b.dataset.len});
+let buildMode='full';
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');buildMode=b.dataset.mode;
+  const rb=document.getElementById('runBtn');if(rb)rb.textContent=buildMode==='full'?'✨ בנה שיעור מלא':'✨ בנה מערך';});
 
 // ===== files =====
 let files=[];
@@ -691,7 +702,7 @@ function buildSteps(){document.getElementById('pipeSteps').innerHTML=
 function setStep(n,state,txt){const s=document.getElementById('step-'+n);s.classList.remove('run','done','err');if(state)s.classList.add(state);document.getElementById('stat-'+n).textContent=txt;}
 function liveAppend(n,_,full){const el=document.getElementById('live-'+n);el.classList.add('show');document.getElementById('tog-'+n).classList.add('show');el.textContent=full;el.scrollTop=el.scrollHeight;}
 function startRun(){usage={in:0,out:0};currentSlides=null;curArtifacts={};lastCarousel=null;document.getElementById('pkgArea').innerHTML='';document.getElementById('carouselArea').innerHTML='';
-  pState={name:document.getElementById('lessonName').value.trim(),len:lenChoice};
+  pState={name:document.getElementById('lessonName').value.trim(),len:lenChoice,mode:buildMode};
   const content=[],textBlocks=[];
   for(const f of files){if(f.kind==='doc')content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:f.data}});
     else if(f.kind==='image')content.push({type:'image',source:{type:'base64',media_type:f.media,data:f.data}});
@@ -727,11 +738,24 @@ async function runFrom(start){const err=document.getElementById('err');err.class
     setStep(1,'done','✓ השיעור מוכן');lastLesson=final;renderDoc();
     document.getElementById('metaLine').innerHTML=`<span>🌿 מוכן</span><span>עלות: ~${costStr()}</span><span>${final.length} תווים</span>`;
     document.getElementById('lesson').scrollIntoView({behavior:'smooth',block:'nearest'});toast('השיעור מוכן 🌳','good');
+    if(pState&&pState.mode==='full'){await buildFullExtras();}
   }catch(e){setStep(1,'err','נעצר');
     err.innerHTML=`<span>⚠️ ${esc(e.message)}</span><button class="btn" id="resumeBtn">נסי שוב</button>`;err.classList.add('show');
     document.getElementById('resumeBtn').onclick=()=>runFrom(1);}
   finally{runBtn.disabled=false;}}
 function renderDoc(){document.getElementById('doc').innerHTML='<div class="md">'+mdRender(lastLesson)+'</div>';document.getElementById('doc').classList.remove('editing');editing=false;document.getElementById('editBtn').textContent='✏️ עריכה';}
+// "שיעור מלא" — בונה את כל החבילה והקרוסלה אחרי שהמערך מוכן, בפקודה אחת
+async function buildFullExtras(){
+  const pa=document.getElementById('pkgArea');
+  pa.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📦 בונה את כל החבילה…</h3><div class="hint">כל הסוכנים עובדים יחד — מצגת · תרגילים · שיעורי בית · וואטסאפ · עזרים. אל תסגרי.</div></div>';
+  pa.scrollIntoView({behavior:'smooth',block:'center'});
+  try{await buildPackage({name:nameOf()||'שיעור',num:document.getElementById('lessonNum').value.trim(),body:lastLesson,
+    getSlides:()=>currentSlides,setSlides:s=>{currentSlides=s;},artifacts:curArtifacts,setArtifacts:A=>{curArtifacts=A;},area:pa});}catch(e){}
+  try{const ca=document.getElementById('carouselArea');ca.innerHTML='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>📱 בונה קרוסלה לאינסטגרם…</h3></div>';
+    const p=aiProg('📱 בונה קרוסלה');p.auto(20);
+    const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));lastCarousel=d;renderCarousel(d);p.done('הקרוסלה מוכנה 📱');}catch(e){}
+  toast('שיעור מלא מוכן — מערך, מצגת, תרגילים, שיעורי בית, וואטסאפ, קרוסלה ועזרים 🌿','good');
+}
 
 // ===== lesson actions =====
 let editing=false;
@@ -1033,6 +1057,54 @@ function renderGal(){const g=loadGal();const card=document.getElementById('galle
   if(!g.length){card.style.display='none';return;}card.style.display='block';
   el.innerHTML=g.map(u=>`<img src="${u}" loading="lazy">`).join('');
   el.querySelectorAll('img').forEach((im,i)=>im.onclick=()=>{lastImgUrl=g[i];const wrap=document.getElementById('imgWrap');wrap.innerHTML='';const big=new Image();big.src=g[i];wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';window.scrollTo({top:0,behavior:'smooth'});});}
+
+// ===== ערכת עזרים לשיעור (סוכן עזרים) =====
+function fillAidLessons(){const sel=document.getElementById('aidLesson');if(!sel)return;
+  const lib=loadLib().slice().sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999));
+  let html='';if(lastLesson)html+='<option value="__current__">⭐ השיעור הנוכחי</option>';
+  html+=lib.map(l=>`<option value="${l.id}">${esc((l.num?l.num+'. ':'')+(l.name||'שיעור'))}</option>`).join('');
+  if(!html)html='<option value="">— עדיין אין שיעורים. בני שיעור קודם —</option>';
+  sel.innerHTML=html;}
+async function genAids(body,name){
+  const raw=await callClaude(systemBase()+'\n\nאת בונה ערכת עזרים שתעזור לתלמידות שונות להבין לעומק — לפי סגנונות למידה (עין, תנועה, סיפור).',
+   [{type:'text',text:`מתוך תוכנית השיעור "${name}", החזירי JSON בלבד:\n{"images":[3 תיאורים קצרים באנגלית לתמונות שממחישות מושגי-מפתח של השיעור],"videoQueries":[2-3 מילות חיפוש בעברית לסרטוני המחשה ביוטיוב הקשורים ישירות לנושא],"stories":[2-3 פריטים, כל אחד {"title":"כותרת קצרה","text":"סיפור או דוגמה קצרים מהחיים (3-5 שורות), בקול של שפת הנשמה, פנייה ל'את', בלי דרמה מלאכותית — שממחישים את לב השיעור"}]}\n\n${body}`}],
+   3000,null,{think:false,stream:false});
+  let j;try{j=JSON.parse(extractJsonStr(raw,'{','}'));}catch{j={};}
+  return {images:j.images||[],videoQueries:j.videoQueries||[],stories:j.stories||[]};}
+async function renderAids(area,d,name){
+  const imgUrls=(d.images||[]).slice(0,3).map((p,i)=>`https://image.pollinations.ai/prompt/${encodeURIComponent(p+' — '+brandStyle())}?width=1280&height=720&nologo=true&model=flux&seed=${300+i}`);
+  if(imgUrls.length){saveGal([...imgUrls,...loadGal()].slice(0,12));renderGal();}
+  const vids=(d.videoQueries||[]).slice(0,3);
+  const pexClips=getPexels()?await Promise.all(vids.map(q=>pexelsVideo(q))):vids.map(()=>null);
+  const stories=d.stories||[];
+  let html='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>🎁 ערכת עזרים — '+esc(name)+'</h3>';
+  html+='<p class="hint">לכל סגנון למידה. אפשר להוריד תמונות, לפתוח סרטונים, ולהעתיק את הסיפורים לשליחה.</p>';
+  if(imgUrls.length)html+='<h4 style="margin:14px 0 6px">🖼️ תמונות להמחשה — ללומדת בעין</h4><div class="imggrid">'+imgUrls.map(u=>`<img src="${u}" loading="lazy" style="cursor:pointer" data-aimg="${u}">`).join('')+'</div>';
+  if(vids.length){html+='<h4 style="margin:16px 0 6px">🎬 וידאו — ללומדת בתנועה</h4>';
+    html+=vids.map((q,i)=>{const yt='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+      let v='<div style="margin-bottom:10px"><a class="btn" href="'+yt+'" target="_blank" rel="noopener">🔎 חיפוש ביוטיוב: '+esc(q)+'</a>';
+      if(pexClips[i])v+='<video controls preload="metadata" poster="'+(pexClips[i].poster||'')+'" style="width:100%;border-radius:10px;margin-top:6px"><source src="'+pexClips[i].url+'" type="video/mp4"></video>';
+      return v+'</div>';}).join('');}
+  if(stories.length){html+='<h4 style="margin:16px 0 6px">📖 סיפורים ודוגמאות — ללומדת דרך סיפור</h4>';
+    html+=stories.map(s=>'<div style="background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 14px;margin-bottom:10px"><div style="font-weight:600;margin-bottom:4px">'+esc(s.title||'')+'</div><div style="line-height:1.7;white-space:pre-wrap">'+esc(s.text||'')+'</div></div>').join('');}
+  html+='<div class="actions" style="margin-top:12px"><button class="btn dark" id="aidCopy">📋 העתק סיפורים + קישורים לשליחה</button></div></div>';
+  area.innerHTML=html;
+  area.querySelectorAll('[data-aimg]').forEach(im=>im.onclick=()=>{lastImgUrl=im.dataset.aimg;const wrap=document.getElementById('imgWrap');if(wrap){wrap.innerHTML='';const big=new Image();big.src=im.dataset.aimg;wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';wrap.scrollIntoView({behavior:'smooth',block:'center'});}});
+  const cb=area.querySelector('#aidCopy');if(cb)cb.onclick=()=>{let t='✨ עזרים לשיעור — '+name+'\n\n';
+    if(stories.length)t+=stories.map(s=>'📖 '+(s.title||'')+'\n'+(s.text||'')).join('\n\n')+'\n\n';
+    if(vids.length)t+='🎬 סרטונים מומלצים (חיפוש ביוטיוב):\n'+vids.map(q=>'• '+q+' — https://www.youtube.com/results?search_query='+encodeURIComponent(q)).join('\n')+'\n';
+    copyText(t);};}
+(function(){const b=document.getElementById('aidBtn');if(!b)return;b.onclick=async()=>{
+  const sel=document.getElementById('aidLesson'),v=sel?sel.value:'';let body='',name='';
+  if(v==='__current__'){body=lastLesson;name=nameOf()||'שיעור';}
+  else if(v){const l=loadLib().find(x=>x.id===v);if(l){body=l.body;name=l.name||'שיעור';}}
+  if(!body){toast('בחרי שיעור (או בני שיעור חדש קודם)');return;}
+  const o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה ערכה…';b.disabled=true;
+  const area=document.getElementById('aidArea');area.innerHTML='';
+  const p=aiProg('🎁 בונה ערכת עזרים');p.auto(18);
+  try{const d=await genAids(body,name);await renderAids(area,d,name);p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  catch(e){p.error('לא הצלחתי לבנות ערכה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
+  finally{b.innerHTML=o;b.disabled=false;}};})();
 
 // ===== library =====
 function loadLib(){try{return JSON.parse(localStorage.getItem(LS.lib))||[]}catch{return[]}}
@@ -1834,7 +1906,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v34 · חבילה נשמרת באתר + סידור כרטיסים';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v35 · שיעור מלא בפקודה אחת + ערכת עזרים לתלמידות';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
