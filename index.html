@@ -1401,8 +1401,10 @@ ${mdRender(md)}
 <div style="margin-top:34px;border-top:1px solid #E6D8C2;padding-top:12px;text-align:center;color:#8C876B;font-size:.85rem">עופרה אינוז · קפסולה אלוקית</div></body></html>`;
 }
 function openHTMLWindow(html){const w=window.open('','_blank');if(!w){toast('אשרי חלונות קופצים');return;}w.document.write(html);w.document.close();}
+const NODRAMA=`משמעת לשון מחייבת: זו עבודת אימון לפיתוח אמונה והרחבת תודעה — לא שיעור דרמה ולא משחק רגשי. עצם הרעיון הוא לזהות את הדרמה של המציאות ("המטריקס") ולצאת ממנה, לא להישאב אליה — ולכן גם השפה חייבת להיות צלולה, יציבה ומדויקת, בלי בכיינות ובלי דרמטיזציה.
+אסור: מילים מיותרות של רגש, "סיפור מקרה שנוגע", פניות מתרגשות, סופרלטיבים, הטפה, או ניסיון לרגש. רצוי: עדינות שקטה, כבוד לאישה בוגרת ומשכילה, בהירות ועניין. כל מילה צריכה לעבוד — אם אפשר להוריד מילה והמשמעות נשמרת, הורידי אותה.`;
 async function genArtifact(kind,body,name){const P={
-  homework:`מתוך תוכנית השיעור, כתבי "שיעורי בית" — פשוטים ומעשיים. 1–3 משימות קונקרטיות שנובעות ישירות מהחומר שנלמד: מה לעשות בפועל כדי להטמיע אותו. כל משימה בשורה–שתיים: מה לעשות, ולמה זה מהחומר. בלי דרמה, בלי משלים, בלי "תרגיל חוויתי" — פעולה פשוטה וברורה שאפשר לבצע. בקול חם אבל ענייני. ב‑Markdown, כותרת "# שיעורי בית — ${name}". בלי הקדמות.`,
+  homework:`מתוך תוכנית השיעור, כתבי "שיעורי בית" שמרחיבים תודעה — לא מטלות יבשות ולא חוויה רגשית. 1–3 משימות קונקרטיות שנובעות ישירות מהחומר: פעולה או התבוננות פשוטה שאפשר לעשות ביומיום, שמיישמת את מה שנלמד ומרחיבה את המבט. כל משימה: מה לעשות בפועל, ובמשפט — איך זה מחבר לחומר. ${NODRAMA}\nב‑Markdown, כותרת "# שיעורי בית — ${name}". בלי הקדמות.`,
   whatsapp:`כתבי הודעת וואטסאפ לקבוצת התלמידות, **בקול המדויק של שפת הנשמה** (לפי פרופיל הקול שקיבלת — זה מעל הכול).
 זו לא הודעה "מנהלתית" ולא סיכום יבש — זו לחישה חמה אל "את". קצרה (4–6 שורות, נשימה בין שורות).
 קחי משפט או תמונה אמיתיים מתוך השיעור עצמו (לא כללי) והדהדי אותם. פתחי ברגע אנושי, השאירי בסוף קריאה
@@ -1410,7 +1412,7 @@ async function genArtifact(kind,body,name){const P={
 אפשר אימוג'י עדין אחד (🌿). פנייה ל"את". טקסט בלבד, בלי כותרת.`};
   return await callClaude(systemBase()+'\n\n'+P[kind],[{type:'text',text:body}],kind==='whatsapp'?1200:5000,null,{think:false,stream:false});}
 async function genExercisesList(body,name){
-  const raw=await callClaude(systemBase()+'\n\nאת בונה תרגילים ברמה הגבוהה ביותר — כאלה שיגרמו לתלמידה להעריץ את המורָה ולרצות לעשות כל תרגיל.',[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך תרגילים. לכל תרגיל: {"title":"שם התרגיל","where":"בכיתה" או "בית","md":"תוכן מלא ב‑Markdown בקול של שפת הנשמה: מטרה במשפט אחד, הוראות פשוטות שלב-אחר-שלב, דוגמה מהחיים / משל / סיפור מקרה שנוגע, ושאלה להתבוננות"}. 3–5 תרגילים שמשרתים את לב השיעור, מגוונים (חלקם בכיתה חלקם בבית), ברמה גבוהה, חמה ומדויקת.\n\n${body}`}],4500,null,{think:false});
+  const raw=await callClaude(systemBase()+'\n\nאת בונה תרגילי אימון לפיתוח אמונה והרחבת תודעה — מדויקים, מעשיים ומכבדים.\n\n'+NODRAMA,[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך תרגילים. לכל תרגיל: {"title":"שם התרגיל","where":"בכיתה" או "בית","md":"תוכן ב‑Markdown: מטרה במשפט אחד (איזו יכולת או אמונה התרגיל מאמן), הוראות פשוטות שלב-אחר-שלב, ושאלה אחת צלולה להתבוננות. אם דוגמה קונקרטית מבהירה — קצרה ועניינית, לא כדי לרגש"}. 3–5 תרגילים שמשרתים את לב השיעור, מגוונים (חלקם בכיתה חלקם בבית), מדויקים ומכבדים.\n\n${body}`}],4500,null,{think:false});
   let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch{arr=[{title:'תרגיל',where:'בית',md:raw}];}
   return arr;}
 function exercisesCombinedMd(list,name){if(!Array.isArray(list))return String(list||'');return '# תרגילים — '+name+'\n\n'+list.map((e,i)=>`## ${i+1}. ${e.title||'תרגיל'}${e.where?'  ·  '+e.where:''}\n\n${e.md||''}`).join('\n\n---\n\n');}
@@ -2057,7 +2059,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v41 · שמירה אוטומטית — שורד רענון';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v42 · תרגילים ושיעורי בית בלי דרמה — אימון אמונה ותודעה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
