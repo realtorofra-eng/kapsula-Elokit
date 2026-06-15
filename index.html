@@ -156,6 +156,11 @@
   .empty{text-align:center;color:var(--ink2);font-weight:300;padding:48px 0;font-size:1.05rem}
   .empty .big{font-size:2rem;display:block;margin-bottom:8px;opacity:.7}
   .chip{display:inline-block;background:var(--rose-soft);color:var(--copper);border-radius:20px;padding:5px 14px;font-size:.88rem;margin:3px}
+  .schips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .schip{font-size:.72rem;border-radius:20px;padding:2px 9px;border:1px solid #e6dccb;color:#b6a489;background:transparent;white-space:nowrap}
+  .schip.on{background:#ecdcc0;color:#6b4423;border-color:#dcc6a2}
+  .lib-group{font-family:'Frank Ruhl Libre';font-size:.98rem;color:var(--copper);font-weight:600;margin:20px 4px 9px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+  .lib-group:first-child{margin-top:4px}
 
   /* images */
   .imgwrap{margin-top:18px;text-align:center}
@@ -323,7 +328,7 @@
   <section class="tab" id="tab-library">
     <div class="section-head"><h2 class="section">ספריית השיעורים</h2>
       <p class="lead">כל שיעור שבנית נשמר כאן, אצלך במחשב. אפשר לפתוח, להציג, להעתיק או להוריד.</p></div>
-    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"><button class="btn dark" id="libAddBtn" type="button">➕ הוסף שיעור</button><button class="btn" id="libImportBtn" type="button">📥 ייבא קובץ</button></div>
+    <div class="libtools"><input class="inp" id="libSearch" type="text" placeholder="🔍 חיפוש לפי שם או תוכן…"><button class="btn" id="libCollapseBtn" type="button">⬆️ כווץ הכל</button><button class="btn dark" id="libAddBtn" type="button">➕ הוסף שיעור</button><button class="btn" id="libImportBtn" type="button">📥 ייבא קובץ</button></div>
     <div id="libList"></div>
   </section>
 
@@ -1323,11 +1328,16 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
   const el=document.getElementById('libList');
   if(!d.length){el.innerHTML='<div class="empty"><span class="big">🌱</span>'+(q?'לא נמצא שיעור מתאים':'עדיין אין שיעורים. בני את הראשון ב"שיעור חדש"')+'</div>';return;}
   d.sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999));
-  el.innerHTML=d.map(l=>`<div class="lib-item"><div class="top"><div class="n">${esc(l.num||'—')}</div>
-    <div><div class="nm">${esc(l.name)}</div><div class="meta">${l.date||''} · ${l.body.length} תווים${l.slides?' · מצגת':''}${(l.artifacts&&l.artifacts.exercises)?' · חבילה':''}</div></div>
+  const grouped=(!q&&d.length>6);let lastB=null;
+  el.innerHTML=d.map(l=>{
+    let head='';
+    if(grouped){const n=parseInt(l.num);const b=n?Math.ceil(n/10):0;if(b!==lastB){lastB=b;head=`<div class="lib-group">${b?('שיעורים '+(b*10-9)+'–'+(b*10)):'ללא מספר'}</div>`;}}
+    return head+`<div class="lib-item"><div class="top"><div class="n">${esc(l.num||'—')}</div>
+    <div style="flex:1;min-width:140px"><div class="nm">${esc(l.name)}</div>${libChips(l)}</div>
     <div class="row"><button data-open="${l.id}">📂 פתיחה</button><button data-edit="${l.id}">✏️ עריכה</button><button data-present="${l.id}">🖥️ מצגת</button>
       <button data-package="${l.id}">📦 חבילה</button><button data-carousel="${l.id}">📱 קרוסלה</button><button data-copy="${l.id}">העתקה</button>${l.slides?`<button class="danger" data-delslides="${l.id}">🗑️ מצגת</button>`:''}${(l.artifacts&&(l.artifacts.exercises||l.artifacts.homework))?`<button class="danger" data-delex="${l.id}">🗑️ אימון ותרגול</button>`:''}<button class="danger" data-del="${l.id}">🗑️ מחק שיעור</button></div></div>
-    <div class="body" id="ob-${l.id}"></div><div id="pkg-${l.id}"></div></div>`).join('');
+    <div class="body" id="ob-${l.id}"></div><div id="pkg-${l.id}"></div></div>`;}).join('');
+  const cb=document.getElementById('libCollapseBtn');if(cb)cb.onclick=()=>{el.querySelectorAll('.body.show').forEach(x=>x.classList.remove('show'));toast('הכל מקופל','good');};
   el.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;const ob=document.getElementById('ob-'+id);
     if(ob.classList.contains('show')){ob.classList.remove('show');return;}openLessonPanel(id,ob);ob.classList.add('show');});
   el.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const l=loadLib().find(x=>x.id===b.dataset.copy);copyText(l.body);});
@@ -1348,6 +1358,9 @@ function renderLib(){let d=loadLib();const q=(document.getElementById('libSearch
     const area=document.getElementById('pkg-'+id);area.innerHTML='';
     const p=aiProg('📱 בונה קרוסלה');p.stage('הסוכן הופך את "'+esc(l.name)+'" לכרטיסים…');p.auto(20);
     b.disabled=true;try{const d=await genCarousel(l.body,(len)=>p.streamLen(len,2600));renderCarousel(d,area);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='';}finally{b.disabled=false;}});}
+function libChips(l){const A=l.artifacts||{};
+  const def=[['מערך',!!(l.body&&l.body.length)],['מצגת',!!(l.slides&&l.slides.length)],['אימון ותרגול',!!(A.exercises&&A.exercises.length)],['וואטסאפ',!!A.whatsapp],['עזרים',!!(l.aids||A.media)]];
+  return '<div class="schips">'+def.map(([n,on])=>`<span class="schip${on?' on':''}">${on?'✓':'○'} ${n}</span>`).join('')+'</div>';}
 function saveLibField(id,field,val){const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it[field]=val;saveLib(lib);}}
 function editLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;
   ob.innerHTML='<div class="lib-edit"><div class="field-row"><input class="inp num" id="ed-num-'+id+'" value="'+esc(l.num||'')+'" placeholder="מס\'"><input class="inp grow" id="ed-name-'+id+'" value="'+esc(l.name||'')+'" placeholder="שם השיעור"></div>'+
@@ -1543,15 +1556,16 @@ function renderPkgResult(area,ctx,A,zipInfo){if(!area)return;
    +'<div class="actions"><button class="btn" id="pk-pptx">🖥️ PowerPoint</button><button class="btn" id="pk-lesson">📄 מערך שיעור (PDF)</button><button class="btn" id="pk-ex">🧭 אימון ותרגול (PDF)</button>'
    +'<button class="btn" id="pk-media">🎨 עזרים</button></div>'
    +'<div style="margin-top:16px"><div style="font-weight:500;margin-bottom:6px">🧭 אימון ותרגול — לצפייה, עריכה, מחיקה והוספה:</div><div id="pk-ex-list"></div></div>'
-   +'<div style="margin-top:16px"><div style="font-weight:500;margin-bottom:6px">💬 סיכום וואטסאפ — לצפייה ועריכה לפני שליחה:</div>'
-   +'<textarea class="inp" id="pk-wa-text" style="min-height:120px;line-height:1.7"></textarea>'
-   +'<div class="actions"><button class="btn dark" id="pk-wa-copy">📋 העתק לשליחה</button></div></div></div>';
+   +'<div style="margin-top:16px"><button class="btn" id="pk-wa-toggle">💬 סיכום וואטסאפ — צפה / ערוך</button>'
+   +'<div id="pk-wa-wrap" style="display:none;margin-top:8px"><textarea class="inp" id="pk-wa-text" style="min-height:120px;line-height:1.7"></textarea>'
+   +'<div class="actions"><button class="btn dark" id="pk-wa-copy">📋 העתק לשליחה</button></div></div></div></div>';
   if(zipInfo&&zipInfo.blob){const zb=area.querySelector('#pk-zip');if(zb)zb.onclick=()=>{const u=URL.createObjectURL(zipInfo.blob);const a=document.createElement('a');a.href=u;a.download=(zipInfo.name||'שיעור')+'.zip';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);toast('התיקייה ירדה 📦','good');};}
   area.querySelector('#pk-pptx').onclick=()=>downloadPptx(ctx.name,(ctx.getSlides&&ctx.getSlides())||[]);
   area.querySelector('#pk-lesson').onclick=()=>downloadPdf('מערך שיעור — '+ctx.name,ctx.body);
   area.querySelector('#pk-ex').onclick=()=>downloadPdf('אימון ותרגול — '+ctx.name,exercisesCombinedMd(A.exercises,ctx.name));
   area.querySelector('#pk-media').onclick=()=>{go('images');toast('התמונות שנוצרו בלשונית תמונות 🎨','good');};
   renderPracticeList(area.querySelector('#pk-ex-list'),A,()=>{if(ctx.setArtifacts)ctx.setArtifacts(A);});
+  const wt=area.querySelector('#pk-wa-toggle'),ww=area.querySelector('#pk-wa-wrap');if(wt)wt.onclick=()=>{ww.style.display=ww.style.display==='none'?'block':'none';};
   const wa=area.querySelector('#pk-wa-text');wa.value=A.whatsapp||'';wa.oninput=()=>{A.whatsapp=wa.value;if(ctx.setArtifacts)ctx.setArtifacts(A);};
   area.querySelector('#pk-wa-copy').onclick=()=>copyText(wa.value);
 }
@@ -2141,7 +2155,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v48 · חלון אינסטגרם נשמר — שורד רענון';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v49 · ספרייה מסודרת — תגיות מצב, קיבוץ, כיווץ';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
