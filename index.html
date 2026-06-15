@@ -376,35 +376,41 @@
   <!-- ===== אינסטגרם ===== -->
   <section class="tab" id="tab-instagram">
     <div class="section-head"><h2 class="section">אינסטגרם</h2>
-      <p class="lead">חלל נפרד לתוכן הרשת — קרוסלות, פוסטים, כיתובים ורעיונות. הכל בקול של שפת הנשמה, נפרד מהלימוד.</p></div>
+      <p class="lead">חלל נפרד לתוכן הרשת — קרוסלות, פוסטים, כיתובים ורעיונות. בוחרים שיעור, והסוכן שואב ממנו. בקול שלך: פשוט, אמיתי, עמוק ואנושי.</p></div>
+
+    <div class="card" id="igSourceCard">
+      <label class="lbl">📚 מאיזה שיעור לשאוב?</label>
+      <select class="inp" id="igLesson"></select>
+      <p class="hint">בוחרים שיעור (מתוך 42) — וכל הכלים למטה שואבים מהתוכן שלו. אפשר גם "נושא חופשי" ולכתוב בעצמך בתיבת המיקוד שבכל כלי.</p>
+    </div>
 
     <div class="card" id="igCarCard">
-      <h3>📱 קרוסלה עצמאית</h3>
-      <p class="hint" style="margin-bottom:10px">כתבי נושא חופשי (לא חייב שיעור) — והסוכן יבנה קרוסלה מעוצבת לעריכה ולהורדה.</p>
-      <textarea class="inp" id="igCarTopic" style="min-height:90px" placeholder="למשל: למה אנחנו מפחדות מהשקט — ומה מסתתר בו"></textarea>
+      <h3>📱 קרוסלה</h3>
+      <p class="hint" style="margin-bottom:10px">מהשיעור שבחרת → קרוסלה מעוצבת לעריכה ולהורדה. תיבת המיקוד אופציונלית (זווית/דגש מסוים).</p>
+      <textarea class="inp" id="igCarTopic" style="min-height:70px" placeholder="מיקוד אופציונלי — למשל: דווקא מהזווית של ההאטה (אפשר להשאיר ריק)"></textarea>
       <div class="actions"><button class="btn dark" id="igCarBtn">✨ בנה קרוסלה</button></div>
       <div id="igCarArea"></div>
     </div>
 
     <div class="card">
       <h3>📸 פוסט בודד</h3>
-      <p class="hint" style="margin-bottom:10px">משפט אחד שנוגע → פוסט מרובע ממותג, מוכן לאינסטגרם.</p>
-      <textarea class="inp" id="igQuote" style="min-height:80px" placeholder="למשל: כשהלב מתעורר — המציאות משתנה"></textarea>
-      <div class="actions"><button class="btn dark" id="igBtn">📸 צור פוסט</button></div>
+      <p class="hint" style="margin-bottom:10px">משפט אחד → פוסט מרובע ממותג. אפשר לכתוב משפט, או לשאוב משפט מהשיעור שבחרת.</p>
+      <textarea class="inp" id="igQuote" style="min-height:70px" placeholder="למשל: כשהלב מתעורר — המציאות משתנה"></textarea>
+      <div class="actions"><button class="btn dark" id="igBtn">📸 צור פוסט</button><button class="btn" id="igQuoteFromLesson">✨ הצע משפט מהשיעור</button></div>
     </div>
 
     <div class="card">
       <h3>✍️ כיתוב + האשטגים</h3>
-      <p class="hint" style="margin-bottom:10px">נושא → כיתוב בקול שלך + האשטגים מתאימים, מוכן להעתקה.</p>
-      <textarea class="inp" id="igCapTopic" style="min-height:80px" placeholder="למשל: המתנה שיש בלהאט — להאט בכל מה שאנחנו עושות"></textarea>
+      <p class="hint" style="margin-bottom:10px">מהשיעור שבחרת → כיתוב בקול שלך + האשטגים. תיבת המיקוד אופציונלית.</p>
+      <textarea class="inp" id="igCapTopic" style="min-height:70px" placeholder="מיקוד אופציונלי — זווית/דגש לכיתוב (אפשר להשאיר ריק)"></textarea>
       <div class="actions"><button class="btn dark" id="igCapBtn">✍️ כתבי כיתוב</button></div>
       <div id="igCapArea"></div>
     </div>
 
     <div class="card">
       <h3>💡 רעיונות לפוסטים</h3>
-      <p class="hint" style="margin-bottom:10px">נושא כללי (או ריק לרעיונות חופשיים) → רשימת רעיונות לתוכן שבועי בנושאי שפת הנשמה.</p>
-      <textarea class="inp" id="igIdeaTopic" style="min-height:70px" placeholder="למשל: שקט, האטה, חזרה פנימה (או השאירי ריק)"></textarea>
+      <p class="hint" style="margin-bottom:10px">מהשיעור שבחרת → רעיונות לפוסטים שנובעים מהתוכן. תיבת המיקוד אופציונלית.</p>
+      <textarea class="inp" id="igIdeaTopic" style="min-height:60px" placeholder="מיקוד אופציונלי (אפשר להשאיר ריק)"></textarea>
       <div class="actions"><button class="btn dark" id="igIdeaBtn">💡 תני לי רעיונות</button></div>
       <div id="igIdeaArea"></div>
     </div>
@@ -619,7 +625,7 @@ const nav=document.getElementById('nav');
 tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
 function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();if(id==='images'&&typeof fillAidLessons==='function')fillAidLessons();
+  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();if(id==='images'&&typeof fillAidLessons==='function')fillAidLessons();if(id==='instagram'&&typeof fillIgLessons==='function')fillIgLessons();
   try{const a=document.querySelector('nav button.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
 
 let buildMode='full';
@@ -1220,29 +1226,52 @@ async function runAidsAgent(force){
   const rb=document.getElementById('aidRebuildBtn');if(rb)rb.onclick=()=>runAidsAgent(true);})();
 
 // ===== אינסטגרם — חלון נפרד =====
+const IG_VOICE='\n\nקול האינסטגרם של שפת הנשמה — מומחה, מקורי ושונה מכולם. אסור: להעתיק, להיות בכייני, דרמטי, מליצי, או להשתמש בקלישאות ובסופרלטיבים. רצוי: פשוט (הכי פשוט), אותנטי, אמיתי, עמוק, ישר, כן, ואנושי מאוד. פנייה ל"את", בגובה העיניים. נאמנה לתוכן השיעור — בלי להמציא מקורות, ובלי להעתיק משפטים כמו שהם. כל מילה אמיתית ועובדת.';
+function fillIgLessons(){const sel=document.getElementById('igLesson');if(!sel)return;const cur=sel.value;
+  const lib=loadLib().slice().sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999));
+  let html='<option value="__free__">✍️ נושא חופשי (כתבי בתיבת המיקוד)</option>';
+  if(lastLesson)html+='<option value="__current__">⭐ השיעור הנוכחי (שיעור חדש)</option>';
+  html+=lib.map(l=>`<option value="${l.id}">${esc((l.num?l.num+'. ':'')+(l.name||'שיעור'))}</option>`).join('');
+  sel.innerHTML=html;if(cur)sel.value=cur;}
+function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel?sel.value:'__free__';
+  let body='',from='';
+  if(v==='__current__'){body=lastLesson;from=nameOf()||'השיעור הנוכחי';}
+  else if(v&&v!=='__free__'){const l=loadLib().find(x=>x.id===v);if(l){body=l.body;from=(l.num?l.num+'. ':'')+(l.name||'שיעור');}}
+  if(body){let s='מתוך מערך השיעור "'+from+'":\n\n'+body;if(focusText)s+='\n\nמיקוד/זווית מבוקשת: '+focusText;return {text:s,from,isLesson:true,focus:focusText};}
+  return {text:focusText||'',from:'',isLesson:false,focus:focusText};}
 (function(){
   const carBtn=document.getElementById('igCarBtn');
   if(carBtn)carBtn.onclick=async()=>{
-    const topic=(document.getElementById('igCarTopic').value||'').trim();
-    if(!topic){toast('כתבי נושא קצר');return;}
+    const src=igSource((document.getElementById('igCarTopic').value||'').trim());
+    if(!src.text){toast('בחרי שיעור או כתבי נושא במיקוד');return;}
     const o=carBtn.innerHTML;carBtn.innerHTML='<span class="spinner"></span> בונה קרוסלה…';carBtn.disabled=true;
     const area=document.getElementById('igCarArea');area.innerHTML='';
     const p=aiProg('📱 בונה קרוסלה');p.auto(20);
-    try{const d=await genCarousel('נושא לקרוסלה (לא שיעור): '+topic+'\n\nבני קרוסלה לאינסטגרם סביב הנושא הזה.',(len)=>p.streamLen(len,2600));
+    const txt=src.isLesson?src.text:('נושא לקרוסלה: '+src.text+'\n\nבני קרוסלה לאינסטגרם סביב הנושא הזה, פשוט ואותנטי.');
+    try{const d=await genCarousel(txt,(len)=>p.streamLen(len,2600));
       renderCarousel(d,area);const rg=area.querySelector('#carRegen');if(rg)rg.onclick=()=>carBtn.click();
       p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
     catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
     finally{carBtn.innerHTML=o;carBtn.disabled=false;}};
 
+  const qfl=document.getElementById('igQuoteFromLesson');
+  if(qfl)qfl.onclick=async()=>{
+    const src=igSource('');
+    if(!src.isLesson){toast('בחרי קודם שיעור מהרשימה למעלה');return;}
+    const o=qfl.innerHTML;qfl.innerHTML='<span class="spinner"></span> שואבת…';qfl.disabled=true;
+    try{const raw=await callClaude(systemBase()+IG_VOICE,[{type:'text',text:src.text+'\n\nבחרי משפט אחד חזק מתוך השיעור הזה לפוסט אינסטגרם — אמיתי, פשוט ועמוק, בקול שלך (אפשר לנסח מחדש, לא להעתיק). החזירי רק את המשפט, בלי מרכאות ובלי תוספות.'}],200,null,{think:false,stream:false});
+      const q=document.getElementById('igQuote');if(q)q.value=(raw||'').trim().replace(/^["“”]|["“”]$/g,'');toast('משפט מוכן — אפשר לערוך וליצור פוסט ✨','good');}
+    catch(e){toast('לא הצלחתי: '+e.message);}finally{qfl.innerHTML=o;qfl.disabled=false;}};
+
   const capBtn=document.getElementById('igCapBtn');
   if(capBtn)capBtn.onclick=async()=>{
-    const topic=(document.getElementById('igCapTopic').value||'').trim();
-    if(!topic){toast('כתבי נושא קצר');return;}
+    const src=igSource((document.getElementById('igCapTopic').value||'').trim());
+    if(!src.text){toast('בחרי שיעור או כתבי נושא במיקוד');return;}
     const o=capBtn.innerHTML;capBtn.innerHTML='<span class="spinner"></span> כותבת…';capBtn.disabled=true;
     const area=document.getElementById('igCapArea');area.innerHTML='';
     const p=aiProg('✍️ כותבת כיתוב');p.auto(12);
-    try{const raw=await callClaude(systemBase()+'\n\nאת כותבת כיתוב (caption) לאינסטגרם בקול של שפת הנשמה — חם, אישי, פנייה ל"את", בלי שיווק ובלי דרמה.',
-      [{type:'text',text:`נושא: ${topic}\n\nכתבי כיתוב לפוסט אינסטגרם (3-6 שורות, נשימה בין שורות), ואז שורה ריקה, "—", ואז שורת האשטגים (8-12 האשטגים רלוונטיים).`}],900,null,{think:false,stream:false});
+    try{const raw=await callClaude(systemBase()+IG_VOICE,
+      [{type:'text',text:`${src.text}\n\nכתבי כיתוב (caption) לפוסט אינסטגרם (3-6 שורות, נשימה בין שורות), ואז שורה ריקה, "—", ואז שורת האשטגים (8-12 רלוונטיים).`}],900,null,{think:false,stream:false});
       area.innerHTML='<div style="margin-top:12px"><textarea class="inp" id="igCapOut" style="min-height:160px;line-height:1.7"></textarea><div class="actions"><button class="btn dark" id="igCapCopy">📋 העתק</button></div></div>';
       area.querySelector('#igCapOut').value=raw.trim();
       area.querySelector('#igCapCopy').onclick=()=>copyText(area.querySelector('#igCapOut').value);
@@ -1252,12 +1281,13 @@ async function runAidsAgent(force){
 
   const ideaBtn=document.getElementById('igIdeaBtn');
   if(ideaBtn)ideaBtn.onclick=async()=>{
-    const topic=(document.getElementById('igIdeaTopic').value||'').trim();
+    const src=igSource((document.getElementById('igIdeaTopic').value||'').trim());
+    if(!src.text){toast('בחרי שיעור או כתבי נושא במיקוד');return;}
     const o=ideaBtn.innerHTML;ideaBtn.innerHTML='<span class="spinner"></span> חושבת…';ideaBtn.disabled=true;
     const area=document.getElementById('igIdeaArea');area.innerHTML='';
     const p=aiProg('💡 רעיונות לפוסטים');p.auto(12);
-    try{const raw=await callClaude(systemBase()+'\n\nאת מציעה רעיונות לתוכן אינסטגרם בקול של שפת הנשמה.',
-      [{type:'text',text:`${topic?('בנושא: '+topic+'\n\n'):''}תני 7 רעיונות לפוסטים לאינסטגרם בנושאי שפת הנשמה. כל רעיון: כותרת קצרה + שורה אחת מה הפוסט אומר. בקול חם, בלי דרמה. ב-Markdown, רשימה ממוספרת.`}],1200,null,{think:false,stream:false});
+    try{const raw=await callClaude(systemBase()+IG_VOICE,
+      [{type:'text',text:`${src.text}\n\nתני 7 רעיונות לפוסטים לאינסטגרם שנובעים מהתוכן הזה. כל רעיון: כותרת קצרה + שורה אחת מה הפוסט אומר. ב-Markdown, רשימה ממוספרת.`}],1200,null,{think:false,stream:false});
       area.innerHTML='<div class="card" style="margin-top:12px;background:var(--cream)"><div class="md">'+mdRender(raw)+'</div><div class="actions"><button class="btn dark" id="igIdeaCopy">📋 העתק</button></div></div>';
       area.querySelector('#igIdeaCopy').onclick=()=>copyText(raw);
       p.done('הרעיונות מוכנים 💡');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
@@ -2094,7 +2124,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v45 · אימון ותרגול אמין — פענוח חסין + כפתור בנייה ישיר';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v46 · אינסטגרם שואב משיעור נבחר + קול מחוזק';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
