@@ -1137,24 +1137,35 @@ async function renderAids(area,d,name,body){
       let v='<div style="margin-bottom:10px"><a class="btn" href="'+yt+'" target="_blank" rel="noopener">🔎 חיפוש ביוטיוב: '+esc(q)+'</a>';
       if(pexClips[i])v+='<video controls preload="metadata" poster="'+(pexClips[i].poster||'')+'" style="width:100%;border-radius:10px;margin-top:6px"><source src="'+pexClips[i].url+'" type="video/mp4"></video>';
       return v+'</div>';}).join('');}
-  html+='<h4 style="margin:16px 0 6px">📖 סיפורים ודוגמאות — ללומדת דרך סיפור <span class="hint" style="font-weight:400">(ניתן לערוך בלחיצה על הטקסט)</span></h4>';
+  html+='<h4 style="margin:16px 0 6px">📖 סיפורים ודוגמאות — ללומדת דרך סיפור <span class="hint" style="font-weight:400">(אפשר לערוך, למחוק או להוסיף)</span></h4>';
   html+='<div id="aidStories"></div>';
   html+='<div class="actions" style="margin-top:8px"><button class="btn" id="aidStoryAdd">➕ הוסף סיפור</button><button class="btn" id="aidStoryRegen">🔄 כתבי סיפורים מחדש</button></div>';
   html+='<div class="actions" style="margin-top:8px"><button class="btn dark" id="aidCopy">📋 העתק סיפורים + קישורים לשליחה</button></div></div>';
   area.innerHTML=html;
   area.querySelectorAll('[data-aimg]').forEach(im=>im.onclick=()=>{lastImgUrl=im.dataset.aimg;const wrap=document.getElementById('imgWrap');if(wrap){wrap.innerHTML='';const big=new Image();big.src=im.dataset.aimg;wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';wrap.scrollIntoView({behavior:'smooth',block:'center'});}});
-  const box=area.querySelector('#aidStories');
+  const box=area.querySelector('#aidStories');let editIdx=-1;
+  const cardCss='background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 14px;margin-bottom:10px';
   function renderStories(){
     if(!stories.length){box.innerHTML='<p class="hint">אין סיפורים כרגע. אפשר להוסיף, או "כתבי סיפורים מחדש".</p>';return;}
-    box.innerHTML=stories.map((s,i)=>'<div style="background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 32px 12px 14px;margin-bottom:10px;position:relative">'
-      +'<button class="btn" data-sdel="'+i+'" title="מחיקה" style="position:absolute;left:6px;top:6px;padding:2px 8px;line-height:1.2">🗑️</button>'
-      +'<div contenteditable="true" data-si="'+i+'" data-sf="title" style="font-weight:600;margin-bottom:4px;outline:none">'+esc(s.title||'')+'</div>'
-      +'<div contenteditable="true" data-si="'+i+'" data-sf="text" style="line-height:1.7;white-space:pre-wrap;outline:none">'+esc(s.text||'')+'</div></div>').join('');
-    box.querySelectorAll('[data-si]').forEach(el=>el.oninput=()=>{const i=+el.dataset.si,f=el.dataset.sf;if(stories[i])stories[i][f]=el.innerText;});
-    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);renderStories();});
+    box.innerHTML=stories.map((s,i)=>{
+      if(i===editIdx)return '<div data-card="'+i+'" style="'+cardCss+'">'
+        +'<input class="inp" data-et="title" placeholder="כותרת" style="font-weight:600;margin-bottom:6px">'
+        +'<textarea class="inp" data-et="text" placeholder="הסיפור או הדוגמה" style="min-height:150px;line-height:1.7"></textarea>'
+        +'<div class="actions" style="margin-top:6px"><button class="btn dark" data-save="'+i+'">💾 שמור</button><button class="btn" data-cancel="'+i+'">ביטול</button></div></div>';
+      return '<div style="'+cardCss+'">'
+        +'<div style="font-weight:600;margin-bottom:4px">'+esc(s.title||'')+'</div>'
+        +'<div style="line-height:1.7;white-space:pre-wrap">'+esc(s.text||'')+'</div>'
+        +'<div class="actions" style="margin-top:8px"><button class="btn" data-edit="'+i+'">✏️ ערוך</button><button class="btn" data-sdel="'+i+'">🗑️ מחק</button></div></div>';
+    }).join('');
+    if(editIdx>=0&&stories[editIdx]){const w=box.querySelector('[data-card="'+editIdx+'"]');if(w){w.querySelector('[data-et="title"]').value=stories[editIdx].title||'';w.querySelector('[data-et="text"]').value=stories[editIdx].text||'';}}
+    box.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.edit;renderStories();});
+    box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{editIdx=-1;renderStories();});
+    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);editIdx=-1;renderStories();});
+    box.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save,w=box.querySelector('[data-card="'+i+'"]');
+      stories[i]={title:w.querySelector('[data-et="title"]').value,text:w.querySelector('[data-et="text"]').value};editIdx=-1;renderStories();toast('נשמר ✓','good');});
   }
   renderStories();
-  area.querySelector('#aidStoryAdd').onclick=()=>{stories.push({title:'כותרת',text:'כתבי כאן את הסיפור או הדוגמה שלך'});renderStories();};
+  area.querySelector('#aidStoryAdd').onclick=()=>{stories.push({title:'',text:''});editIdx=stories.length-1;renderStories();};
   const regenBtn=area.querySelector('#aidStoryRegen');regenBtn.onclick=async()=>{
     if(!body){toast('אין טקסט שיעור לחידוש');return;}
     const o=regenBtn.innerHTML;regenBtn.innerHTML='<span class="spinner"></span> כותבת מחדש…';regenBtn.disabled=true;
@@ -2022,7 +2033,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v39 · סיפור-זהב לדוגמה בסוכן העזרים';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v40 · כפתורי ערוך/שמור/מחק לכל סיפור';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
