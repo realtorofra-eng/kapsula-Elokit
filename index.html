@@ -1096,31 +1096,63 @@ function fillAidLessons(){const sel=document.getElementById('aidLesson');if(!sel
   html+=lib.map(l=>`<option value="${l.id}">${esc((l.num?l.num+'. ':'')+(l.name||'שיעור'))}</option>`).join('');
   if(!html)html='<option value="">— עדיין אין שיעורים. בני שיעור קודם —</option>';
   sel.innerHTML=html;}
+const STORY_BRIEF=`כל סיפור/דוגמה צריך להאיר את לב השיעור הזה ללומדת שמבינה דרך סיפור. כללים מחייבים:
+• את פונה לאישה בוגרת, מעמיקה ומשכילה. לעולם אל תפשטי, אל תסבירי כמו לילד, ואל תפתחי ב"דמייני אישה ש…".
+• כל פריט נטוע בתוֹכן הספציפי ובמושגים של השיעור הזה — לא משל גנרי שמתאים לכל נושא בעולם.
+• אסורות קלישאות שחוקות: משקפיים מלוכלכות, כוס קפה, "כל יום אפור", "נקי את העדשה", פרפר/גולם, קרחון. אם עולה דימוי כזה — זִרקי אותו וכתבי משהו מקורי.
+• העדיפי עומק על רוֹך מתקתק. בחרי אחד משני אלה: (א) סיפור/מאמר אמיתי ומדויק ממקור — חז"ל, מדרש, חסידות, מקובלים — עם ציון המקור, רק אם את בטוחה בו; או (ב) רגע אנושי קונקרטי, מדויק ולא צפוי, שמדבר אל הנשמה בלי לדרוש "מוסר השכל" בסוף.
+• בקול של שפת הנשמה: חם, מדויק, אמין, מכובד. בלי דרמה מלאכותית, בלי הטפה, בלי לסכם לקורא מה הוא אמור להרגיש.`;
+async function genAidStories(body,name){
+  const raw=await callClaude(systemBase()+'\n\nאת בוחרת סיפורים ודוגמאות ברמה הגבוהה ביותר — כאלה שתלמידה משכילה תרגיש שנגעו בה, לא שדיברו אליה מלמעלה.',
+   [{type:'text',text:`מתוך תוכנית השיעור "${name}", החזירי JSON בלבד: מערך של 3 פריטים, כל אחד {"title":"כותרת קצרה ומדויקת (לא קלישאתית)","text":"4-7 שורות, שפה עשירה ובוגרת"}.\n\n${STORY_BRIEF}\n\nתוכנית השיעור:\n${body}`}],
+   2600,null,{think:false,stream:false});
+  let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch{arr=[];}
+  return Array.isArray(arr)?arr:[];}
 async function genAids(body,name){
-  const raw=await callClaude(systemBase()+'\n\nאת בונה ערכת עזרים שתעזור לתלמידות שונות להבין לעומק — לפי סגנונות למידה (עין, תנועה, סיפור).',
-   [{type:'text',text:`מתוך תוכנית השיעור "${name}", החזירי JSON בלבד:\n{"images":[3 תיאורים קצרים באנגלית לתמונות שממחישות מושגי-מפתח של השיעור],"videoQueries":[2-3 מילות חיפוש בעברית לסרטוני המחשה ביוטיוב הקשורים ישירות לנושא],"stories":[2-3 פריטים, כל אחד {"title":"כותרת קצרה","text":"סיפור או דוגמה קצרים מהחיים (3-5 שורות), בקול של שפת הנשמה, פנייה ל'את', בלי דרמה מלאכותית — שממחישים את לב השיעור"}]}\n\n${body}`}],
-   3000,null,{think:false,stream:false});
-  let j;try{j=JSON.parse(extractJsonStr(raw,'{','}'));}catch{j={};}
-  return {images:j.images||[],videoQueries:j.videoQueries||[],stories:j.stories||[]};}
-async function renderAids(area,d,name){
+  const [media,stories]=await Promise.all([
+    callClaude(systemBase()+'\n\nאת בוחרת המחשות חזותיות לשיעור.',
+     [{type:'text',text:`מתוך תוכנית השיעור "${name}", החזירי JSON בלבד:\n{"images":[3 תיאורים קצרים באנגלית לתמונות שממחישות מושגי-מפתח של השיעור],"videoQueries":[2-3 מילות חיפוש בעברית לסרטוני המחשה ביוטיוב הקשורים ישירות לנושא]}\n\n${body}`}],
+     1400,null,{think:false,stream:false}).then(raw=>{try{return JSON.parse(extractJsonStr(raw,'{','}'));}catch{return {};}}),
+    genAidStories(body,name)
+  ]);
+  return {images:media.images||[],videoQueries:media.videoQueries||[],stories:stories||[]};}
+async function renderAids(area,d,name,body){
   const imgUrls=(d.images||[]).slice(0,3).map((p,i)=>`https://image.pollinations.ai/prompt/${encodeURIComponent(p+' — '+brandStyle())}?width=1280&height=720&nologo=true&model=flux&seed=${300+i}`);
   if(imgUrls.length){saveGal([...imgUrls,...loadGal()].slice(0,12));renderGal();}
   const vids=(d.videoQueries||[]).slice(0,3);
   const pexClips=getPexels()?await Promise.all(vids.map(q=>pexelsVideo(q))):vids.map(()=>null);
-  const stories=d.stories||[];
+  const stories=Array.isArray(d.stories)?d.stories:[];
   let html='<div class="card" style="margin-top:14px;background:var(--cream)"><h3>🎁 ערכת עזרים — '+esc(name)+'</h3>';
-  html+='<p class="hint">לכל סגנון למידה. אפשר להוריד תמונות, לפתוח סרטונים, ולהעתיק את הסיפורים לשליחה.</p>';
+  html+='<p class="hint">לכל סגנון למידה. אפשר להוריד תמונות, לפתוח סרטונים, ולערוך/למחוק כל סיפור לפני שליחה.</p>';
   if(imgUrls.length)html+='<h4 style="margin:14px 0 6px">🖼️ תמונות להמחשה — ללומדת בעין</h4><div class="imggrid">'+imgUrls.map(u=>`<img src="${u}" loading="lazy" style="cursor:pointer" data-aimg="${u}">`).join('')+'</div>';
   if(vids.length){html+='<h4 style="margin:16px 0 6px">🎬 וידאו — ללומדת בתנועה</h4>';
     html+=vids.map((q,i)=>{const yt='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
       let v='<div style="margin-bottom:10px"><a class="btn" href="'+yt+'" target="_blank" rel="noopener">🔎 חיפוש ביוטיוב: '+esc(q)+'</a>';
       if(pexClips[i])v+='<video controls preload="metadata" poster="'+(pexClips[i].poster||'')+'" style="width:100%;border-radius:10px;margin-top:6px"><source src="'+pexClips[i].url+'" type="video/mp4"></video>';
       return v+'</div>';}).join('');}
-  if(stories.length){html+='<h4 style="margin:16px 0 6px">📖 סיפורים ודוגמאות — ללומדת דרך סיפור</h4>';
-    html+=stories.map(s=>'<div style="background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 14px;margin-bottom:10px"><div style="font-weight:600;margin-bottom:4px">'+esc(s.title||'')+'</div><div style="line-height:1.7;white-space:pre-wrap">'+esc(s.text||'')+'</div></div>').join('');}
-  html+='<div class="actions" style="margin-top:12px"><button class="btn dark" id="aidCopy">📋 העתק סיפורים + קישורים לשליחה</button></div></div>';
+  html+='<h4 style="margin:16px 0 6px">📖 סיפורים ודוגמאות — ללומדת דרך סיפור <span class="hint" style="font-weight:400">(ניתן לערוך בלחיצה על הטקסט)</span></h4>';
+  html+='<div id="aidStories"></div>';
+  html+='<div class="actions" style="margin-top:8px"><button class="btn" id="aidStoryAdd">➕ הוסף סיפור</button><button class="btn" id="aidStoryRegen">🔄 כתבי סיפורים מחדש</button></div>';
+  html+='<div class="actions" style="margin-top:8px"><button class="btn dark" id="aidCopy">📋 העתק סיפורים + קישורים לשליחה</button></div></div>';
   area.innerHTML=html;
   area.querySelectorAll('[data-aimg]').forEach(im=>im.onclick=()=>{lastImgUrl=im.dataset.aimg;const wrap=document.getElementById('imgWrap');if(wrap){wrap.innerHTML='';const big=new Image();big.src=im.dataset.aimg;wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';wrap.scrollIntoView({behavior:'smooth',block:'center'});}});
+  const box=area.querySelector('#aidStories');
+  function renderStories(){
+    if(!stories.length){box.innerHTML='<p class="hint">אין סיפורים כרגע. אפשר להוסיף, או "כתבי סיפורים מחדש".</p>';return;}
+    box.innerHTML=stories.map((s,i)=>'<div style="background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 32px 12px 14px;margin-bottom:10px;position:relative">'
+      +'<button class="btn" data-sdel="'+i+'" title="מחיקה" style="position:absolute;left:6px;top:6px;padding:2px 8px;line-height:1.2">🗑️</button>'
+      +'<div contenteditable="true" data-si="'+i+'" data-sf="title" style="font-weight:600;margin-bottom:4px;outline:none">'+esc(s.title||'')+'</div>'
+      +'<div contenteditable="true" data-si="'+i+'" data-sf="text" style="line-height:1.7;white-space:pre-wrap;outline:none">'+esc(s.text||'')+'</div></div>').join('');
+    box.querySelectorAll('[data-si]').forEach(el=>el.oninput=()=>{const i=+el.dataset.si,f=el.dataset.sf;if(stories[i])stories[i][f]=el.innerText;});
+    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);renderStories();});
+  }
+  renderStories();
+  area.querySelector('#aidStoryAdd').onclick=()=>{stories.push({title:'כותרת',text:'כתבי כאן את הסיפור או הדוגמה שלך'});renderStories();};
+  const regenBtn=area.querySelector('#aidStoryRegen');regenBtn.onclick=async()=>{
+    if(!body){toast('אין טקסט שיעור לחידוש');return;}
+    const o=regenBtn.innerHTML;regenBtn.innerHTML='<span class="spinner"></span> כותבת מחדש…';regenBtn.disabled=true;
+    try{const fresh=await genAidStories(body,name);if(fresh.length){stories.length=0;fresh.forEach(s=>stories.push(s));renderStories();toast('סיפורים חדשים מוכנים ✓','good');}else toast('לא הצלחתי — נסי שוב');}
+    catch(e){toast('שגיאה: '+e.message);}finally{regenBtn.innerHTML=o;regenBtn.disabled=false;}};
   const cb=area.querySelector('#aidCopy');if(cb)cb.onclick=()=>{let t='✨ עזרים לשיעור — '+name+'\n\n';
     if(stories.length)t+=stories.map(s=>'📖 '+(s.title||'')+'\n'+(s.text||'')).join('\n\n')+'\n\n';
     if(vids.length)t+='🎬 סרטונים מומלצים (חיפוש ביוטיוב):\n'+vids.map(q=>'• '+q+' — https://www.youtube.com/results?search_query='+encodeURIComponent(q)).join('\n')+'\n';
@@ -1133,7 +1165,7 @@ async function renderAids(area,d,name){
   const o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה ערכה…';b.disabled=true;
   const area=document.getElementById('aidArea');area.innerHTML='';
   const p=aiProg('🎁 בונה ערכת עזרים');p.auto(18);
-  try{const d=await genAids(body,name);await renderAids(area,d,name);p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  try{const d=await genAids(body,name);await renderAids(area,d,name,body);p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
   catch(e){p.error('לא הצלחתי לבנות ערכה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
   finally{b.innerHTML=o;b.disabled=false;}};})();
 
@@ -1983,7 +2015,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v36 · חלון אינסטגרם נפרד';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v37 · סיפורים בעומק + עריכה ומחיקה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
