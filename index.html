@@ -520,7 +520,7 @@ function mdRender(s){ if(window.marked){try{return marked.parse(s)}catch(e){}}
   return esc(s).replace(/^### (.*)$/gm,'<h3>$1</h3>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>').replace(/^---$/gm,'<hr>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'); }
 
 // ===== storage =====
-const LS={key:'sn-apikey',model:'sn-model',voice:'sn-voice',ex:'sn-examples',lib:'sn-lessons',gal:'sn-gallery'};
+const LS={key:'sn-apikey',model:'sn-model',voice:'sn-voice',ex:'sn-examples',lib:'sn-lessons',gal:'sn-gallery',sess:'sn-session'};
 const getKey=()=>localStorage.getItem(LS.key)||'';
 try{if(!localStorage.getItem('sn-mig-sonnet')){localStorage.setItem(LS.model,'claude-sonnet-4-6');localStorage.setItem('sn-mig-sonnet','1');}}catch(e){}
 const getModel=()=>localStorage.getItem(LS.model)||'claude-sonnet-4-6';
@@ -746,7 +746,8 @@ function startRun(){usage={in:0,out:0};currentSlides=null;curArtifacts={};lastCa
   buildSteps();runFrom(1);}
 function clearNewLesson(){
   files.length=0;try{renderFiles();}catch(e){}try{refreshRun();}catch(e){}
-  lastLesson='';currentSlides=null;curArtifacts={};
+  lastLesson='';currentSlides=null;curArtifacts={};curAids=null;curAidsName='';clearSession();
+  const ai=document.getElementById('aidArea');if(ai)ai.innerHTML='';
   const pipe=document.getElementById('pipe');if(pipe)pipe.classList.remove('show');
   const lesson=document.getElementById('lesson');if(lesson)lesson.classList.remove('show');
   const doc=document.getElementById('doc');if(doc)doc.innerHTML='<div class="md" id="docMd"></div>';
@@ -769,6 +770,7 @@ async function runFrom(start){const err=document.getElementById('err');err.class
     setStep(1,'done','✓ השיעור מוכן');lastLesson=final;renderDoc();
     document.getElementById('metaLine').innerHTML=`<span>🌿 מוכן</span><span>עלות: ~${costStr()}</span><span>${final.length} תווים</span>`;
     document.getElementById('lesson').scrollIntoView({behavior:'smooth',block:'nearest'});toast('השיעור מוכן 🌳','good');
+    saveSession();
     if(pState&&pState.mode==='full'){await buildFullExtras();}
   }catch(e){setStep(1,'err','נעצר');
     err.innerHTML=`<span>⚠️ ${esc(e.message)}</span><button class="btn" id="resumeBtn">נסי שוב</button>`;err.classList.add('show');
@@ -786,13 +788,34 @@ async function buildFullExtras(){
     const p=aiProg('📱 בונה קרוסלה');p.auto(20);
     const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));lastCarousel=d;renderCarousel(d);p.done('הקרוסלה מוכנה 📱');}catch(e){}
   toast('שיעור מלא מוכן — מערך, מצגת, תרגילים, שיעורי בית, וואטסאפ, קרוסלה ועזרים 🌿','good');
+  saveSession();
 }
+// ===== שמירה אוטומטית של מצב העבודה — שורד רענון =====
+function saveSession(){try{localStorage.setItem(LS.sess,JSON.stringify({
+  name:(document.getElementById('lessonName')||{}).value||'',num:(document.getElementById('lessonNum')||{}).value||'',
+  mode:buildMode,lesson:lastLesson||'',slides:currentSlides||null,artifacts:curArtifacts||{},
+  carousel:lastCarousel||null,aids:curAids||null,aidsName:curAidsName||'',t:Date.now()
+}));}catch(e){}}
+function clearSession(){try{localStorage.removeItem(LS.sess);}catch(e){}}
+function restoreSession(){let s;try{s=JSON.parse(localStorage.getItem(LS.sess));}catch(e){}if(!s)return;
+  try{
+    if(s.name&&document.getElementById('lessonName'))document.getElementById('lessonName').value=s.name;
+    if(s.num&&document.getElementById('lessonNum'))document.getElementById('lessonNum').value=s.num;
+    if(s.mode){buildMode=s.mode;document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.toggle('on',x.dataset.mode===s.mode));}
+    if(s.lesson){lastLesson=s.lesson;currentSlides=s.slides||null;curArtifacts=s.artifacts||{};lastCarousel=s.carousel||null;
+      const L=document.getElementById('lesson');if(L)L.classList.add('show');
+      if(typeof renderDoc==='function')renderDoc();
+      if(lastCarousel&&typeof renderCarousel==='function'){try{renderCarousel(lastCarousel);}catch(e){}}
+    }
+    if(s.aids){curAids=s.aids;curAidsName=s.aidsName||'';const area=document.getElementById('aidArea');
+      if(area&&typeof renderAids==='function'){renderAids(area,curAids,curAidsName||'שיעור',lastLesson);}}
+  }catch(e){}}
 
 // ===== lesson actions =====
 let editing=false;
 document.getElementById('editBtn').onclick=()=>{const doc=document.getElementById('doc'),btn=document.getElementById('editBtn');
   if(!editing){doc.classList.add('editing');doc.innerHTML='<textarea id="docEdit"></textarea>';document.getElementById('docEdit').value=lastLesson;btn.textContent='✓ סיום עריכה';editing=true;}
-  else{lastLesson=document.getElementById('docEdit').value;currentSlides=null;renderDoc();toast('עודכן');}};
+  else{lastLesson=document.getElementById('docEdit').value;currentSlides=null;renderDoc();saveSession();toast('עודכן');}};
 document.getElementById('copyLesson').onclick=()=>copyText(lastLesson);
 function copyText(t){try{navigator.clipboard.writeText(t).then(()=>toast('הועתק ✓','good')).catch(()=>toast('לא ניתן להעתיק — סמני והעתיקי ידנית'));}catch(e){toast('לא ניתן להעתיק');}}
 document.getElementById('pdfLesson').onclick=()=>downloadPdf('מערך שיעור — '+(nameOf()||'שיעור'),lastLesson);
@@ -808,7 +831,7 @@ document.getElementById('presentBtn').onclick=()=>presentFlow(()=>lastLesson,s=>
   {getExercises:()=>curArtifacts.exercises,setExercises:e=>{curArtifacts.exercises=e;},onChange:()=>{}});
 
 // ===== סוכן קרוסלה לאינסטגרם (מערכת שמנת 4:5, מרכוז, עריכה+מחיקה) =====
-let lastCarousel=null;
+let lastCarousel=null;let curAids=null,curAidsName='';
 const CARC={cream:'#FAF6EF',ink:'#4A3520',body:'#5C4A38',copper:'#8B6F47',cop2:'#B89968',line:'#E4D6C0',wm:'#A98C63'};
 async function genCarousel(text,onProg){
   const sys=systemBase()+'\n\nאת עופרה — כותבת כרטיסים לאינסטגרם בשפת הנשמה. פשוט ואותנטי, בלי מאמץ להרשים. לא "הוקים" שמנסים לעצור גלילה, לא גימיקים, לא ניסיון להיות כמו כולם. אמת אחת לכל כרטיס, במילים פשוטות, מהלב — מה שנכון ואנושי. את מדברת לאישה אחת, אלייך, בגובה העיניים. נאמנה לתוכן השיעור — לא ממציאה מקורות או ציטוטים, ולא מעתיקה משפטים כמו שהם. בלי סימני קריאה ובלי ז\'רגון מיסטי. הגאונות בפשטות.';
@@ -893,7 +916,7 @@ document.getElementById('carouselBtn').onclick=async()=>{
   const b=document.getElementById('carouselBtn'),o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה קרוסלה…';b.disabled=true;
   const area=document.getElementById('carouselArea');area.innerHTML='';
   const p=aiProg('📱 בונה קרוסלה');p.stage('סוכן הרשתות כותב את הכרטיסים…');p.auto(20);
-  try{const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));renderCarousel(d);p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  try{const d=await genCarousel(lastLesson,(len)=>p.streamLen(len,2600));renderCarousel(d);saveSession();p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
   catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='';}
   finally{b.innerHTML=o;b.disabled=false;}};
 
@@ -1143,6 +1166,7 @@ async function renderAids(area,d,name,body){
   html+='<div class="actions" style="margin-top:8px"><button class="btn dark" id="aidCopy">📋 העתק סיפורים + קישורים לשליחה</button></div></div>';
   area.innerHTML=html;
   area.querySelectorAll('[data-aimg]').forEach(im=>im.onclick=()=>{lastImgUrl=im.dataset.aimg;const wrap=document.getElementById('imgWrap');if(wrap){wrap.innerHTML='';const big=new Image();big.src=im.dataset.aimg;wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';wrap.scrollIntoView({behavior:'smooth',block:'center'});}});
+  curAids=d;curAidsName=name;
   const box=area.querySelector('#aidStories');let editIdx=-1;
   const cardCss='background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 14px;margin-bottom:10px';
   function renderStories(){
@@ -1160,16 +1184,16 @@ async function renderAids(area,d,name,body){
     if(editIdx>=0&&stories[editIdx]){const w=box.querySelector('[data-card="'+editIdx+'"]');if(w){w.querySelector('[data-et="title"]').value=stories[editIdx].title||'';w.querySelector('[data-et="text"]').value=stories[editIdx].text||'';}}
     box.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.edit;renderStories();});
     box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{editIdx=-1;renderStories();});
-    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);editIdx=-1;renderStories();});
+    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);editIdx=-1;renderStories();saveSession();});
     box.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save,w=box.querySelector('[data-card="'+i+'"]');
-      stories[i]={title:w.querySelector('[data-et="title"]').value,text:w.querySelector('[data-et="text"]').value};editIdx=-1;renderStories();toast('נשמר ✓','good');});
+      stories[i]={title:w.querySelector('[data-et="title"]').value,text:w.querySelector('[data-et="text"]').value};editIdx=-1;renderStories();saveSession();toast('נשמר ✓','good');});
   }
   renderStories();
   area.querySelector('#aidStoryAdd').onclick=()=>{stories.push({title:'',text:''});editIdx=stories.length-1;renderStories();};
   const regenBtn=area.querySelector('#aidStoryRegen');regenBtn.onclick=async()=>{
     if(!body){toast('אין טקסט שיעור לחידוש');return;}
     const o=regenBtn.innerHTML;regenBtn.innerHTML='<span class="spinner"></span> כותבת מחדש…';regenBtn.disabled=true;
-    try{const fresh=await genAidStories(body,name);if(fresh.length){stories.length=0;fresh.forEach(s=>stories.push(s));renderStories();toast('סיפורים חדשים מוכנים ✓','good');}else toast('לא הצלחתי — נסי שוב');}
+    try{const fresh=await genAidStories(body,name);if(fresh.length){stories.length=0;fresh.forEach(s=>stories.push(s));renderStories();saveSession();toast('סיפורים חדשים מוכנים ✓','good');}else toast('לא הצלחתי — נסי שוב');}
     catch(e){toast('שגיאה: '+e.message);}finally{regenBtn.innerHTML=o;regenBtn.disabled=false;}};
   const cb=area.querySelector('#aidCopy');if(cb)cb.onclick=()=>{let t='✨ עזרים לשיעור — '+name+'\n\n';
     if(stories.length)t+=stories.map(s=>'📖 '+(s.title||'')+'\n'+(s.text||'')).join('\n\n')+'\n\n';
@@ -1183,7 +1207,7 @@ async function renderAids(area,d,name,body){
   const o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה ערכה…';b.disabled=true;
   const area=document.getElementById('aidArea');area.innerHTML='';
   const p=aiProg('🎁 בונה ערכת עזרים');p.auto(18);
-  try{const d=await genAids(body,name);await renderAids(area,d,name,body);p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  try{const d=await genAids(body,name);await renderAids(area,d,name,body);saveSession();p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
   catch(e){p.error('לא הצלחתי לבנות ערכה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
   finally{b.innerHTML=o;b.disabled=false;}};})();
 
@@ -1447,7 +1471,7 @@ async function buildPackage(ctx){
     f.file('קרא-אותי.txt','תיקיית שיעור — שפת הנשמה · עופרה אינוז · קפסולה אלוקית\n\n— הקבצים המרכזיים (לשימוש) —\nמצגת.pptx        ← המצגת ל-PowerPoint (עם הערות דובר — לחצי Slide Show → Use Presenter View)\nמערך-שיעור.pdf   ← השיעור המלא\nתרגילים.pdf      ← כל התרגילים\nשיעורי-בית.pdf   ← לתלמידות\nסיכום-וואטסאפ.txt ← לשליחה לקבוצה\n\n— תיקיות —\nתרגילים/   ← כל תרגיל בקובץ נפרד (לפתיחה והדפסה)\nעזרים/     ← תמונות + רעיונות לסרטונים\nלעריכה ולווב/ ← אותם תכנים בפורמט לעריכה (md) ולדפדפן (html) — לא חובה');
     done++;prog('אורזת…');
     const blob=await zip.generateAsync({type:'blob'});
-    renderPkgResult(area,ctx,A,{blob,name:folder});pov.done('החבילה מוכנה 📦');toast('החבילה מוכנה — נשמרה באתר, מורידים כשתרצי 📦','good');
+    renderPkgResult(area,ctx,A,{blob,name:folder});saveSession();pov.done('החבילה מוכנה 📦');toast('החבילה מוכנה — נשמרה באתר, מורידים כשתרצי 📦','good');
   }catch(e){pov.error('לא הצלחתי לבנות חבילה.\n'+e.message);if(area)area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
 }
 function renderPkgResult(area,ctx,A,zipInfo){if(!area)return;
@@ -2028,12 +2052,12 @@ function initFolder(){
   folderLoadSaved();updateFolderStatus();try{populateLessonPicker();}catch(e){}}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
-checkKey();refreshRun();renderGal();
+checkKey();refreshRun();renderGal();try{restoreSession();}catch(e){}
 try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{});}}catch(e){}
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v40 · כפתורי ערוך/שמור/מחק לכל סיפור';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v41 · שמירה אוטומטית — שורד רענון';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
