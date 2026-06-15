@@ -1322,7 +1322,7 @@ function openLessonPanel(id,ob){const l=loadLib().find(x=>x.id===id);if(!l)retur
     h+='<div style="border:1px solid var(--line);border-radius:11px;background:var(--paper);margin-bottom:8px;padding:8px 12px"><div style="display:flex;align-items:center;gap:8px;font-weight:500"><span style="font-size:1.1rem">🧭</span><span style="flex:1">אימון ותרגול ('+A.exercises.length+' פריטים)</span><button class="btn" style="padding:5px 10px;font-size:.8rem" data-act="add-ex">➕ הוסף פריט</button></div>';
     A.exercises.forEach((ex,i)=>{h+='<div style="display:flex;align-items:center;gap:8px;padding:7px 4px 7px 20px;border-top:1px solid var(--line2);flex-wrap:wrap"><span style="flex:1;min-width:100px;font-size:.92rem">'+(i+1)+'. '+esc(ex.title||'פריט')+'</span><span style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="view-ex|'+i+'">צפה</button><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="edit-ex|'+i+'">ערוך</button><button class="btn" style="padding:5px 9px;font-size:.79rem" data-act="pdf-ex|'+i+'">PDF</button><button class="btn" style="padding:5px 9px;font-size:.79rem;color:var(--red)" data-act="del-ex|'+i+'">מחק</button></span></div>';});
     h+='</div>';
-  } else h+=lpRow('🧭','אימון ותרגול',[{t:'צרי חבילה ליצירה (📦)',a:'need-pkg'}]);
+  } else h+=lpRow('🧭','אימון ותרגול',[{t:'✨ בנה אימון ותרגול',a:'build-ex'}]);
   if(A.whatsapp)h+=lpRow('💬','סיכום וואטסאפ',[{t:'צפה / ערוך / העתק',a:'edit-wa'}]);else h+=lpRow('💬','וואטסאפ',[{t:'צרי חבילה (📦)',a:'need-pkg'}]);
   h+='</div><div id="lpedit-'+id+'"></div>';
   ob.innerHTML=h;
@@ -1332,7 +1332,7 @@ function lpEditBox(ob,id,label,value,onSave,big){const box=document.getElementBy
   document.getElementById('lpta').value=value;box.scrollIntoView({behavior:'smooth',block:'nearest'});
   document.getElementById('lpsave').onclick=()=>{onSave(document.getElementById('lpta').value);openLessonPanel(id,ob);toast('נשמר ✓','good');};
   document.getElementById('lpcancel').onclick=()=>{box.innerHTML='';};}
-function lpAct(id,act,i,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;const A=l.artifacts||{};
+async function lpAct(id,act,i,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;const A=l.artifacts||{};
   if(act==='view-body')openHTMLWindow(printableHTML('מערך שיעור — '+l.name,l.body,l.name));
   else if(act==='edit-body')lpEditBox(ob,id,'מערך שיעור',l.body,v=>{saveLibField(id,'body',v);saveLibField(id,'slides',null);},true);
   else if(act==='pdf-body')downloadPdf('מערך שיעור — '+l.name,l.body);
@@ -1347,6 +1347,7 @@ function lpAct(id,act,i,ob){const l=loadLib().find(x=>x.id===id);if(!l)return;co
   else if(act==='edit-ex')lpEditBox(ob,id,'אימון ותרגול',(A.exercises[i].title?'# '+A.exercises[i].title+'\n\n':'')+(A.exercises[i].md||''),v=>{const m=v.match(/^#\s*(.+?)\n+([\s\S]*)$/);if(m){A.exercises[i].title=m[1].trim();A.exercises[i].md=m[2].trim();}else A.exercises[i].md=v;saveLibField(id,'artifacts',A);},true);
   else if(act==='pdf-ex')downloadPdf(A.exercises[i].title||'פריט',A.exercises[i].md||'');
   else if(act==='del-ex'){if(confirm('למחוק את הפריט?')){A.exercises.splice(i,1);saveLibField(id,'artifacts',A);openLessonPanel(id,ob);toast('נמחק');}}
+  else if(act==='build-ex'){if(!l.body){toast('אין מערך שיעור');return;}toast('בונה אימון ותרגול…');try{const ex=await genExercisesList(l.body,l.name);if(ex.length){A.exercises=ex;saveLibField(id,'artifacts',A);openLessonPanel(id,ob);toast('מוכן ✓ ('+ex.length+' פריטים)','good');}else toast('חזר ריק — נסי שוב');}catch(e){toast('שגיאה: '+e.message);}}
   else if(act==='edit-wa')lpEditBox(ob,id,'סיכום וואטסאפ',A.whatsapp||'',v=>{A.whatsapp=v;saveLibField(id,'artifacts',A);});
   else if(act==='need-pkg')toast('לחצי "📦 חבילה" בשורת השיעור כדי ליצור את הקבצים');}
 function waEditorHTML(text){return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>סיכום וואטסאפ</title>
@@ -1415,9 +1416,20 @@ async function genArtifact(kind,body,name){const P={
 שקטה/געגוע (לא מסקנה), והזכירי בעדינות את התרגיל לבית. בלי סימני קריאה, בלי "כיתה יקרה", בלי שיווק.
 אפשר אימוג'י עדין אחד (🌿). פנייה ל"את". טקסט בלבד, בלי כותרת.`};
   return await callClaude(systemBase()+'\n\n'+P[kind],[{type:'text',text:body}],kind==='whatsapp'?1200:5000,null,{think:false,stream:false});}
+function parsePracticeArray(raw){
+  let s=extractJsonStr(raw,'[',']');
+  if(s){try{const a=JSON.parse(s);if(Array.isArray(a))return a;}catch(e){}}
+  const o=extractJsonStr(raw,'{','}');
+  if(o){try{const j=JSON.parse(o);for(const k of ['exercises','items','list','data','תרגילים','אימון'])if(Array.isArray(j[k]))return j[k];if(j.title||j.md)return [j];}catch(e){}}
+  return [];}
 async function genExercisesList(body,name){
-  const raw=await callClaude(systemBase()+'\n\nאת בונה "אימון ותרגול" — עבודה מעשית שמיישמת את השיעור: אימון אמונה והרחבת תודעה. מדויק, מעשי ומכבד.\n\n'+NODRAMA,[{type:'text',text:`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך פריטי אימון ותרגול. לכל פריט: {"title":"שם הפריט","md":"תוכן ב‑Markdown: מטרה במשפט אחד (איזו יכולת או אמונה הפריט מאמן / איזו תודעה הוא מרחיב), הוראות פשוטות שלב-אחר-שלב לביצוע בפועל, ושאלה אחת צלולה להתבוננות. אם דוגמה קונקרטית מבהירה — קצרה ועניינית, לא כדי לרגש"}. 4–6 פריטים שמשרתים את לב השיעור, מגוונים (חלקם לעבודה בכיתה וחלקם לבית — בלי לציין זאת במפורש), מדויקים ומכבדים.\n\n${body}`}],4500,null,{think:false});
-  let arr;try{arr=JSON.parse(extractJsonStr(raw,'[',']'));}catch{arr=[{title:'תרגיל',where:'בית',md:raw}];}
+  const sys=systemBase()+'\n\nאת בונה "אימון ותרגול" — עבודה מעשית שמיישמת את השיעור: אימון אמונה והרחבת תודעה. מדויק, מעשי ומכבד.\n\n'+NODRAMA;
+  const user=`מתוך תוכנית השיעור, החזירי JSON בלבד — מערך פריטי אימון ותרגול (מתחיל ב‑[ ומסתיים ב‑], בלי טקסט נוסף ובלי עטיפה). לכל פריט: {"title":"שם הפריט","md":"מטרה במשפט אחד, הוראות פשוטות שלב-אחר-שלב, ושאלה אחת צלולה להתבוננות"}. 4–6 פריטים שמשרתים את לב השיעור, מגוונים, מדויקים ומכבדים. שמרי כל פריט תמציתי כדי שכל המערך ייכנס בתשובה אחת.\n\n${body}`;
+  let arr=[];
+  for(let attempt=0;attempt<2&&!arr.length;attempt++){
+    const raw=await callClaude(sys,[{type:'text',text:user}],6000,null,{think:false,stream:false});
+    arr=parsePracticeArray(raw).filter(x=>x&&(x.title||x.md)).map(x=>({title:String(x.title||'פריט'),md:String(x.md||'')}));
+  }
   return arr;}
 function exercisesCombinedMd(list,name){if(!Array.isArray(list))return String(list||'');return '# אימון ותרגול — '+name+'\n\n'+list.map((e,i)=>`## ${i+1}. ${e.title||'פריט'}\n\n${e.md||''}`).join('\n\n---\n\n');}
 function safeName(s){return String(s||'תרגיל').replace(/[\\/:*?"<>|\n]/g,'').trim().slice(0,40);}
@@ -2082,7 +2094,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v44 · איחוד "אימון ותרגול" — עם צפייה/עריכה/מחיקה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v45 · אימון ותרגול אמין — פענוח חסין + כפתור בנייה ישיר';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
