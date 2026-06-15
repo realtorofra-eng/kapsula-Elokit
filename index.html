@@ -1229,9 +1229,10 @@ async function runAidsAgent(force){
 const IG_VOICE='\n\nקול האינסטגרם של שפת הנשמה — מומחה, מקורי ושונה מכולם. אסור: להעתיק, להיות בכייני, דרמטי, מליצי, או להשתמש בקלישאות ובסופרלטיבים. רצוי: פשוט (הכי פשוט), אותנטי, אמיתי, עמוק, ישר, כן, ואנושי מאוד. פנייה ל"את", בגובה העיניים. נאמנה לתוכן השיעור — בלי להמציא מקורות, ובלי להעתיק משפטים כמו שהם. כל מילה אמיתית ועובדת.';
 function fillIgLessons(){const sel=document.getElementById('igLesson');if(!sel)return;const cur=sel.value;
   const lib=loadLib().slice().sort((a,b)=>(parseInt(a.num)||999)-(parseInt(b.num)||999));
-  let html='<option value="__free__">✍️ נושא חופשי (כתבי בתיבת המיקוד)</option>';
+  let html='';
   if(lastLesson)html+='<option value="__current__">⭐ השיעור הנוכחי (שיעור חדש)</option>';
   html+=lib.map(l=>`<option value="${l.id}">${esc((l.num?l.num+'. ':'')+(l.name||'שיעור'))}</option>`).join('');
+  html+='<option value="__free__">✍️ נושא חופשי (כתבי בתיבת המיקוד)</option>';
   sel.innerHTML=html;if(cur)sel.value=cur;}
 function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel?sel.value:'__free__';
   let body='',from='';
@@ -2124,7 +2125,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v46 · אינסטגרם שואב משיעור נבחר + קול מחוזק';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v47 · אינסטגרם — בורר שיעור כברירת מחדל';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
