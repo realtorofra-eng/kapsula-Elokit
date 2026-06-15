@@ -353,7 +353,8 @@
       <p class="hint" style="margin-bottom:10px">בחרי שיעור — והסוכן יכין ערכה לתלמידות: 🖼️ תמונות להמחשה · 🎬 סרטוני וידאו · 📖 סיפורים ודוגמאות מהחיים. מוכן לשליחה לקבוצה.</p>
       <label class="lbl">השיעור</label>
       <select class="inp" id="aidLesson"></select>
-      <div class="actions"><button class="btn dark" id="aidBtn">✨ בנה ערכת עזרים</button></div>
+      <div class="actions"><button class="btn dark" id="aidBtn">✨ בנה ערכת עזרים</button><button class="btn" id="aidRebuildBtn">🔄 בנה מחדש</button></div>
+      <p class="hint">אם כבר בנית עזרים לשיעור — הם נטענים מיד, בלי לבזבז טוקנים. "בנה מחדש" מייצר ערכה חדשה לגמרי.</p>
       <div id="aidArea"></div>
     </div>
     <div class="card">
@@ -746,7 +747,7 @@ function startRun(){usage={in:0,out:0};currentSlides=null;curArtifacts={};lastCa
   buildSteps();runFrom(1);}
 function clearNewLesson(){
   files.length=0;try{renderFiles();}catch(e){}try{refreshRun();}catch(e){}
-  lastLesson='';currentSlides=null;curArtifacts={};curAids=null;curAidsName='';clearSession();
+  lastLesson='';currentSlides=null;curArtifacts={};curAids=null;curAidsName='';curAidsLesson='';clearSession();
   const ai=document.getElementById('aidArea');if(ai)ai.innerHTML='';
   const pipe=document.getElementById('pipe');if(pipe)pipe.classList.remove('show');
   const lesson=document.getElementById('lesson');if(lesson)lesson.classList.remove('show');
@@ -794,7 +795,7 @@ async function buildFullExtras(){
 function saveSession(){try{localStorage.setItem(LS.sess,JSON.stringify({
   name:(document.getElementById('lessonName')||{}).value||'',num:(document.getElementById('lessonNum')||{}).value||'',
   mode:buildMode,lesson:lastLesson||'',slides:currentSlides||null,artifacts:curArtifacts||{},
-  carousel:lastCarousel||null,aids:curAids||null,aidsName:curAidsName||'',t:Date.now()
+  carousel:lastCarousel||null,aids:curAids||null,aidsName:curAidsName||'',aidsLesson:curAidsLesson||'',t:Date.now()
 }));}catch(e){}}
 function clearSession(){try{localStorage.removeItem(LS.sess);}catch(e){}}
 function restoreSession(){let s;try{s=JSON.parse(localStorage.getItem(LS.sess));}catch(e){}if(!s)return;
@@ -807,8 +808,8 @@ function restoreSession(){let s;try{s=JSON.parse(localStorage.getItem(LS.sess));
       if(typeof renderDoc==='function')renderDoc();
       if(lastCarousel&&typeof renderCarousel==='function'){try{renderCarousel(lastCarousel);}catch(e){}}
     }
-    if(s.aids){curAids=s.aids;curAidsName=s.aidsName||'';const area=document.getElementById('aidArea');
-      if(area&&typeof renderAids==='function'){renderAids(area,curAids,curAidsName||'שיעור',lastLesson);}}
+    if(s.aids){curAids=s.aids;curAidsName=s.aidsName||'';curAidsLesson=s.aidsLesson||'';const area=document.getElementById('aidArea');
+      if(area&&typeof renderAids==='function'){renderAids(area,curAids,curAidsName||'שיעור',lastLesson,curAidsLesson);}}
   }catch(e){}}
 
 // ===== lesson actions =====
@@ -831,7 +832,7 @@ document.getElementById('presentBtn').onclick=()=>presentFlow(()=>lastLesson,s=>
   {getExercises:()=>curArtifacts.exercises,setExercises:e=>{curArtifacts.exercises=e;},onChange:()=>{}});
 
 // ===== סוכן קרוסלה לאינסטגרם (מערכת שמנת 4:5, מרכוז, עריכה+מחיקה) =====
-let lastCarousel=null;let curAids=null,curAidsName='';
+let lastCarousel=null;let curAids=null,curAidsName='',curAidsLesson='';
 const CARC={cream:'#FAF6EF',ink:'#4A3520',body:'#5C4A38',copper:'#8B6F47',cop2:'#B89968',line:'#E4D6C0',wm:'#A98C63'};
 async function genCarousel(text,onProg){
   const sys=systemBase()+'\n\nאת עופרה — כותבת כרטיסים לאינסטגרם בשפת הנשמה. פשוט ואותנטי, בלי מאמץ להרשים. לא "הוקים" שמנסים לעצור גלילה, לא גימיקים, לא ניסיון להיות כמו כולם. אמת אחת לכל כרטיס, במילים פשוטות, מהלב — מה שנכון ואנושי. את מדברת לאישה אחת, אלייך, בגובה העיניים. נאמנה לתוכן השיעור — לא ממציאה מקורות או ציטוטים, ולא מעתיקה משפטים כמו שהם. בלי סימני קריאה ובלי ז\'רגון מיסטי. הגאונות בפשטות.';
@@ -1146,7 +1147,9 @@ async function genAids(body,name){
     genAidStories(body,name)
   ]);
   return {images:media.images||[],videoQueries:media.videoQueries||[],stories:stories||[]};}
-async function renderAids(area,d,name,body){
+function saveAidsToLesson(id,d){if(!id)return;try{const lib=loadLib();const it=lib.find(x=>x.id===id);if(it){it.aids=d;saveLib(lib);}}catch(e){}}
+async function renderAids(area,d,name,body,lessonId){
+  const persist=()=>{curAids=d;curAidsName=name;curAidsLesson=lessonId||'';if(lessonId)saveAidsToLesson(lessonId,d);saveSession();};
   const imgUrls=(d.images||[]).slice(0,3).map((p,i)=>`https://image.pollinations.ai/prompt/${encodeURIComponent(p+' — '+brandStyle())}?width=1280&height=720&nologo=true&model=flux&seed=${300+i}`);
   if(imgUrls.length){saveGal([...imgUrls,...loadGal()].slice(0,12));renderGal();}
   const vids=(d.videoQueries||[]).slice(0,3);
@@ -1166,7 +1169,7 @@ async function renderAids(area,d,name,body){
   html+='<div class="actions" style="margin-top:8px"><button class="btn dark" id="aidCopy">📋 העתק סיפורים + קישורים לשליחה</button></div></div>';
   area.innerHTML=html;
   area.querySelectorAll('[data-aimg]').forEach(im=>im.onclick=()=>{lastImgUrl=im.dataset.aimg;const wrap=document.getElementById('imgWrap');if(wrap){wrap.innerHTML='';const big=new Image();big.src=im.dataset.aimg;wrap.appendChild(big);document.getElementById('imgActions').style.display='flex';wrap.scrollIntoView({behavior:'smooth',block:'center'});}});
-  curAids=d;curAidsName=name;
+  curAids=d;curAidsName=name;curAidsLesson=lessonId||'';
   const box=area.querySelector('#aidStories');let editIdx=-1;
   const cardCss='background:var(--paper);border-right:3px solid var(--copper);border-radius:8px;padding:12px 14px;margin-bottom:10px';
   function renderStories(){
@@ -1184,32 +1187,37 @@ async function renderAids(area,d,name,body){
     if(editIdx>=0&&stories[editIdx]){const w=box.querySelector('[data-card="'+editIdx+'"]');if(w){w.querySelector('[data-et="title"]').value=stories[editIdx].title||'';w.querySelector('[data-et="text"]').value=stories[editIdx].text||'';}}
     box.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.edit;renderStories();});
     box.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{editIdx=-1;renderStories();});
-    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);editIdx=-1;renderStories();saveSession();});
+    box.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{stories.splice(+b.dataset.sdel,1);editIdx=-1;renderStories();persist();});
     box.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save,w=box.querySelector('[data-card="'+i+'"]');
-      stories[i]={title:w.querySelector('[data-et="title"]').value,text:w.querySelector('[data-et="text"]').value};editIdx=-1;renderStories();saveSession();toast('נשמר ✓','good');});
+      stories[i]={title:w.querySelector('[data-et="title"]').value,text:w.querySelector('[data-et="text"]').value};editIdx=-1;renderStories();persist();toast('נשמר ✓','good');});
   }
   renderStories();
   area.querySelector('#aidStoryAdd').onclick=()=>{stories.push({title:'',text:''});editIdx=stories.length-1;renderStories();};
   const regenBtn=area.querySelector('#aidStoryRegen');regenBtn.onclick=async()=>{
     if(!body){toast('אין טקסט שיעור לחידוש');return;}
     const o=regenBtn.innerHTML;regenBtn.innerHTML='<span class="spinner"></span> כותבת מחדש…';regenBtn.disabled=true;
-    try{const fresh=await genAidStories(body,name);if(fresh.length){stories.length=0;fresh.forEach(s=>stories.push(s));renderStories();saveSession();toast('סיפורים חדשים מוכנים ✓','good');}else toast('לא הצלחתי — נסי שוב');}
+    try{const fresh=await genAidStories(body,name);if(fresh.length){stories.length=0;fresh.forEach(s=>stories.push(s));renderStories();persist();toast('סיפורים חדשים מוכנים ✓','good');}else toast('לא הצלחתי — נסי שוב');}
     catch(e){toast('שגיאה: '+e.message);}finally{regenBtn.innerHTML=o;regenBtn.disabled=false;}};
   const cb=area.querySelector('#aidCopy');if(cb)cb.onclick=()=>{let t='✨ עזרים לשיעור — '+name+'\n\n';
     if(stories.length)t+=stories.map(s=>'📖 '+(s.title||'')+'\n'+(s.text||'')).join('\n\n')+'\n\n';
     if(vids.length)t+='🎬 סרטונים מומלצים (חיפוש ביוטיוב):\n'+vids.map(q=>'• '+q+' — https://www.youtube.com/results?search_query='+encodeURIComponent(q)).join('\n')+'\n';
     copyText(t);};}
-(function(){const b=document.getElementById('aidBtn');if(!b)return;b.onclick=async()=>{
-  const sel=document.getElementById('aidLesson'),v=sel?sel.value:'';let body='',name='';
+async function runAidsAgent(force){
+  const sel=document.getElementById('aidLesson'),v=sel?sel.value:'';let body='',name='',lessonId='';
   if(v==='__current__'){body=lastLesson;name=nameOf()||'שיעור';}
-  else if(v){const l=loadLib().find(x=>x.id===v);if(l){body=l.body;name=l.name||'שיעור';}}
+  else if(v){const l=loadLib().find(x=>x.id===v);if(l){body=l.body;name=l.name||'שיעור';lessonId=l.id;}}
   if(!body){toast('בחרי שיעור (או בני שיעור חדש קודם)');return;}
-  const o=b.innerHTML;b.innerHTML='<span class="spinner"></span> בונה ערכה…';b.disabled=true;
-  const area=document.getElementById('aidArea');area.innerHTML='';
-  const p=aiProg('🎁 בונה ערכת עזרים');p.auto(18);
-  try{const d=await genAids(body,name);await renderAids(area,d,name,body);saveSession();p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  const area=document.getElementById('aidArea');
+  if(!force&&lessonId){const l=loadLib().find(x=>x.id===lessonId);if(l&&l.aids){area.innerHTML='';await renderAids(area,l.aids,name,body,lessonId);saveSession();toast('טענתי את הערכה השמורה — בלי לבזבז טוקנים 🌿','good');area.scrollIntoView({behavior:'smooth',block:'nearest'});return;}}
+  const b=document.getElementById('aidBtn'),rb=document.getElementById('aidRebuildBtn'),o=b?b.innerHTML:'',ro=rb?rb.innerHTML:'';
+  if(b){b.disabled=true;}if(rb){rb.disabled=true;}
+  if(force&&rb)rb.innerHTML='<span class="spinner"></span> בונה מחדש…';else if(b)b.innerHTML='<span class="spinner"></span> בונה ערכה…';
+  area.innerHTML='';const p=aiProg('🎁 בונה ערכת עזרים');p.auto(18);
+  try{const d=await genAids(body,name);await renderAids(area,d,name,body,lessonId);if(lessonId)saveAidsToLesson(lessonId,d);saveSession();p.done('הערכה מוכנה 🎁');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
   catch(e){p.error('לא הצלחתי לבנות ערכה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
-  finally{b.innerHTML=o;b.disabled=false;}};})();
+  finally{if(b){b.disabled=false;b.innerHTML=o;}if(rb){rb.disabled=false;rb.innerHTML=ro;}}}
+(function(){const b=document.getElementById('aidBtn');if(b)b.onclick=()=>runAidsAgent(false);
+  const rb=document.getElementById('aidRebuildBtn');if(rb)rb.onclick=()=>runAidsAgent(true);})();
 
 // ===== אינסטגרם — חלון נפרד =====
 (function(){
@@ -2059,7 +2067,7 @@ try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEv
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v42 · תרגילים ושיעורי בית בלי דרמה — אימון אמונה ותודעה';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v43 · ערכת עזרים נשמרת לכל שיעור — בלי לבזבז טוקנים';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
