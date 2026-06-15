@@ -625,7 +625,7 @@ const nav=document.getElementById('nav');
 tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.label;b.dataset.id=t.id;if(i===0)b.classList.add('active');b.onclick=()=>go(t.id);nav.appendChild(b)});
 function go(id){document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();if(id==='images'&&typeof fillAidLessons==='function')fillAidLessons();if(id==='instagram'&&typeof fillIgLessons==='function')fillIgLessons();
+  window.scrollTo({top:0,behavior:'smooth'});if(id==='library')renderLib();if(id==='new'){checkKey();if(typeof populateLessonPicker==='function')populateLessonPicker();}if(id==='source'&&typeof renderSource==='function')renderSource();if(id==='images'&&typeof fillAidLessons==='function')fillAidLessons();if(id==='instagram'&&typeof fillIgLessons==='function'){fillIgLessons();if(typeof restoreIg==='function')restoreIg();}
   try{const a=document.querySelector('nav button.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
 
 let buildMode='full';
@@ -1240,6 +1240,16 @@ function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel
   else if(v&&v!=='__free__'){const l=loadLib().find(x=>x.id===v);if(l){body=l.body;from=(l.num?l.num+'. ':'')+(l.name||'שיעור');}}
   if(body){let s='מתוך מערך השיעור "'+from+'":\n\n'+body;if(focusText)s+='\n\nמיקוד/זווית מבוקשת: '+focusText;return {text:s,from,isLesson:true,focus:focusText};}
   return {text:focusText||'',from:'',isLesson:false,focus:focusText};}
+// שמירה אוטומטית של חלון האינסטגרם — שורד רענון
+function saveIg(){try{const sel=document.getElementById('igLesson');localStorage.setItem('sn-ig',JSON.stringify({
+  lesson:sel?sel.value:'',car:window.__igCar||null,cap:(document.getElementById('igCapOut')||{}).value||window.__igCap||'',
+  ideas:window.__igIdeas||'',quote:(document.getElementById('igQuote')||{}).value||''}));}catch(e){}}
+function restoreIg(){let s;try{s=JSON.parse(localStorage.getItem('sn-ig'));}catch(e){}if(!s)return;
+  const sel=document.getElementById('igLesson');if(sel&&s.lesson&&[...sel.options].some(o=>o.value===s.lesson))sel.value=s.lesson;
+  const q=document.getElementById('igQuote');if(q&&s.quote)q.value=s.quote;
+  if(s.car){window.__igCar=s.car;const a=document.getElementById('igCarArea');if(a&&typeof renderCarousel==='function'){renderCarousel(s.car,a);const rg=a.querySelector('#carRegen');if(rg)rg.onclick=()=>document.getElementById('igCarBtn').click();}}
+  if(s.cap){window.__igCap=s.cap;const a=document.getElementById('igCapArea');if(a){a.innerHTML='<div style="margin-top:12px"><textarea class="inp" id="igCapOut" style="min-height:160px;line-height:1.7"></textarea><div class="actions"><button class="btn dark" id="igCapCopy">📋 העתק</button></div></div>';a.querySelector('#igCapOut').value=s.cap;a.querySelector('#igCapOut').oninput=()=>{window.__igCap=a.querySelector('#igCapOut').value;saveIg();};a.querySelector('#igCapCopy').onclick=()=>copyText(a.querySelector('#igCapOut').value);}}
+  if(s.ideas){window.__igIdeas=s.ideas;const a=document.getElementById('igIdeaArea');if(a){a.innerHTML='<div class="card" style="margin-top:12px;background:var(--cream)"><div class="md">'+mdRender(s.ideas)+'</div><div class="actions"><button class="btn dark" id="igIdeaCopy">📋 העתק</button></div></div>';a.querySelector('#igIdeaCopy').onclick=()=>copyText(s.ideas);}}}
 (function(){
   const carBtn=document.getElementById('igCarBtn');
   if(carBtn)carBtn.onclick=async()=>{
@@ -1251,6 +1261,7 @@ function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel
     const txt=src.isLesson?src.text:('נושא לקרוסלה: '+src.text+'\n\nבני קרוסלה לאינסטגרם סביב הנושא הזה, פשוט ואותנטי.');
     try{const d=await genCarousel(txt,(len)=>p.streamLen(len,2600));
       renderCarousel(d,area);const rg=area.querySelector('#carRegen');if(rg)rg.onclick=()=>carBtn.click();
+      window.__igCar=d;saveIg();
       p.done('הקרוסלה מוכנה 📱');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
     catch(e){p.error('לא הצלחתי לבנות קרוסלה.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
     finally{carBtn.innerHTML=o;carBtn.disabled=false;}};
@@ -1261,7 +1272,7 @@ function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel
     if(!src.isLesson){toast('בחרי קודם שיעור מהרשימה למעלה');return;}
     const o=qfl.innerHTML;qfl.innerHTML='<span class="spinner"></span> שואבת…';qfl.disabled=true;
     try{const raw=await callClaude(systemBase()+IG_VOICE,[{type:'text',text:src.text+'\n\nבחרי משפט אחד חזק מתוך השיעור הזה לפוסט אינסטגרם — אמיתי, פשוט ועמוק, בקול שלך (אפשר לנסח מחדש, לא להעתיק). החזירי רק את המשפט, בלי מרכאות ובלי תוספות.'}],200,null,{think:false,stream:false});
-      const q=document.getElementById('igQuote');if(q)q.value=(raw||'').trim().replace(/^["“”]|["“”]$/g,'');toast('משפט מוכן — אפשר לערוך וליצור פוסט ✨','good');}
+      const q=document.getElementById('igQuote');if(q)q.value=(raw||'').trim().replace(/^["“”]|["“”]$/g,'');saveIg();toast('משפט מוכן — אפשר לערוך וליצור פוסט ✨','good');}
     catch(e){toast('לא הצלחתי: '+e.message);}finally{qfl.innerHTML=o;qfl.disabled=false;}};
 
   const capBtn=document.getElementById('igCapBtn');
@@ -1274,7 +1285,8 @@ function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel
     try{const raw=await callClaude(systemBase()+IG_VOICE,
       [{type:'text',text:`${src.text}\n\nכתבי כיתוב (caption) לפוסט אינסטגרם (3-6 שורות, נשימה בין שורות), ואז שורה ריקה, "—", ואז שורת האשטגים (8-12 רלוונטיים).`}],900,null,{think:false,stream:false});
       area.innerHTML='<div style="margin-top:12px"><textarea class="inp" id="igCapOut" style="min-height:160px;line-height:1.7"></textarea><div class="actions"><button class="btn dark" id="igCapCopy">📋 העתק</button></div></div>';
-      area.querySelector('#igCapOut').value=raw.trim();
+      area.querySelector('#igCapOut').value=raw.trim();window.__igCap=raw.trim();saveIg();
+      area.querySelector('#igCapOut').oninput=()=>{window.__igCap=area.querySelector('#igCapOut').value;saveIg();};
       area.querySelector('#igCapCopy').onclick=()=>copyText(area.querySelector('#igCapOut').value);
       p.done('הכיתוב מוכן ✍️');}
     catch(e){p.error('לא הצלחתי.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
@@ -1290,10 +1302,14 @@ function igSource(focusText){const sel=document.getElementById('igLesson'),v=sel
     try{const raw=await callClaude(systemBase()+IG_VOICE,
       [{type:'text',text:`${src.text}\n\nתני 7 רעיונות לפוסטים לאינסטגרם שנובעים מהתוכן הזה. כל רעיון: כותרת קצרה + שורה אחת מה הפוסט אומר. ב-Markdown, רשימה ממוספרת.`}],1200,null,{think:false,stream:false});
       area.innerHTML='<div class="card" style="margin-top:12px;background:var(--cream)"><div class="md">'+mdRender(raw)+'</div><div class="actions"><button class="btn dark" id="igIdeaCopy">📋 העתק</button></div></div>';
+      window.__igIdeas=raw;saveIg();
       area.querySelector('#igIdeaCopy').onclick=()=>copyText(raw);
       p.done('הרעיונות מוכנים 💡');area.scrollIntoView({behavior:'smooth',block:'nearest'});}
     catch(e){p.error('לא הצלחתי.\n'+e.message);area.innerHTML='<div class="err-box show">⚠️ '+esc(e.message)+'</div>';}
     finally{ideaBtn.innerHTML=o;ideaBtn.disabled=false;}};
+
+  const igLes=document.getElementById('igLesson');if(igLes)igLes.onchange=saveIg;
+  const igQ=document.getElementById('igQuote');if(igQ)igQ.oninput=saveIg;
 })();
 
 // ===== library =====
@@ -2120,12 +2136,12 @@ function initFolder(){
   folderLoadSaved();updateFolderStatus();try{populateLessonPicker();}catch(e){}}
 
 (function(){const hl=document.getElementById('hdrLogo');if(hl)hl.src=LOGO_DATA||'assets/logo.png';})();
-checkKey();refreshRun();renderGal();try{restoreSession();}catch(e){}
+checkKey();refreshRun();renderGal();try{restoreSession();}catch(e){}try{if(typeof fillIgLessons==='function')fillIgLessons();restoreIg();}catch(e){}
 try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{});}}catch(e){}
 document.head.insertAdjacentHTML('beforeend','<style>'+SLIDE_CSS+'</style>');
 initChat();
 initFolder();
-const APP_VERSION='v47 · אינסטגרם — בורר שיעור כברירת מחדל';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
+const APP_VERSION='v48 · חלון אינסטגרם נשמר — שורד רענון';try{const av=document.getElementById('appVer');if(av)av.textContent='גרסה '+APP_VERSION;}catch(e){}
 try{const _a=document.querySelector('nav button.active');if(_a)_a.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
 
 // ===== PWA — התקנה כאפליקציה (מחשב + נייד) =====
