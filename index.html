@@ -533,6 +533,8 @@ function mdRender(s){ if(window.marked){try{return marked.parse(s)}catch(e){}}
 const LS={key:'sn-apikey',model:'sn-model',voice:'sn-voice',ex:'sn-examples',lib:'sn-lessons',gal:'sn-gallery',sess:'sn-session'};
 const getKey=()=>localStorage.getItem(LS.key)||'';
 try{if(!localStorage.getItem('sn-mig-sonnet')){localStorage.setItem(LS.model,'claude-sonnet-4-6');localStorage.setItem('sn-mig-sonnet','1');}}catch(e){}
+// איפוס חד-פעמי ל-Sonnet (חיסכון) — מעביר ל-Sonnet גם מי שנשאר על Opus. אפשר עדיין לבחור Opus ידנית בהגדרות.
+try{if(!localStorage.getItem('sn-mig-sonnet2')){localStorage.setItem(LS.model,'claude-sonnet-4-6');localStorage.setItem('sn-mig-sonnet2','1');}}catch(e){}
 const getModel=()=>localStorage.getItem(LS.model)||'claude-sonnet-4-6';
 const getEx=()=>localStorage.getItem(LS.ex)||'';
 
